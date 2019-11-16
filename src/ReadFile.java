@@ -1,13 +1,7 @@
-import javax.print.Doc;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Scanner;
-import java.util.stream.Stream;
 
 public class ReadFile {
 
@@ -54,7 +48,7 @@ public class ReadFile {
                         if(line.equals("</DOC>")){
                             sb.append(line).append("\n");
                             Document= new Document(sb);
-                            Parse.add(Document);
+                            Parse.parse(Document);
                             sb.setLength(0);
                         }
                         else
