@@ -14,6 +14,7 @@ public class Parse {
 
 
     public Parse() {
+        klkl;
     }
 
     public void parse(Document currDoc){
