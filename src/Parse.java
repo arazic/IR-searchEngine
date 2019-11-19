@@ -101,7 +101,7 @@ public class Parse {
     }
 
     private boolean matchToFour(int i) {
-        while (i + 3 <= tokens.length) { // can check terms in size 4
+        if (i + 3 <= tokens.length) { // can check terms in size 4
             String firstToken = tokens[i];
             String secondToken = tokens[i + 1];
             String thirdToken = tokens[i + 2];
@@ -111,16 +111,14 @@ public class Parse {
             if (isNum(firstToken) && matcherPrice4.find()) {
                 int num = Integer.valueOf(firstToken) * transperToFormat.get(secondToken);
                 newTerm = Integer.toString(num) + " M Dollars";
-                info[0] = Integer.toString(i + 3);
-                info[1] = newTerm;
+                place = i + 3;
                 return true;
             }
 
             if (firstToken.toLowerCase().equals("between") && isNum(secondToken)
                     && (thirdToken.toLowerCase().equals("and") || thirdToken.toLowerCase().equals("to")) && isNum(fourthToken)) {
                 newTerm = firstToken + " " + secondToken + " " + thirdToken + " " + fourthToken;
-                info[0] = Integer.toString(i + 3);
-                info[1] = newTerm;
+                place = i + 3;
                 return true;
             }
             return false;
