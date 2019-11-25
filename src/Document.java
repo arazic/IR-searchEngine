@@ -14,6 +14,16 @@ public class Document {
         docTerms = new TreeMap<>();
     }
 
+    public String getDocName()
+    {
+        return this.docName;
+    }
+
+    public void setTerms(HashMap<String,Integer> notOrderedMap)
+    {
+      notOrderedMap.forEach((key,value) -> docTerms.put(key,value));
+    }
+
     public void addTermsToDoc (HashMap<String,Integer> allterms)
     {
         Term currTerm;

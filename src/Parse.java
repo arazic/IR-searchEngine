@@ -33,6 +33,13 @@ public class Parse {
         transperToFormat.put("trillion",1000000);
     }
 
+    private void makeTerms()
+    {
+        String docName=currDoc.getDocName();
+        Term term;
+
+    }
+
     public void createDocument(StringBuilder content)
     {
         currDoc = new Document();
