@@ -1,9 +1,6 @@
 import com.sun.deploy.util.StringUtils;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -11,6 +8,8 @@ public class Parse {
 
     private static HashSet<String> stopWords;
     private HashMap<String, Integer>transperToFormat;
+    private HashMap<String,Integer> allDocTerms;
+    private TreeSet<Term> terms;
     private List<String> quotes;
     private String[] tokens;
     private String text;
@@ -18,7 +17,6 @@ public class Parse {
     private Document currDoc;
     private int currIndex;
     private String newTerm;
-    private String[] info= new String[2];
 
     private Pattern priceLength4= Pattern.compile("(million|billion|trillion)"+ " "+"U.S."+ " "+"dollars");
     private Pattern intPattern= Pattern.compile("^[0-9]*$");
@@ -52,11 +50,15 @@ public class Parse {
         // clean header and insert to text
 
         // split text by delimters
-        tokens= StringUtils.splitString(text," ():?[] ");
+        tokens= StringUtils.splitString(text," ():?[] "); // to add ""
         cleanText();
         parseText();
+        updateDoc();
     }
 
+    private void updateDoc() {
+        currDoc.addTermsToDoc(allDocTerms);
+    }
 
 
     private void cleanText()
@@ -109,6 +111,7 @@ public class Parse {
             {
                 continue;
             }
+
         }
     }
 
@@ -127,7 +130,7 @@ public class Parse {
         String token=tokens[currIndex];
         if(!stopWords.contains(token.toLowerCase()))
         {
-            currDoc.add(token);
+            makeTerm(token);
             return true;
         }
         return false;
@@ -153,12 +156,16 @@ public class Parse {
             if (isNum(firstToken) && matcherPrice4.find()) {
                 int num = Integer.valueOf(firstToken) * transperToFormat.get(secondToken);
                 newTerm = Integer.toString(num) + " M Dollars";
+                currIndex=currIndex+4;
+                makeTerm(newTerm);
                 return true;
             }
 
             if (firstToken.toLowerCase().equals("between") && isNum(secondToken)
                     && (thirdToken.toLowerCase().equals("and") || thirdToken.toLowerCase().equals("to")) && isNum(fourthToken)) {
                 newTerm = firstToken + " " + secondToken + " " + thirdToken + " " + fourthToken;
+                currIndex=currIndex+4;
+                makeTerm(newTerm);
                 return true;
             }
             return false;
@@ -166,6 +173,12 @@ public class Parse {
         return false;
     }
 
+    private void makeTerm(String newTerm) {
+        if(allDocTerms.containsKey(newTerm))
+             allDocTerms.put(newTerm,allDocTerms.get(newTerm)+1);
+        else
+            allDocTerms.put(newTerm,1);
+    }
 
 
     private Boolean isNum(String val){
@@ -173,14 +186,6 @@ public class Parse {
                 doublePattern.matcher(val).find()|| fractionPattern.matcher(val).find());
     }
 
-
-
-    private String clearTheToken(String token) {
-        String pureToken= token.replaceAll(":","");
-        pureToken= token.replaceAll(";","");
-
-        return pureToken;
-    }
 
     private String[] extractOneWordExpression(int place, String kind) {
         String []info=new String[2];

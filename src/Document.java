@@ -1,5 +1,4 @@
-import java.util.HashMap;
-import java.util.Set;
+import java.util.*;
 
 public class Document {
 
@@ -8,23 +7,24 @@ public class Document {
     private String popularTerm;
     private int maxTerm;
     private int uniqeTermsNum;
-    private HashMap <String,Integer> termsFrequency;
-
-
+    private TreeMap <String,Integer> docTerms;
 
     public Document()
     {
-        termsFrequency = new HashMap<>();
+        docTerms = new TreeMap<>();
     }
 
-    public void add (String term)
+    public void addTermsToDoc (HashMap<String,Integer> allterms)
     {
-        if(termsFrequency.containsKey(term))
-        {
-            termsFrequency.replace(term,termsFrequency.get(term)+1);
-            return;
+        Term currTerm;
+        Iterator it = allterms.entrySet().iterator();
+        while (it.hasNext()) {
+            Map.Entry pair = (Map.Entry)it.next();
+            System.out.println(pair.getKey() + " = " + pair.getValue());
+            currTerm=new Term((String)(pair.getKey()),(int)pair.getValue());
+            currTerm.addDocToTerm(docName);
+            it.remove(); // avoids a ConcurrentModificationException
         }
-        termsFrequency.put(term,1);
     }
 
     public void setDocName(String name)
@@ -42,10 +42,9 @@ public class Document {
 
     public void setMaxTerm()
     {
-
         String maxString="";
         int maxFrequency=0;
-        for (HashMap.Entry<String,Integer> entry : termsFrequency.entrySet())
+        for (HashMap.Entry<String,Integer> entry : docTerms.entrySet())
         {
             if(entry.getValue()>maxFrequency)
             {
