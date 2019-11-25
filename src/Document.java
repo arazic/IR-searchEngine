@@ -1,33 +1,67 @@
 import java.util.HashMap;
+import java.util.Set;
 
 public class Document {
 
-    private String docNo;
-    private String Ht;
+    private String docName;
     private String header;
+    private String popularTerm;
     private int maxTerm;
     private int uniqeTermsNum;
-    private HashMap <Term,String> map= new HashMap<>();
-    private StringBuilder content;
+    private HashMap <String,Integer> termsFrequency;
 
 
-    public Document(StringBuilder content) {
-        this.content = content;
+
+    public Document()
+    {
+        termsFrequency = new HashMap<>();
     }
 
-    public StringBuilder getContent() {
-        return content;
+    public void add (String term)
+    {
+        if(termsFrequency.containsKey(term))
+        {
+            termsFrequency.replace(term,termsFrequency.get(term)+1);
+            return;
+        }
+        termsFrequency.put(term,1);
     }
 
-    public void setDocNo(String DocNo) {
-        docNo= DocNo;
+    public void setDocName(String name)
+    {
+        if(name!=null && name !="")
+        {
+            docName =name;
+        }
     }
 
-    public void setHt(String ht) {
-        Ht = ht;
+    public void setHt(String ht)
+    {
+
     }
 
-    public void setHeader(String header) {
-        this.header = header;
+    public void setMaxTerm()
+    {
+
+        String maxString="";
+        int maxFrequency=0;
+        for (HashMap.Entry<String,Integer> entry : termsFrequency.entrySet())
+        {
+            if(entry.getValue()>maxFrequency)
+            {
+                maxString=entry.getKey();
+                maxFrequency=entry.getValue();
+            }
+        }
+        this.maxTerm=maxFrequency;
+        this.popularTerm=maxString;
+
+
     }
+
+    public void setHeader(String header)
+    {
+        this.header=header;
+    }
+
 }
