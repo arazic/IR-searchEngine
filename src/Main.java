@@ -6,6 +6,7 @@ public class Main {
         Parse parse= new Parse();
         ReadFile rf= new ReadFile("C:/Users/user/Xcorpus", parse);
         rf.createDocuments();
+        System.out.println("chen is my queen!");
 	// write your code here
     }
 }
