@@ -120,21 +120,30 @@ public class Parse {
     {
         while (currIndex<tokens.length)
         {
-            if(matchToFour())
-            {
-                continue;
-            }
-            else if(matchToThree())
-            {
-                continue;
-            }
-            else if(matchToTwo())
-            {
-                continue;
-            }
-            else if(oneTerm())
-            {
-                continue;
+            String concant=tokens[currIndex];
+            if(isNum(concant)){
+              currIndex++;
+              if(isFraction(tokens[currIndex])){
+                  concant= concant+ tokens[currIndex];
+                  currIndex++;
+
+              }
+              if(isMonth(tokens[currIndex])){
+
+              }
+              else if(isUnit(tokens[currIndex])){ //Thou...prec...Dollars,Dollar
+                concant= concant+tokens[currIndex];
+                currIndex++;
+                //trad in
+              }
+              else if(isUS()){
+              }
+          }
+          else if(isContainsNum()){
+                if(is-()){
+
+                }
+                else if ()
             }
 
         }
@@ -208,7 +217,7 @@ public class Parse {
 
     private Boolean isNum(String val){
         return (intPattern.matcher(val).find()|| digitPattern.matcher(val).find()||
-                doublePattern.matcher(val).find()|| fractionPattern.matcher(val).find());
+                doublePattern.matcher(val).find());
     }
 
 
