@@ -33,12 +33,30 @@ public class Parse {
         transperToFormat.put("trillion",1000000);
     }
 
-    private void makeTerms()
+    private void mergeTerms()
     {
-        String docName=currDoc.getDocName();
-        Term term;
+        TreeMap<String,Integer> mapTerms = new TreeMap<>(allDocTerms);
+        Iterator <String> it = mapTerms.keySet().iterator();
+        Iterator <Term> termIterator = terms.iterator();
+        while (it.hasNext())
+        {
+            Term term =(Term) termIterator;
+            String termString = it.toString();
+            if(term.compareTo(termString)==0)
+            {
+                term.setFreq(term.getFreq()+mapTerms.get(termString));
+                if(termIterator.hasNext())
+                {
+                    termIterator.next();
+                    it.next();
+                }
+
+            }
+        }
 
     }
+    
+    
 
     public void createDocument(StringBuilder content)
     {
