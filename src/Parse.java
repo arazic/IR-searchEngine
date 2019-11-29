@@ -35,7 +35,8 @@ public class Parse {
         allDocTerms = new HashMap<>();
         quotes = new LinkedList<>();
         entity=new HashMap<>();
-
+        loadMonthMap();
+        loadUnits();
         transperToFormat.put("million",1);
         transperToFormat.put("billion",1000);
         transperToFormat.put("trillion",1000000);
@@ -43,29 +44,39 @@ public class Parse {
 
     private void loadMonthMap()
     {
-        monthMap.put("January","01");
-        monthMap.put("Jan","01");
-        monthMap.put("February","02");
-        monthMap.put("Feb","02");
-        monthMap.put("March","03");
-        monthMap.put("Mar","03");
-        monthMap.put("April","04");
-        monthMap.put("Apr","04");
-        monthMap.put("May","05");
-        monthMap.put("June","06");
-        monthMap.put("Jun","06");
-        monthMap.put("July","07");
-        monthMap.put("Jul","07");
-        monthMap.put("August","08");
-        monthMap.put("Aug","08");
-        monthMap.put("Septmber","09");
-        monthMap.put("Sep","09");
-        monthMap.put("October","10");
-        monthMap.put("Oct","10");
-        monthMap.put("Novmber","11");
-        monthMap.put("Nov","11");
-        monthMap.put("December","12");
-        monthMap.put("Dec","12");
+        monthMap.put("january","01");
+        monthMap.put("jan","01");
+        monthMap.put("february","02");
+        monthMap.put("feb","02");
+        monthMap.put("march","03");
+        monthMap.put("mar","03");
+        monthMap.put("april","04");
+        monthMap.put("apr","04");
+        monthMap.put("may","05");
+        monthMap.put("june","06");
+        monthMap.put("jun","06");
+        monthMap.put("july","07");
+        monthMap.put("jul","07");
+        monthMap.put("august","08");
+        monthMap.put("aug","08");
+        monthMap.put("septmber","09");
+        monthMap.put("sep","09");
+        monthMap.put("october","10");
+        monthMap.put("oct","10");
+        monthMap.put("novmber","11");
+        monthMap.put("nov","11");
+        monthMap.put("december","12");
+        monthMap.put("dec","12");
+    }
+
+    private void loadUnits()
+    {
+        unitMap.put("million","M");
+        unitMap.put("billion","B");
+        unitMap.put("$","Dollars");
+        unitMap.put("m","M");
+        unitMap.put("b","B");
+
     }
 
     public Term createTerm(String sTerm, int frequency)
@@ -180,6 +191,45 @@ public class Parse {
         }
     }
 
+    private String getNumberInPriceFormat(String number)
+    {
+        String ans="";
+        for(int i=0; i<number.length();i++)
+        {
+            if((number.charAt(i)>='0' && number.charAt(i)<='9') || number.charAt(i)=='.')
+            {
+                ans+=number.charAt(i);
+            }
+        }
+        double num=0;
+        if(number.contains("m")||number.contains("M"))
+        {
+            num=Double.parseDouble(ans)*1000000;
+            ans=num+"";
+        }
+        else if(number.contains("b")||number.contains("B"))
+        {
+            num=Double.parseDouble(ans)*1000000000;
+            ans=num+"";
+        }
+        else
+        {
+             num=Double.parseDouble(ans);
+        }
+        if(num >= 1000000)
+        {
+            num=num/1000000;
+            int intNum=(int)num;
+            if(num==intNum)
+            {
+                ans=intNum+" M";
+                return ans;
+            }
+            ans=num+" M";
+        }
+        return ans;
+    }
+
 
 
 
@@ -190,7 +240,7 @@ public class Parse {
         while (currIndex<tokens.length)
         {
             String concat="";
-            String cleanToken="";
+            String cleanToken=cleanWord(tokens[currIndex]);
             if(stopWords.contains(tokens[currIndex]))
             {
                 continue;
@@ -198,11 +248,13 @@ public class Parse {
             else if(monthMap.containsKey(cleanToken.toLowerCase()))
             {
                 int result = isNumber(tokens[currIndex + 1]);
-                if (result == 0) {
+                if (result == 0) //result (1-31)
+                {
                     concat = monthMap.get(cleanToken.toLowerCase()) + "-" + cleanWord(tokens[currIndex + 1]);
                     currIndex += 2;
-                } else if (result == 1) {
-                    concat = result + "-" + monthMap.get(cleanToken.toLowerCase());
+                } else if (result == 1) //result is bigger than 31
+                {
+                    concat = tokens[currIndex+1]+ "-" + monthMap.get(cleanToken.toLowerCase());
                     currIndex += 2;
                 }
             }
@@ -223,25 +275,21 @@ public class Parse {
                     entity.put(concat,1);
                 }
             }
-           else if(tokens[currIndex].equals("$"))
+           else if(tokens[currIndex].charAt(0)=='$')
             {
-                currIndex++;
-                if(isNum(tokens[currIndex]))
+                if(unitMap.containsKey(tokens[currIndex+1]))
                 {
-                    concat=tokens[currIndex]+" ";//split the number to format and units
-                    currIndex++;
-                    if(isNum(tokens[currIndex]))
-                    {
-                        concat=concat+tokens[currIndex]+" ";
-                        currIndex++;
-                    }
-                    if(unitMap.containsKey(tokens[currIndex]))
-                    {
-                        concat =concat+unitMap.get(tokens[currIndex]);
-                        currIndex++;
-                    }
+                    concat=tokens[currIndex]+unitMap.get(tokens[currIndex+1]);
+                    currIndex+=2;
                 }
+                else
+                {
+                    concat=tokens[currIndex];
+                    currIndex++;
+                }
+                concat=getNumberInPriceFormat(concat)+" Dollars";
             }
+            System.out.println(concat);
             if(allDocTerms.containsKey(concat))
             {
                 allDocTerms.replace(concat,allDocTerms.get(concat)+1);
