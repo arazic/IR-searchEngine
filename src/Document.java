@@ -19,6 +19,21 @@ public class Document {
         return this.docName;
     }
 
+    public void printDoc()
+    {
+        System.out.println("<DOCNO> "+docName+" </DOCNO");
+        System.out.println("<T1> "+header+ " </T1>");
+        System.out.println("<TERMS>");
+        Iterator<Map.Entry<String, Integer>> itr = docTerms.entrySet().iterator();
+        while(itr.hasNext())
+        {
+            Map.Entry<String, Integer> entry = itr.next();
+            System.out.println(entry.getKey() + " " + entry.getValue());
+        }
+    }
+
+
+
     public void setTerms(HashMap<String,Integer> notOrderedMap)
     {
       notOrderedMap.forEach((key,value) -> docTerms.put(key,value));
