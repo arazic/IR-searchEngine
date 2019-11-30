@@ -207,53 +207,6 @@ public class Parse {
         }
     }
 
-    private String getNumberInPriceFormat(String number)
-    {
-        String ans="";
-        for(int i=0; i<number.length();i++)
-        {
-            if((number.charAt(i)>='0' && number.charAt(i)<='9') || number.charAt(i)=='.')
-            {
-                ans+=number.charAt(i);
-            }
-        }
-        double num=0;
-        if(number.contains("m")||number.contains("M"))
-        {
-            num=Double.parseDouble(ans)*1000000;
-            ans=num+"";
-        }
-        else if(number.contains("b")||number.contains("B"))
-        {
-            num=Double.parseDouble(ans)*1000000000;
-            ans=num+"";
-        }
-        else if(number.contains("t")||number.contains("T"))
-        {
-            num=Double.parseDouble(ans)*1000000000*100;
-            ans=num+"";
-        }
-        else
-        {
-             num=Double.parseDouble(ans);
-        }
-        if(num >= 1000000)
-        {
-            num=num/1000000;
-            int intNum=(int)num;
-            if(num==intNum)
-            {
-                ans=intNum+" M";
-                return ans;
-            }
-            ans=num+" M";
-        }
-        return ans;
-    }
-
-
-
-
 
     public void parseText()
     {
@@ -319,7 +272,7 @@ public class Parse {
                    concat=tokens[currIndex];
                    currIndex++;
                    // if contains $
-                   if(tokens[currIndex].contains("$"))
+                   if(concat.contains("$"))
                    {
                        if(concat.charAt(0)=='$')
                        {
@@ -332,7 +285,7 @@ public class Parse {
                        }
                        if(unitMap.containsKey(tokens[currIndex].toLowerCase()))
                        {
-                           concat=priceHandler(concat,tokens[currIndex],"$");
+                           concat=priceHandler(concat,unitMap.get(tokens[currIndex].toLowerCase())," Dollars");
                            currIndex++;
                        }
                        else
@@ -341,7 +294,7 @@ public class Parse {
                        }
                    }
                    // if contains bn/m
-                   if(concat.contains("m")||concat.contains("bn"))
+                  else if(concat.contains("m")||concat.contains("bn"))
                    {
                        if(symbols.containsKey(tokens[currIndex].toLowerCase()))
                        {
@@ -455,6 +408,11 @@ public class Parse {
             num=Double.parseDouble(number)*1000000000*1000;
             concat=num+"";
         }
+        else if(unit.contains("K"))
+        {
+            num=Double.parseDouble(number)*1000;
+            concat=num+"";
+        }
         else
         {
             num=Double.parseDouble(number);
@@ -470,14 +428,17 @@ public class Parse {
                 return concat;
             }
             concat=num+" M"+price;
+            return concat;
         }
         else
         {
-            if(num>=1000)
+            int intNum=(int)num;
+            if(num==intNum)
             {
-
+                concat=intNum+price;
+                return concat;
             }
-            concat=concat+price;
+            concat=num+price;
         }
         return concat;
     }
@@ -516,22 +477,7 @@ public class Parse {
         ans=number+"-"+month;
         return ans;
     }
-    private String dollarHandler()
-    {
-        String concat="";
-        if(unitMap.containsKey(tokens[currIndex+1]))
-        {
-            concat=tokens[currIndex]+unitMap.get(tokens[currIndex+1]);
-            currIndex+=2;
-        }
-        else
-        {
-            concat=tokens[currIndex];
-            currIndex++;
-        }
-        concat=getNumberInPriceFormat(concat)+" Dollars";
-        return concat;
-    }
+
 
     private int isMonthNumber(String word)
     {
