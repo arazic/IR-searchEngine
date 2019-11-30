@@ -295,6 +295,7 @@ public class Parse {
                        if(symbols.get(tokens[currIndex])=="%")
                        {
                            concat=concat+"%";
+                           currIndex++;
                        }
                        else
                        {
@@ -309,62 +310,64 @@ public class Parse {
                        }
 
                    }
-                   if(monthMap.containsKey(tokens[currIndex].toLowerCase()))
+                  else if(monthMap.containsKey(tokens[currIndex].toLowerCase()))
                    {
                        concat=monthHandler(concat,monthMap.get(tokens[currIndex].toLowerCase()));
                    }
                }
-               // its not a pure number
-                concat=tokens[currIndex];
-                currIndex++;
-                // if contains $
-                if(tokens[currIndex].contains("$"))
-                {
-                    if(concat.charAt(0)=='$')
-                    {
-                        concat=concat.substring(1);
+               else // its not a pure number
+               {
+                   concat=tokens[currIndex];
+                   currIndex++;
+                   // if contains $
+                   if(tokens[currIndex].contains("$"))
+                   {
+                       if(concat.charAt(0)=='$')
+                       {
+                           concat=concat.substring(1);
 
-                    }
-                    else if(concat.charAt(concat.length()-1)=='$')
-                    {
-                        concat=concat.substring(0,concat.length()-1);
-                    }
-                    if(unitMap.containsKey(tokens[currIndex]))
-                    {
-                        priceHandler(concat,tokens[currIndex],"$");
-                        currIndex++;
-                    }
-                    else
-                    {
-                        priceHandler(concat,"","$");
-                    }
-                }
-                // if contains bn/m
-                if(concat.contains("m")||concat.contains("bn"))
-                {
-                    if(symbols.containsKey(tokens[currIndex].toLowerCase()))
-                    {
-                        String price=symbols.get(tokens[currIndex].toLowerCase());
-                        currIndex++;
-                        if (symbols.containsKey(tokens[currIndex].toLowerCase()))
-                        {
-                            price+=symbols.get(tokens[currIndex].toLowerCase());
-                            currIndex++;
-                        }
-                        if(concat.contains("m")) {
-                            String num = concat.substring(0, concat.length() - 1);
-                            concat=priceHandler(num,"M",price);
-                        }
-                        else
-                        {
-                            String num = concat.substring(0, concat.length() - 2);
-                            concat=priceHandler(num,"B",price);
-                        }
+                       }
+                       else if(concat.charAt(concat.length()-1)=='$')
+                       {
+                           concat=concat.substring(0,concat.length()-1);
+                       }
+                       if(unitMap.containsKey(tokens[currIndex].toLowerCase()))
+                       {
+                           concat=priceHandler(concat,tokens[currIndex],"$");
+                           currIndex++;
+                       }
+                       else
+                       {
+                           concat=priceHandler(concat,""," Dollars");
+                       }
+                   }
+                   // if contains bn/m
+                   if(concat.contains("m")||concat.contains("bn"))
+                   {
+                       if(symbols.containsKey(tokens[currIndex].toLowerCase()))
+                       {
+                           String price=symbols.get(tokens[currIndex].toLowerCase());
+                           currIndex++;
+                           if (symbols.containsKey(tokens[currIndex].toLowerCase()))
+                           {
+                               price+=symbols.get(tokens[currIndex].toLowerCase());
+                               currIndex++;
+                           }
+                           if(concat.contains("m")) {
+                               String num = concat.substring(0, concat.length() - 1);
+                               concat=priceHandler(num,"M",price);
+                           }
+                           else
+                           {
+                               String num = concat.substring(0, concat.length() - 2);
+                               concat=priceHandler(num,"B",price);
+                           }
 
-                    }
-                }
-                //if contanis -
-                // if contains %
+                       }
+                   }
+                   //if contanis -
+                   // if contains %
+               }
             }
             else if(monthMap.containsKey(tokens[currIndex].toLowerCase()))
             {
@@ -464,6 +467,14 @@ public class Parse {
                 return concat;
             }
             concat=num+" M"+price;
+        }
+        else
+        {
+            if(num>=1000)
+            {
+
+            }
+            concat=concat+price;
         }
         return concat;
     }
