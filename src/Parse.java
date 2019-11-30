@@ -1,5 +1,4 @@
 import com.sun.deploy.util.StringUtils;
-import sun.awt.Symbol;
 
 import java.util.*;
 import java.util.regex.Matcher;
@@ -309,7 +308,7 @@ public class Parse {
                        }
 
                    }
-                   if(monthMap.containsKey(tokens[currIndex].toLowerCase()))
+                   else if(monthMap.containsKey(tokens[currIndex].toLowerCase()))
                    {
                        concat=monthHandler(concat,monthMap.get(tokens[currIndex].toLowerCase()));
                    }
@@ -371,6 +370,10 @@ public class Parse {
             }
             else if(monthMap.containsKey(tokens[currIndex].toLowerCase()))
             {
+                concat = monthMap.get(tokens[currIndex].toLowerCase());
+                currIndex++;
+                if(isMonthNumber(tokens[currIndex])!=-1)
+                    concat=monthHandler(tokens[currIndex],concat);
 
             }
             else if(tokens[currIndex].charAt(0)>='A' && tokens[currIndex].charAt(0)<='Z')// is a entity
@@ -494,7 +497,9 @@ public class Parse {
                 ans=month+"-"+number;
                 return ans;
             }
+
             ans=month+"-0"+number;
+            return ans;
         }
         ans=number+"-"+month;
         return ans;
@@ -516,7 +521,7 @@ public class Parse {
         return concat;
     }
 
-    private int isNumber(String word)
+    private int isMonthNumber(String word)
     {
        word=cleanWord(word);
        try {
