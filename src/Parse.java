@@ -9,6 +9,7 @@ public class Parse {
     private static HashMap<String,String> monthMap = new HashMap<>();
     private static HashMap<String,String> unitMap = new HashMap<>();
     private static TreeSet<Term> terms = new TreeSet<>();
+    private static HashSet<String> symbols=new HashSet<>();
 
     private HashMap<String, Integer>transperToFormat;
     private HashMap<String,Integer> allDocTerms;
@@ -37,6 +38,7 @@ public class Parse {
         entity=new HashMap<>();
         loadMonthMap();
         loadUnits();
+        loadSymbols();
         transperToFormat.put("million",1);
         transperToFormat.put("billion",1000);
         transperToFormat.put("trillion",1000000);
@@ -69,13 +71,23 @@ public class Parse {
         monthMap.put("dec","12");
     }
 
+    private void loadSymbols()
+    {
+        symbols.add("u.s");
+        symbols.add("u.s.");
+        symbols.add("dollars");
+        symbols.add("dollar");
+    }
+
     private void loadUnits()
     {
         unitMap.put("million","M");
         unitMap.put("billion","B");
-        unitMap.put("$","Dollars");
+        unitMap.put("trillion","T");
         unitMap.put("m","M");
-        unitMap.put("b","B");
+        unitMap.put("bn","B");
+        unitMap.put("$","Dollars");
+
 
     }
 
@@ -212,6 +224,11 @@ public class Parse {
             num=Double.parseDouble(ans)*1000000000;
             ans=num+"";
         }
+        else if(number.contains("t")||number.contains("T"))
+        {
+            num=Double.parseDouble(ans)*1000000000*100;
+            ans=num+"";
+        }
         else
         {
              num=Double.parseDouble(ans);
@@ -244,6 +261,49 @@ public class Parse {
             if(stopWords.contains(tokens[currIndex]))
             {
                 continue;
+            }
+            else if(true)
+            {
+                concat=tokens[currIndex];
+                currIndex++;
+                if(fractionPattern.matcher(tokens[currIndex]).matches())
+                {
+                    concat+=" "+tokens[currIndex];
+                    currIndex++;
+                    if(symbols.contains(tokens[currIndex].toLowerCase()))// its price and not a regular number
+                    {
+                        concat+=concat+" Dollars";
+                        currIndex++;
+                    }
+                }
+                else if(symbols.contains(tokens[currIndex].toLowerCase())) // there is a dollars // U.S => price dollars
+                {
+                  concat=getNumberInPriceFormat(concat);
+                  currIndex++;
+                  if(symbols.contains(tokens[currIndex].toLowerCase()))
+                  {
+                      currIndex++;
+                  }
+                   concat+=" Dollars";
+                }
+                else if(unitMap.containsKey(tokens[currIndex].toLowerCase()))// there is a unit
+                {
+                    if(symbols.contains(tokens[currIndex+1].toLowerCase()))// there is dollars\ U.S
+                    {
+                        concat+=unitMap.get(tokens[currIndex]);
+                        concat=getNumberInPriceFormat(concat);
+                        currIndex++;
+                        while(symbols.contains(tokens[currIndex].toLowerCase()))
+                        {
+                            currIndex++;
+                        }
+                        concat+=" Dollars";
+                    }
+                    else // its a regular number
+                    {
+
+                    }
+                }
             }
             else if(monthMap.containsKey(cleanToken.toLowerCase()))
             {
