@@ -1,4 +1,6 @@
 import com.sun.deploy.util.StringUtils;
+import sun.awt.Symbol;
+
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -9,7 +11,7 @@ public class Parse {
     private static HashMap<String,String> monthMap = new HashMap<>();
     private static HashMap<String,String> unitMap = new HashMap<>();
     private static TreeSet<Term> terms = new TreeSet<>();
-    private static HashSet<String> symbols=new HashSet<>();
+    private static HashMap<String, String> symbols=new HashMap<>();
 
     private HashMap<String, Integer>transperToFormat;
     private HashMap<String,Integer> allDocTerms;
@@ -25,10 +27,10 @@ public class Parse {
     private String newTerm;
 
     private Pattern priceLength4= Pattern.compile("(million|billion|trillion)"+ " "+"U.S."+ " "+"dollars");
-    private Pattern intPattern= Pattern.compile("^[0-9]*$");
-    private Pattern digitPattern= Pattern.compile("\\d");
-    private Pattern doublePattern= Pattern.compile("^[0-9]*$"+"."+"^[0-9]*$");
-    private Pattern fractionPattern= Pattern.compile("[0-9]*" + "/" + "[0-9]*");
+    private Pattern intPattern= Pattern.compile("[0-9]+");
+    private Pattern digitPattern= Pattern.compile("\\d+");
+    private Pattern doublePattern= Pattern.compile("[0-9]*"+"."+"[0-9]*");
+    private Pattern fractionPattern= Pattern.compile("[0-9]*"+"/"+"[0-9]*");
 
     public Parse()
     {
@@ -73,10 +75,14 @@ public class Parse {
 
     private void loadSymbols()
     {
-        symbols.add("u.s");
-        symbols.add("u.s.");
-        symbols.add("dollars");
-        symbols.add("dollar");
+        symbols.put("u.s","");
+        symbols.put("u.s.","");
+        symbols.put("dollars"," Dollars");
+        symbols.put("dollar"," Dollars");
+        symbols.put("%","%");
+        symbols.put("percent","%");
+        symbols.put("percentage","%");
+        symbols.put("$"," Dollars");
     }
 
     private void loadUnits()
@@ -86,7 +92,6 @@ public class Parse {
         unitMap.put("trillion","T");
         unitMap.put("m","M");
         unitMap.put("bn","B");
-        unitMap.put("$","Dollars");
 
 
     }
@@ -257,94 +262,121 @@ public class Parse {
         while (currIndex<tokens.length)
         {
             String concat="";
-            String cleanToken=cleanWord(tokens[currIndex]);
             if(stopWords.contains(tokens[currIndex]))
             {
                 continue;
             }
-            else if(isOneTokenNum(tokens[currIndex]))
+            else if(containsNumber(tokens[currIndex]))
+            {
+               if(isPureNum(tokens[currIndex]))
+               {
+                   concat+= tokens[currIndex];
+                   currIndex++;
+                   if(fractionPattern.matcher(tokens[currIndex]).find()){
+                       concat+=" "+tokens[currIndex];
+                       currIndex++;
+                       if(symbols.containsKey(tokens[currIndex].toLowerCase())) { //dollar, precent, %
+                             concat = concat + symbols.get(tokens[currIndex].toLowerCase());
+                             currIndex++;
+                           if(symbols.containsKey(tokens[currIndex].toLowerCase())) { //dollar, precent, %
+                               concat = concat + symbols.get(tokens[currIndex].toLowerCase());
+                               currIndex++;
+                           }
+                       }
+                   }
+                   String secondToken="";
+                   if(unitMap.containsKey(tokens[currIndex].toLowerCase()))
+                   {
+                       secondToken=unitMap.get(tokens[currIndex]);
+                       currIndex++;
+                   }
+                   if(symbols.containsKey(tokens[currIndex].toLowerCase())) // if true is a price
+                   {
+                       if(symbols.get(tokens[currIndex])=="%")
+                       {
+                           concat=concat+"%";
+                       }
+                       else
+                       {
+                           String therdToken=symbols.get(tokens[currIndex].toLowerCase());
+                           currIndex++;
+                           if(symbols.containsKey(tokens[currIndex].toLowerCase()))
+                           {
+                               therdToken =symbols.get(tokens[currIndex].toLowerCase());
+                               currIndex++;
+                           }
+                           concat=priceHandler(concat,secondToken,therdToken);
+                       }
+
+                   }
+                   if(monthMap.containsKey(tokens[currIndex].toLowerCase()))
+                   {
+                       concat=monthHandler(concat,monthMap.get(tokens[currIndex].toLowerCase()));
+                   }
+
+               }
+            }
+            else if(containsNumber(tokens[currIndex]))
             {
                 concat=tokens[currIndex];
                 currIndex++;
-                if(fractionPattern.matcher(tokens[currIndex]).matches())
+                // if contains $
+                if(tokens[currIndex].contains("$"))
                 {
-                    concat+=" "+tokens[currIndex];
-                    currIndex++;
-
-                }
-                if(symbols.contains(tokens[currIndex].toLowerCase())) // there is a dollars // U.S => price dollars
-                {
-                  concat=getNumberInPriceFormat(concat);
-                  currIndex++;
-                  if(symbols.contains(tokens[currIndex].toLowerCase()))
-                  {
-                      currIndex++;
-                  }
-                   concat+=" Dollars";
-                }
-                else if(unitMap.containsKey(tokens[currIndex].toLowerCase()))// there is a unit
-                {
-                    if(symbols.contains(tokens[currIndex+1].toLowerCase()))// there is dollars\ U.S
+                    if(concat.charAt(0)=='$')
                     {
-                        concat+=unitMap.get(tokens[currIndex]);
-                        concat=getNumberInPriceFormat(concat);
+                        concat=concat.substring(1);
+
+                    }
+                    else if(concat.charAt(concat.length()-1)=='$')
+                    {
+                        concat=concat.substring(0,concat.length()-1);
+                    }
+                    if(unitMap.containsKey(tokens[currIndex]))
+                    {
+                        priceHandler(concat,tokens[currIndex],"$");
                         currIndex++;
-                        while(symbols.contains(tokens[currIndex].toLowerCase()))
-                        {
-                            currIndex++;
-                        }
-                        concat+=" Dollars";
                     }
-                    else // its a regular number
+                    else
                     {
+                        priceHandler(concat,"","$");
+                    }
+                }
+                // if contains bn/m
+                if(concat.contains("m")||concat.contains("bn"))
+                {
+                    if(symbols.containsKey(tokens[currIndex]))
+                    {
+                        String price=symbols.get(tokens[currIndex]);
+                        currIndex++;
+                        if (symbols.containsKey(tokens[currIndex]))
+                        {
+                           price+=symbols.get(tokens[currIndex]);
+                           currIndex++;
+                        }
+                        if(concat.contains("m")) {
+                            String num = concat.substring(0, concat.length() - 1);
+                            priceHandler(num,"M",price);
+                        }
+                        else
+                        {
+                            String num = concat.substring(0, concat.length() - 2);
+                            priceHandler(num,"B",price);
+                        }
 
                     }
                 }
-
+                //if contanis -
+                // if contains %
             }
-            else if(monthMap.containsKey(cleanToken.toLowerCase()))
+            else if(monthMap.containsKey(tokens[currIndex].toLowerCase()))
             {
-                int result = isNumber(tokens[currIndex + 1]);
-                if (result == 0) //result (1-31)
-                {
-                    concat = monthMap.get(cleanToken.toLowerCase()) + "-" + cleanWord(tokens[currIndex + 1]);
-                    currIndex += 2;
-                } else if (result == 1) //result is bigger than 31
-                {
-                    concat = tokens[currIndex+1]+ "-" + monthMap.get(cleanToken.toLowerCase());
-                    currIndex += 2;
-                }
+
             }
             else if(tokens[currIndex].charAt(0)>='A' && tokens[currIndex].charAt(0)<='Z')// is a entity
             {
-                concat=tokens[currIndex++];
-                while(tokens[currIndex].charAt(0)>='A' && tokens[currIndex].charAt(0)<='Z')
-                {
-                    concat=concat+" "+tokens[currIndex++];
-                }
-                concat=concat.toUpperCase();
-                if(entity.containsKey(concat))
-                {
-                    entity.replace(concat,entity.get(concat)+1);
-                }
-                else
-                {
-                    entity.put(concat,1);
-                }
-            }
-           else if(tokens[currIndex].charAt(0)=='$')
-            {
-                if(unitMap.containsKey(tokens[currIndex+1]))
-                {
-                    concat=tokens[currIndex]+unitMap.get(tokens[currIndex+1]);
-                    currIndex+=2;
-                }
-                else
-                {
-                    concat=tokens[currIndex];
-                    currIndex++;
-                }
-                concat=getNumberInPriceFormat(concat)+" Dollars";
+               entityHandler();
+               continue;
             }
             System.out.println(concat);
             if(allDocTerms.containsKey(concat))
@@ -356,6 +388,132 @@ public class Parse {
                 allDocTerms.put(concat,1);
             }
         }
+    }
+
+    private void handleComplexNumber()
+    {
+
+    }
+
+
+
+
+    private boolean containsNumber(String word)
+    {
+        for(int i=0; i<10; i++)
+        {
+            String s=String.valueOf(i);
+            if(word.contains(s))
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+
+    private Boolean isPureNum(String val){
+        if (intPattern.matcher(val).find()|| digitPattern.matcher(val).find()||
+                doublePattern.matcher(val).find()|| fractionPattern.matcher(val).find())
+             return true;
+        return false;
+
+    }
+
+    private String cleanPureNumber(String number)
+    {
+        if(number.contains(","))
+        {
+            number=number.replaceAll(",","");
+        }
+        return number;
+    }
+    private String priceHandler(String number,String unit, String price)
+    {
+        number=cleanPureNumber(number);
+        String concat="";
+        double num=0;
+        if(unit.contains("M"))
+        {
+            num=Double.parseDouble(number)*1000000;
+            concat=num+"";
+        }
+        else if(unit.contains("B"))
+        {
+            num=Double.parseDouble(number)*1000000000;
+            concat=num+"";
+        }
+        else if(unit.contains("T"))
+        {
+            num=Double.parseDouble(number)*1000000000*1000;
+            concat=num+"";
+        }
+        else
+        {
+            num=Double.parseDouble(number);
+            concat=num+"";
+        }
+        if(num >= 1000000)
+        {
+            num=num/1000000;
+            int intNum=(int)num;
+            if(num==intNum)
+            {
+                concat=intNum+" M"+price;
+                return concat;
+            }
+            concat=num+" M"+price;
+        }
+        return concat;
+    }
+
+    private void entityHandler()
+    {
+        String concat="";
+        concat=tokens[currIndex++];
+        while(tokens[currIndex].charAt(0)>='A' && tokens[currIndex].charAt(0)<='Z')
+        {
+            concat=concat+" "+tokens[currIndex++];
+        }
+        if(entity.containsKey(concat))
+        {
+            entity.replace(concat,entity.get(concat)+1);
+        }
+        else
+        {
+            entity.put(concat,1);
+        }
+    }
+    private String monthHandler(String number, String month)
+    {
+        String ans="";
+        if(number.length()<=2)
+        {
+            if(number.length()==2)
+            {
+                ans=month+"-"+number;
+                return ans;
+            }
+            ans=month+"-0"+number;
+        }
+        ans=number+"-"+month;
+        return ans;
+    }
+    private String dollarHandler()
+    {
+        String concat="";
+        if(unitMap.containsKey(tokens[currIndex+1]))
+        {
+            concat=tokens[currIndex]+unitMap.get(tokens[currIndex+1]);
+            currIndex+=2;
+        }
+        else
+        {
+            concat=tokens[currIndex];
+            currIndex++;
+        }
+        concat=getNumberInPriceFormat(concat)+" Dollars";
+        return concat;
     }
 
     private int isNumber(String word)
@@ -407,11 +565,6 @@ public class Parse {
             allDocTerms.put(newTerm,1);
     }
 
-
-    private Boolean isOneTokenNum(String val){
-        return (intPattern.matcher(val).find()|| digitPattern.matcher(val).find()||
-                doublePattern.matcher(val).find());
-    }
 
 
     private String[] extractOneWordExpression(int place, String kind) {
