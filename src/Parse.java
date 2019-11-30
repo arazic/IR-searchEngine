@@ -28,7 +28,7 @@ public class Parse {
     private Pattern intPattern= Pattern.compile("^[0-9]*$");
     private Pattern digitPattern= Pattern.compile("\\d");
     private Pattern doublePattern= Pattern.compile("^[0-9]*$"+"."+"^[0-9]*$");
-    private Pattern fractionPattern= Pattern.compile("^[0-9]*$"+" "+"^[0-9]*$"+"/"+"^[0-9]*$");
+    private Pattern fractionPattern= Pattern.compile("[0-9]*" + "/" + "[0-9]*");
 
     public Parse()
     {
@@ -262,7 +262,7 @@ public class Parse {
             {
                 continue;
             }
-            else if(true)
+            else if(isOneTokenNum(tokens[currIndex]))
             {
                 concat=tokens[currIndex];
                 currIndex++;
@@ -270,13 +270,9 @@ public class Parse {
                 {
                     concat+=" "+tokens[currIndex];
                     currIndex++;
-                    if(symbols.contains(tokens[currIndex].toLowerCase()))// its price and not a regular number
-                    {
-                        concat+=concat+" Dollars";
-                        currIndex++;
-                    }
+
                 }
-                else if(symbols.contains(tokens[currIndex].toLowerCase())) // there is a dollars // U.S => price dollars
+                if(symbols.contains(tokens[currIndex].toLowerCase())) // there is a dollars // U.S => price dollars
                 {
                   concat=getNumberInPriceFormat(concat);
                   currIndex++;
@@ -304,6 +300,7 @@ public class Parse {
 
                     }
                 }
+
             }
             else if(monthMap.containsKey(cleanToken.toLowerCase()))
             {
@@ -366,7 +363,7 @@ public class Parse {
        word=cleanWord(word);
        try {
            int number=Integer.parseInt(word);
-           if(number<31 && number>0)
+           if(number<=31 && number>0)
            {
                return 0;
            }
@@ -411,9 +408,9 @@ public class Parse {
     }
 
 
-    private Boolean isNum(String val){
+    private Boolean isOneTokenNum(String val){
         return (intPattern.matcher(val).find()|| digitPattern.matcher(val).find()||
-                doublePattern.matcher(val).find()|| fractionPattern.matcher(val).find());
+                doublePattern.matcher(val).find());
     }
 
 
