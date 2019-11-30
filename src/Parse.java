@@ -312,11 +312,8 @@ public class Parse {
                    {
                        concat=monthHandler(concat,monthMap.get(tokens[currIndex].toLowerCase()));
                    }
-
                }
-            }
-            else if(containsNumber(tokens[currIndex]))
-            {
+               // its not a pure number
                 concat=tokens[currIndex];
                 currIndex++;
                 // if contains $
@@ -344,23 +341,23 @@ public class Parse {
                 // if contains bn/m
                 if(concat.contains("m")||concat.contains("bn"))
                 {
-                    if(symbols.containsKey(tokens[currIndex]))
+                    if(symbols.containsKey(tokens[currIndex].toLowerCase()))
                     {
-                        String price=symbols.get(tokens[currIndex]);
+                        String price=symbols.get(tokens[currIndex].toLowerCase());
                         currIndex++;
-                        if (symbols.containsKey(tokens[currIndex]))
+                        if (symbols.containsKey(tokens[currIndex].toLowerCase()))
                         {
-                           price+=symbols.get(tokens[currIndex]);
-                           currIndex++;
+                            price+=symbols.get(tokens[currIndex].toLowerCase());
+                            currIndex++;
                         }
                         if(concat.contains("m")) {
                             String num = concat.substring(0, concat.length() - 1);
-                            priceHandler(num,"M",price);
+                            concat=priceHandler(num,"M",price);
                         }
                         else
                         {
                             String num = concat.substring(0, concat.length() - 2);
-                            priceHandler(num,"B",price);
+                            concat=priceHandler(num,"B",price);
                         }
 
                     }
@@ -416,11 +413,15 @@ public class Parse {
 
 
     private Boolean isPureNum(String val){
-        if (intPattern.matcher(val).find()|| digitPattern.matcher(val).find()||
-                doublePattern.matcher(val).find()|| fractionPattern.matcher(val).find())
-             return true;
-        return false;
-
+       for (int i=0; i<val.length();i++)
+       {
+           if((val.charAt(i)<='9' && val.charAt(i)>='0') || val.charAt(i)==','||val.charAt(i)=='.'||val.charAt(i)=='/')
+           {
+               continue;
+           }
+           return false;
+       }
+       return true;
     }
 
     private String cleanPureNumber(String number)
