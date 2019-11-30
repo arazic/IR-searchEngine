@@ -91,6 +91,7 @@ public class Parse {
         unitMap.put("trillion","T");
         unitMap.put("m","M");
         unitMap.put("bn","B");
+        unitMap.put("thousand","K");
 
 
     }
@@ -208,12 +209,13 @@ public class Parse {
     }
 
 
-    public void parseText()
+    private void parseText()
     {
         currIndex=0;
         while (currIndex<tokens.length)
         {
             String concat="";
+            boolean fractionFlag=false;
             if(stopWords.contains(tokens[currIndex]))
             {
                 continue;
@@ -225,6 +227,7 @@ public class Parse {
                    concat+= tokens[currIndex];
                    currIndex++;
                    if(fractionPattern.matcher(tokens[currIndex]).find()){
+                       fractionFlag=true;
                        concat+=" "+tokens[currIndex];
                        currIndex++;
                        if(symbols.containsKey(tokens[currIndex].toLowerCase())) { //dollar, precent, %
@@ -236,10 +239,10 @@ public class Parse {
                            }
                        }
                    }
-                   String secondToken="";
+                   String unitToken="";
                    if(unitMap.containsKey(tokens[currIndex].toLowerCase()))
                    {
-                       secondToken=unitMap.get(tokens[currIndex]);
+                       unitToken=tokens[currIndex];
                        currIndex++;
                    }
                    if(symbols.containsKey(tokens[currIndex].toLowerCase())) // if true is a price
@@ -251,20 +254,35 @@ public class Parse {
                        }
                        else
                        {
-                           String therdToken=symbols.get(tokens[currIndex].toLowerCase());
                            currIndex++;
                            if(symbols.containsKey(tokens[currIndex].toLowerCase()))
                            {
-                               therdToken =symbols.get(tokens[currIndex].toLowerCase());
                                currIndex++;
                            }
-                           concat=priceHandler(concat,secondToken,therdToken);
+                           if(unitToken!="")
+                           {
+                               concat=handlePriceNumbersAndUnits(concat,unitToken);
+                           }
+                           else
+                           {
+                               concat=handlePriceNumbers(concat);
+                           }
                        }
-
                    }
                    else if(monthMap.containsKey(tokens[currIndex].toLowerCase()))
                    {
                        concat=monthHandler(concat,monthMap.get(tokens[currIndex].toLowerCase()));
+                   }
+                   else if(fractionFlag==false) // its just a nummber
+                   {
+                       if(unitToken!="")
+                       {
+                           concat=handleSimpleNumbersAndUnits(concat,unitToken);
+                       }
+                       else if(fractionFlag==false)
+                       {
+                           concat=handleSimpleNumbers(concat);
+                       }
                    }
                }
                else // its not a pure number
@@ -285,12 +303,12 @@ public class Parse {
                        }
                        if(unitMap.containsKey(tokens[currIndex].toLowerCase()))
                        {
-                           concat=priceHandler(concat,unitMap.get(tokens[currIndex].toLowerCase())," Dollars");
+                           concat=handlePriceNumbersAndUnits(concat,tokens[currIndex]);
                            currIndex++;
                        }
-                       else
+                       else if(fractionFlag==false)
                        {
-                           concat=priceHandler(concat,""," Dollars");
+                           concat=handlePriceNumbers(concat);
                        }
                    }
                    // if contains bn/m
@@ -298,27 +316,38 @@ public class Parse {
                    {
                        if(symbols.containsKey(tokens[currIndex].toLowerCase()))
                        {
-                           String price=symbols.get(tokens[currIndex].toLowerCase());
                            currIndex++;
                            if (symbols.containsKey(tokens[currIndex].toLowerCase()))
                            {
-                               price+=symbols.get(tokens[currIndex].toLowerCase());
                                currIndex++;
                            }
                            if(concat.contains("m")) {
                                String num = concat.substring(0, concat.length() - 1);
-                               concat=priceHandler(num,"M",price);
+                               concat=handlePriceNumbersAndUnits(num,"million");
                            }
                            else
                            {
                                String num = concat.substring(0, concat.length() - 2);
-                               concat=priceHandler(num,"B",price);
+                               concat=handlePriceNumbersAndUnits(num,"billion");
                            }
-
+                       }
+                       else
+                       {
+                           if(concat.contains("m")) {
+                               String num = concat.substring(0, concat.length() - 1);
+                               concat=handleSimpleNumbersAndUnits(num,"million");
+                           }
+                           else
+                           {
+                               String num = concat.substring(0, concat.length() - 2);
+                               concat=handleSimpleNumbersAndUnits(num,"billion");
+                           }
                        }
                    }
-                   //if contanis -
-                   // if contains %
+                   else if(concat.contains("-"))
+                   {
+
+                   }
                }
             }
             else if(monthMap.containsKey(tokens[currIndex].toLowerCase()))
@@ -346,10 +375,109 @@ public class Parse {
         }
     }
 
-    private void handleComplexNumber()
+
+    private String handlePriceNumbers(String sNum)
     {
+        String ans=handleSimpleNumbers(sNum);
+        if(ans.charAt(ans.length()-1)=='K')
+        {
+            return sNum+" Dollars";
+        }
+        if(ans.charAt(ans.length()-1)=='B')
+        {
+            return handlePriceNumbersAndUnits(sNum.substring(0,sNum.length()-2),"billion");
+        }
+        if(ans.charAt(ans.length()-1)=='T')
+        {
+            return handlePriceNumbersAndUnits(sNum.substring(0,sNum.length()-2),"trillion");
+        }
+        if(ans.charAt(ans.length()-1)=='M')
+        {
+            return ans.substring(0,ans.length()-1)+" M"+ " Dollars";
+        }
+        return sNum+ " Dollars";
+    }
+
+    private String handleSimpleNumbersAndUnits(String sNum,String unit)
+    {
+        String ans=sNum+unitMap.get(unit.toLowerCase());
+        return  ans;
+    }
+
+    private String handlePriceNumbersAndUnits(String sNumb,String unit)
+    {
+        String ans="";
+        String sNum=cleanPureNumber(sNumb);
+        if(unitMap.get(unit)=="B" || unitMap.get(unit)=="T" )
+        {
+            double number = Double.parseDouble(sNum);
+            if(unitMap.get(unit)=="B")
+            {
+                number=number*1000;
+            }
+            else
+            {
+                number=number*1000000;
+            }
+            int check=(int)number;
+            if(check==number)
+            {
+                ans=String.valueOf(check)+" M"+" Dollars";
+                return ans;
+            }
+            ans=String.valueOf(number)+" M"+" Dollars";
+            return ans;
+        }
+        ans=sNum+" M"+" Dollars";
+        return ans;
+    }
+
+
+    private String handleSimpleNumbers(String sNumb)
+    {
+       String sNum= cleanPureNumber(sNumb);
+       double number=Double.parseDouble(sNum);
+       String unit="";
+       if(number<1000)
+       {
+
+       }
+       else if(number<1000000)
+       {
+           number=number/1000;
+           unit="K";
+       }
+       else if(number<1000000000)
+       {
+           number=number/1000000;
+           unit="M";
+       }
+       else if((number/1000)<1000000000)
+       {
+           number=number/1000000000;
+           unit="B";
+       }
+       else
+       {
+           unit="T";
+       }
+       String sNumber=String.valueOf(number);
+       int position=sNumber.indexOf('.');
+       int diff=sNumber.length()-position;
+       if(diff>=3)
+       {
+           String ans = sNumber.substring(0,position+4)+unit;
+           return ans;
+       }
+       else
+       {
+           String ans = sNumber.substring(0,position)+unit;
+           return ans;
+       }
 
     }
+
+
 
 
 
@@ -387,60 +515,6 @@ public class Parse {
             number=number.replaceAll(",","");
         }
         return number;
-    }
-    private String priceHandler(String number,String unit, String price)
-    {
-        number=cleanPureNumber(number);
-        String concat="";
-        double num=0;
-        if(unit.contains("M"))
-        {
-            num=Double.parseDouble(number)*1000000;
-            concat=num+"";
-        }
-        else if(unit.contains("B"))
-        {
-            num=Double.parseDouble(number)*1000000000;
-            concat=num+"";
-        }
-        else if(unit.contains("T"))
-        {
-            num=Double.parseDouble(number)*1000000000*1000;
-            concat=num+"";
-        }
-        else if(unit.contains("K"))
-        {
-            num=Double.parseDouble(number)*1000;
-            concat=num+"";
-        }
-        else
-        {
-            num=Double.parseDouble(number);
-            concat=num+"";
-        }
-        if(num >= 1000000)
-        {
-            num=num/1000000;
-            int intNum=(int)num;
-            if(num==intNum)
-            {
-                concat=intNum+" M"+price;
-                return concat;
-            }
-            concat=num+" M"+price;
-            return concat;
-        }
-        else
-        {
-            int intNum=(int)num;
-            if(num==intNum)
-            {
-                concat=intNum+price;
-                return concat;
-            }
-            concat=num+price;
-        }
-        return concat;
     }
 
     private void entityHandler()
