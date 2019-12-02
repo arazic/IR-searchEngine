@@ -26,10 +26,11 @@ public class Parse {
     private String newTerm;
 
     private Pattern priceLength4= Pattern.compile("(million|billion|trillion)"+ " "+"U.S."+ " "+"dollars");
-    private Pattern intPattern= Pattern.compile("[0-9]+");
-    private Pattern digitPattern= Pattern.compile("\\d+");
+    private Pattern intPattern= Pattern.compile("[0-9]");
+    private Pattern digitPattern= Pattern.compile("\\d");
     private Pattern doublePattern= Pattern.compile("[0-9]*"+"."+"[0-9]*");
     private Pattern fractionPattern= Pattern.compile("[0-9]*"+"/"+"[0-9]*");
+
 
     public Parse()
     {
@@ -208,6 +209,9 @@ public class Parse {
     }
 
 
+
+
+
     public void parseText()
     {
         currIndex=0;
@@ -216,6 +220,14 @@ public class Parse {
             String concat="";
             if(stopWords.contains(tokens[currIndex]))
             {
+                if(tokens[currIndex].toLowerCase().equals("between")) {
+                    concat = concat + "between";
+                    currIndex++;
+                  /*  if(isPureNum(tokens[currIndex])){
+
+
+                    }*/
+                }
                 continue;
             }
             else if(containsNumber(tokens[currIndex]))
@@ -325,14 +337,19 @@ public class Parse {
             {
                 concat = monthMap.get(tokens[currIndex].toLowerCase());
                 currIndex++;
-                if(isMonthNumber(tokens[currIndex])!=-1)
-                    concat=monthHandler(tokens[currIndex],concat);
-
+                if(isMonthNumber(tokens[currIndex])!=-1) {
+                    concat = monthHandler(tokens[currIndex], concat);
+                    currIndex++;
+                }
             }
             else if(tokens[currIndex].charAt(0)>='A' && tokens[currIndex].charAt(0)<='Z')// is a entity
             {
                entityHandler();
                continue;
+            }
+            else {
+                concat = tokens[currIndex];
+                currIndex++;
             }
             System.out.println(concat);
             if(allDocTerms.containsKey(concat))
