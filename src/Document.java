@@ -7,12 +7,17 @@ public class Document {
     private String popularTerm;
     private int maxTerm;
     private int uniqeTermsNum;
+    private StringBuilder docLang;
+    private StringBuilder articleType;
     private TreeMap <String,Integer> docTerms;
 
     public Document()
     {
         docTerms = new TreeMap<>();
+        docLang= new StringBuilder();
+        articleType= new StringBuilder();
     }
+
 
     public String getDocName()
     {
@@ -32,6 +37,13 @@ public class Document {
         }
     }
 
+    public void setDocLang(StringBuilder docLang) {
+        this.docLang = docLang;
+    }
+
+    public void setArticleType(StringBuilder articleType) {
+        this.articleType = articleType;
+    }
 
 
     public void setTerms(HashMap<String,Integer> notOrderedMap)
@@ -45,7 +57,7 @@ public class Document {
         Iterator it = allterms.entrySet().iterator();
         while (it.hasNext()) {
             Map.Entry pair = (Map.Entry)it.next();
-            System.out.println(pair.getKey() + " = " + pair.getValue());
+           // System.out.println(pair.getKey() + " = " + pair.getValue());
             currTerm=new Term((String)(pair.getKey()),(int)pair.getValue());
             currTerm.addDocToTerm(docName);
             it.remove(); // avoids a ConcurrentModificationException

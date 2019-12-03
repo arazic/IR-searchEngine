@@ -27,12 +27,12 @@ public class ReadFile {
         this.stemming = false;
         this.totalDocNum = 0;
         this.parse = parse;
-
+        readStopWords();
     }
 
     public void readStopWords()
     {
-        String sPath = this.corpusPath+"/StopWords";
+        String sPath = this.corpusPath+"/stopWords.txt";
         File path= new File(sPath);
         String line;
         List <String> stopWords = new LinkedList<>();
@@ -62,7 +62,7 @@ public class ReadFile {
             if (fileEntry.isDirectory()) {
                 getToFile(fileEntry);
             } else {
-                System.out.println(fileEntry.getName());
+                //degug// System.out.println(fileEntry.getName());
                 StringBuilder sb = new StringBuilder();
                 try (BufferedReader br = new BufferedReader(new FileReader(fileEntry)))
                 {
@@ -80,7 +80,7 @@ public class ReadFile {
                 } catch (IOException e) {
                     System.err.format("IOException: %s%n", e);
                 }
-                System.out.println(sb);
+                //System.out.println(sb);
             }
         }
     }
