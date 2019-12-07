@@ -9,7 +9,6 @@ public class Parse {
     private static HashSet<String> stopWords = new HashSet<>();
     private static HashMap<String,String> monthMap = new HashMap<>();
     private static HashMap<String,String> unitMap = new HashMap<>();
-    private static TreeSet<Term> terms = new TreeSet<>();
     private static HashMap<String, String> symbols=new HashMap<>();
 
 /*
@@ -20,10 +19,12 @@ public class Parse {
     private StringBuilder articleType;
     private List<String> quotes;
     private HashMap<String,Integer> entity;
+    private int maxFreqTermInDoc;
 
     private String[] tokens;
     private String text;
     private Document currDoc;
+    private Posting posting;
 
     private String header;
     private int currIndex;
@@ -39,14 +40,15 @@ public class Parse {
 
     public Parse()
     {
-        debug1=false;
-        debug2=false;
+        debug1=true;
+        debug2=true;
         allDocTerms = new HashMap<>();
         quotes = new LinkedList<>();
         entity=new HashMap<>();
         loadMonthMap();
         loadUnits();
         loadSymbols();
+        posting= new Posting();
 
     }
 
@@ -103,85 +105,8 @@ public class Parse {
 
     }
 
-    public Term createTerm(String sTerm, int frequency)
-    {
-        if(sTerm==null ||sTerm==" "|| frequency<1)
-        {
-            System.out.println("can't create a term ");
-            return null;
-        }
-        else
-        {
-            Term term = new Term(sTerm,frequency,currDoc.getDocName());
-            return term;
-        }
-
-    }
 
 
-    private void mergeTerms()
-    {
-        TreeMap<String,Integer> mapTerms = new TreeMap<>(allDocTerms);
-        Set<Term> tempTerms= new TreeSet<>();
-        Iterator <String> it = mapTerms.keySet().iterator();
-        Iterator <Term> termIterator = terms.iterator();
-        Term term = termIterator.next();
-        String termString = it.next();
-        boolean finish =false;
-        while (it.hasNext() && termIterator.hasNext())
-        {
-            if(term.compareTo(termString)==0)
-            {
-                term.setFreq(term.getFreq()+mapTerms.get(termString));
-                term.addDocToTerm(currDoc.getDocName());
-                term = termIterator.next();
-                termString = it.next();
-            }
-            else if(term.compareTo(termString)==-1)
-            {
-                term = termIterator.next();
-            }
-            else if(term.compareTo(termString)==1)
-            {
-               tempTerms.add(createTerm(termString,mapTerms.get(termString)));
-               termString = it.next();
-            }
-        }
-        while (it.hasNext()|| !finish)
-        {
-            tempTerms.add(createTerm(termString,mapTerms.get(termString)));
-            if(it.hasNext())
-            {
-                termString = it.next();
-            }
-            else
-            {
-                finish=true;
-            }
-
-        }
-        terms.addAll(tempTerms);
-    }
-
-    public void test ()
-    {
-        Term t1 = new Term("t1",1,"doc1");
-        Term t2 = new Term(("t2"),1,"doc1");
-        Term t3 = new Term("t3",1,"doc3");
-        Term t4 = new Term(("t4"),1,"doc4");
-        terms.add(t1);
-        terms.add(t2);
-        terms.add(t3);
-        terms.add(t4);
-        allDocTerms.put("t5",4);
-        allDocTerms.put("t",2);
-        allDocTerms.put("t2",5);
-        currDoc = new Document();
-        currDoc.setDocName("doc2");
-        mergeTerms();
-    }
-    
-    
 
     public void createDocument(StringBuilder content)
     {
@@ -200,11 +125,27 @@ public class Parse {
     }
 
     private void updateDoc() {
-        currDoc.addTermsToDoc(allDocTerms);
+
+        int maxFrequency=0;
+        for (HashMap.Entry<String,Integer> entry : allDocTerms.entrySet())
+        {
+            if(entry.getValue()>maxFrequency)
+            {
+                maxFrequency=entry.getValue();
+            }
+        }
+
+        //currDoc.addTermsToDoc(allDocTerms);
         currDoc.setDocLang(docLang);
         currDoc.setArticleType(articleType);
         if (debug1)
             System.out.println("///////////////// finish to "+currDoc.getDocName() +" !!!");
+        posting.postingDoc(currDoc);
+        posting.postingTerms(allDocTerms, currDoc.getDocName());
+        currDoc.setMaxTerm(maxFrequency);
+        currDoc.setUniqeTermsNum(allDocTerms.size());
+
+        maxFreqTermInDoc=0;
     }
 
 
@@ -371,10 +312,16 @@ public class Parse {
 
             if (!concat.isEmpty()) {
                 concat = cleanWord(concat);
+
                 if(debug2)
                     System.out.println(concat);
-                if (allDocTerms.containsKey(concat))
+
+
+                if (allDocTerms.containsKey(concat)) {
                     allDocTerms.replace(concat, allDocTerms.get(concat) + 1);
+                    if(maxFreqTermInDoc<allDocTerms.get(concat) + 1)
+                        maxFreqTermInDoc=allDocTerms.get(concat) + 1;
+                }
                 else
                     allDocTerms.put(concat, 1);
             }

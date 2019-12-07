@@ -12,7 +12,7 @@ public class Term implements Comparable<Term>
         this.stringTerm = term;
         this.freq = freq;
         this.documents=new TreeSet<>();
-        documents.add(document);
+        documents.add(document+":"+freq);
     }
 
     public Term(String term, int freq) {
@@ -22,12 +22,9 @@ public class Term implements Comparable<Term>
     }
 
 
-    public void addDocToTerm( String sDoc)
+    public void addDocToTerm(String sDoc,int frequency)
     {
-
-        if(documents.contains(sDoc))
-            return;
-        documents.add(sDoc);
+        documents.add(sDoc+":"+frequency);
     }
 
     public int getFreq()
