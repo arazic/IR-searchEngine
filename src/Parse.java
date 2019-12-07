@@ -38,7 +38,7 @@ public class Parse {
     private Pattern fractionPattern= Pattern.compile("[0-9]*"+"/"+"[0-9]*");
 
 
-    public Parse()
+    public Parse(Posting posting)
     {
         debug1=true;
         debug2=true;
@@ -48,7 +48,7 @@ public class Parse {
         loadMonthMap();
         loadUnits();
         loadSymbols();
-        posting= new Posting();
+        this.posting=posting;
 
     }
 
@@ -101,8 +101,6 @@ public class Parse {
         unitMap.put("m","M");
         unitMap.put("bn","B");
         unitMap.put("thousand","K");
-
-
     }
 
 
@@ -138,14 +136,18 @@ public class Parse {
         //currDoc.addTermsToDoc(allDocTerms);
         currDoc.setDocLang(docLang);
         currDoc.setArticleType(articleType);
-        if (debug1)
-            System.out.println("///////////////// finish to "+currDoc.getDocName() +" !!!");
-        posting.postingDoc(currDoc);
-        posting.postingTerms(allDocTerms, currDoc.getDocName());
         currDoc.setMaxTerm(maxFrequency);
         currDoc.setUniqeTermsNum(allDocTerms.size());
 
+        if (debug1)
+            System.out.println("///////////////// finish to "+currDoc.getDocName() +" maxTerm:"+currDoc.getMaxTerm()+" unique:"+currDoc.getUniqeTermsNum());
+
+        posting.postingDoc(currDoc);
+     //   posting.postingTerms(allDocTerms, currDoc.getDocName());
+
+
         maxFreqTermInDoc=0;
+        allDocTerms.clear();
     }
 
 

@@ -29,6 +29,13 @@ public class Document {
         return this.docName;
     }
 
+    public int getMaxTerm() {
+        return maxTerm;
+    }
+
+    public int getUniqeTermsNum() {
+        return uniqeTermsNum;
+    }
 //    public void printDoc()
 //    {
 //        System.out.println("<DOCNO> "+docName+" </DOCNO");
@@ -68,7 +75,6 @@ public class Document {
     public void setMaxTerm(int max)
     {
      this.maxTerm=max;
-
 
     }
 

@@ -8,8 +8,15 @@ public class Indexer {
         private static int sizeWithSteem;
         private static int sizeWithpoutSteem;
 
+        public static void initIndexer(){
+            termsDic= new TreeMap<>();
+            docDic= new HashMap<>();
+        }
+
+
         public static void addDoc(String docName, String pointer){
             docDic.put(docName,pointer);
+            System.out.println(docDic);
         }
 
         //public void margePostingTermsFile();
