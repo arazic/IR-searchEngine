@@ -142,8 +142,8 @@ public class Parse {
         if (debug1)
             System.out.println("///////////////// finish to "+currDoc.getDocName() +" maxTerm:"+currDoc.getMaxTerm()+" unique:"+currDoc.getUniqeTermsNum());
 
-        posting.postingDoc(currDoc);
-     //   posting.postingTerms(allDocTerms, currDoc.getDocName());
+        //posting.postingDoc(currDoc);
+        posting.postingTerms(allDocTerms, currDoc.getDocName());
 
 
         maxFreqTermInDoc=0;

@@ -19,6 +19,11 @@ public class Indexer {
             System.out.println(docDic);
         }
 
-        //public void margePostingTermsFile();
+    public static void addTerm(String stringTerm, String info) {
+            // if the term did not exist- we need to add with info from mearged posting file.
+            termsDic.put(stringTerm,info);
+    }
+
+    //public void margePostingTermsFile();
 
 }

@@ -11,19 +11,25 @@ public class Posting {
     private static TreeSet<Term> mergeTerms;
     private int docCounter; // how many docs are merging in the memory;
     private int docFileCounter; // how many doc in a posting file;
+    private int termFileCounter; // how many term in a posting file;
     private String pointerDocPosting; //<postingFileName><postingPlaceInFile>
+    private String pointerTermPosting; //<postingFileName><postingPlaceInFile>
     private String postingPath;
     private BufferedWriter writerToPostingDoc;
+    private BufferedWriter writerToPostingTerm;
 
 
     public Posting(String postingPath){
         mergeTerms = new TreeSet<>();
         docFileCounter=1;
+        termFileCounter=1;
         pointerDocPosting="";
+        pointerTermPosting="";
         this.postingPath=postingPath;
         chunksCount=1;
         try {
             writerToPostingDoc = new BufferedWriter(new FileWriter(postingPath + "/documents/postingDoc" + chunksCount + ".txt"));
+            writerToPostingTerm = new BufferedWriter(new FileWriter(postingPath + "/terms/postingTerm" + chunksCount + ".txt"));
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -39,8 +45,6 @@ public class Posting {
                 writerToPostingDoc.append('\n');
                 pointerDocPosting = String.valueOf(chunksCount) + "," + docFileCounter;
                 docFileCounter++;
-                //docDetailes.writeToFile("/path");
-                //document.writeToFile("/path");
                 Indexer.addDoc(document.getDocName(), pointerDocPosting);
 
             }
@@ -58,62 +62,83 @@ public class Posting {
 
     public void postingTerms(HashMap<String, Integer> docTerms, String docName) {
         if(docCounter<= chunkPostingSIZE){
-            TreeMap<String,Integer> mapTerms = new TreeMap<>(docTerms);
-            Set<Term> tempTerms= new TreeSet<>();
-            Iterator<String> itNew = mapTerms.keySet().iterator();
-            Iterator <Term> itOld = mergeTerms.iterator();
-            Term newTerm;
-            Term term = itOld.next();
-            String termString = itNew.next();
-            boolean finish =false;
-            int freq=0;
-            while (itNew.hasNext() && itOld.hasNext())
-            {
-                if(term.compareTo(termString)==0)
-                {
-                    freq=docTerms.get(termString);
-                    term.setFreq(term.getFreq()+freq);
-                    term.addDocToTerm(docName,freq); // <docName:freq>
-                    term = itOld.next();
-                    termString = itNew.next();
-                }
-                else if(term.compareTo(termString)==-1)
-                {
-                    term = itOld.next();
-                }
-                else if(term.compareTo(termString)==1)
-                {
-                    tempTerms.add(newTerm = new Term(termString,docTerms.get(termString),docName));
-                    termString = itNew.next();
-                }
-            }
-            while (itNew.hasNext()|| !finish)
-            {
-                tempTerms.add(newTerm = new Term(termString,docTerms.get(termString),docName));
-                if(itNew.hasNext())
-                {
-                    termString = itNew.next();
-                }
-                else
-                {
-                    finish=true;
-                }
+            if(mergeTerms.isEmpty())
+                for(Map.Entry entry : docTerms.entrySet())
+                  mergeTerms.add(new Term((String) entry.getKey(),(int)entry.getValue(),docName));
 
+            else {
+                TreeMap<String, Integer> mapTerms = new TreeMap<>(docTerms);
+                Iterator<String> itNew = mapTerms.keySet().iterator();
+                Iterator<Term> itOld = mergeTerms.iterator();
+                Set<Term> tempTerms= new TreeSet<>();
+                Term existTerm = itOld.next();
+                String newTermString = itNew.next();
+                boolean finish = false;
+                int freq = 0;
+                while (itNew.hasNext() && itOld.hasNext()) {
+                    int option= existTerm.compareTo(newTermString);
+                    if (option == 0) {
+                        freq = docTerms.get(newTermString);
+                        existTerm.setFreq(existTerm.getFreq() + freq);
+                        existTerm.addDocToTerm(docName, freq); // <docName:freq>
+                        existTerm = itOld.next();
+                        newTermString = itNew.next();
+                    } else if (option == -1) {
+                        existTerm = itOld.next();
+                    } else {
+                        tempTerms.add(new Term(newTermString, docTerms.get(newTermString), docName));
+                        newTermString = itNew.next();
+                    }
+                }
+                while (itNew.hasNext() || !finish) {
+                    tempTerms.add(new Term(newTermString, docTerms.get(newTermString), docName));
+                    if (itNew.hasNext()) {
+                        newTermString = itNew.next();
+                    } else {
+                        finish = true;
+                    }
+
+                }
+                mergeTerms.addAll(tempTerms);
+                docCounter++;
             }
-            mergeTerms.addAll(tempTerms);
-            docCounter++;
         }
         if(docCounter> chunkPostingSIZE)
         {
-            //write terms to postig file
+            try {
+            Iterator entry = mergeTerms.iterator();
+            int counter = 0;
+           for(Term term : mergeTerms){
+                pointerTermPosting = String.valueOf(chunksCount) + "," + termFileCounter;
+               writerToPostingTerm.append(term.getStringTerm()+"|"+term.getFreq()+
+                       "|"+term.getDocuments().size()+"|"+pointerTermPosting);
+               //name|Freq|Df|chunkPointer,linePointer
+
+                writerToPostingTerm.append('\n');
+                termFileCounter++;
+               // Indexer.addTerm();
+
+            }
             docCounter=0;
-            //empaty mergeTerms for a new start merging
-            // create a new posting file
+           writerToPostingTerm.flush();
+           mergeTerms.clear();
+           chunksCount++;
+           writerToPostingTerm = new BufferedWriter(new FileWriter(postingPath + "/terms/postingTerm" + chunksCount + ".txt"));
+
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 
+    private void margeToMainPostingFile() {
+        // after the merge we need to write to dic.
 
-
+        //   Indexer.addTerm(term.getStringTerm(), (term.getFreq() +
+        //           "|" + term.getDocuments().size() + "|" + pointerTermPosting));
+        //   //name|Freq|Df|chunkPointer,linePointer
+    }
 
 
 

@@ -21,8 +21,15 @@ public class Term implements Comparable<Term>
         this.documents=new TreeSet<>();
     }
 
+    public String getStringTerm() {
+        return stringTerm;
+    }
 
-    public void addDocToTerm(String sDoc,int frequency)
+    public Set<String> getDocuments() {
+        return documents;
+    }
+
+    public void addDocToTerm(String sDoc, int frequency)
     {
         documents.add(sDoc+":"+frequency);
     }
