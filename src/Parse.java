@@ -40,8 +40,8 @@ public class Parse {
 
     public Parse(Posting posting)
     {
-        debug1=true;
-        debug2=true;
+        debug1=false;
+        debug2=false;
         allDocTerms = new HashMap<>();
         quotes = new LinkedList<>();
         entity=new HashMap<>();

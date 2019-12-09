@@ -26,4 +26,8 @@ public class Indexer {
 
     //public void margePostingTermsFile();
 
+    //DETAILS FOR INDEXER:
+     // writerToPostingTerm.append(term.getStringTerm()+"|"+term.getFreq()+
+     //         "|"+term.getDocuments().size()+"|"+pointerTermPosting);
+    //name|Freq|Df|chunkPointer,linePointer
 }

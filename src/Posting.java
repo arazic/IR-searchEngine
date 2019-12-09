@@ -5,8 +5,8 @@ import java.util.*;
 
 public class Posting {
 
-    private int docFILE= 50; // how many doc in a postingDoc file
-    private int chunkPostingSIZE = 20; // how many doc in a postingTerm file
+    private int docFILE= 100; // how many doc in a postingDoc file
+    private int chunkPostingSIZE = 130; // how many doc in a postingTerm file
     private int chunksCount;
     private static TreeSet<Term> mergeTerms;
     private int docCounter; // how many docs are merging in the memory;
@@ -61,75 +61,82 @@ public class Posting {
     }
 
     public void postingTerms(HashMap<String, Integer> docTerms, String docName) {
-        if(docCounter<= chunkPostingSIZE){
-            if(mergeTerms.isEmpty())
-                for(Map.Entry entry : docTerms.entrySet())
-                  mergeTerms.add(new Term((String) entry.getKey(),(int)entry.getValue(),docName));
+        if (!docTerms.isEmpty()){
+            if (docCounter <= chunkPostingSIZE) {
+                if (mergeTerms.isEmpty())
+                    for (Map.Entry entry : docTerms.entrySet())
+                        mergeTerms.add(new Term((String) entry.getKey(), (int) entry.getValue(), docName));
 
-            else {
-                TreeMap<String, Integer> mapTerms = new TreeMap<>(docTerms);
-                Iterator<String> itNew = mapTerms.keySet().iterator();
-                Iterator<Term> itOld = mergeTerms.iterator();
-                Set<Term> tempTerms= new TreeSet<>();
-                Term existTerm = itOld.next();
-                String newTermString = itNew.next();
-                boolean finish = false;
-                int freq = 0;
-                while (itNew.hasNext() && itOld.hasNext()) {
-                    int option= existTerm.compareTo(newTermString);
-                    if (option == 0) {
-                        freq = docTerms.get(newTermString);
-                        existTerm.setFreq(existTerm.getFreq() + freq);
-                        existTerm.addDocToTerm(docName, freq); // <docName:freq>
-                        existTerm = itOld.next();
-                        newTermString = itNew.next();
-                    } else if (option == -1) {
-                        existTerm = itOld.next();
-                    } else {
+                else {
+
+                    TreeMap<String, Integer> mapTerms = new TreeMap<>(docTerms);
+                    Iterator<String> itNew = mapTerms.keySet().iterator();
+                    Iterator<Term> itOld = mergeTerms.iterator();
+                    Set<Term> tempTerms = new TreeSet<>();
+                    Term existTerm = itOld.next();
+                    String newTermString = itNew.next();
+                    boolean finish = false;
+                    int freq = 0;
+                    while (itNew.hasNext() && itOld.hasNext()) {
+                        int option = existTerm.compareTo(newTermString);
+                        if (option == 0) {
+                            freq = docTerms.get(newTermString);
+                            existTerm.setFreq(existTerm.getFreq() + freq);
+                            existTerm.addDocToTerm(docName, freq); // <docName:freq>
+                            existTerm = itOld.next();
+                            newTermString = itNew.next();
+                        } else if (option == -1) {
+                            existTerm = itOld.next();
+                        } else {
+                            tempTerms.add(new Term(newTermString, docTerms.get(newTermString), docName));
+                            newTermString = itNew.next();
+                        }
+                    }
+                    while (itNew.hasNext() || !finish) {
                         tempTerms.add(new Term(newTermString, docTerms.get(newTermString), docName));
-                        newTermString = itNew.next();
-                    }
-                }
-                while (itNew.hasNext() || !finish) {
-                    tempTerms.add(new Term(newTermString, docTerms.get(newTermString), docName));
-                    if (itNew.hasNext()) {
-                        newTermString = itNew.next();
-                    } else {
-                        finish = true;
-                    }
+                        if (itNew.hasNext()) {
+                            newTermString = itNew.next();
+                        } else {
+                            finish = true;
+                        }
 
+                    }
+                    mergeTerms.addAll(tempTerms);
+                    docCounter++;
                 }
-                mergeTerms.addAll(tempTerms);
-                docCounter++;
             }
-        }
-        if(docCounter> chunkPostingSIZE)
-        {
+        if (docCounter > chunkPostingSIZE) {
             try {
-            Iterator entry = mergeTerms.iterator();
-            int counter = 0;
-           for(Term term : mergeTerms){
-                pointerTermPosting = String.valueOf(chunksCount) + "," + termFileCounter;
-               writerToPostingTerm.append(term.getStringTerm()+"|"+term.getFreq()+
-                       "|"+term.getDocuments().size()+"|"+pointerTermPosting);
-               //name|Freq|Df|chunkPointer,linePointer
+                Iterator entry = mergeTerms.iterator();
+                int counter = 0;
+                for (Term term : mergeTerms) {
+                    //pointerTermPosting = String.valueOf(chunksCount) + "," + termFileCounter;
+                    String put = term.getStringTerm() + "," + term.getDocuments().toString() +
+                            "," + term.getDocuments().size();
+                    if (term.getStringTerm().equals("youngster") && term.getDocuments().toString().equals(" LA011290-0024:1")) {
+                        System.out.println("jump");
+                    }
+                    writerToPostingTerm.append(put);
+                    //Banna,#d1:2#d4:6#d9:11,3
+                    //name,#d1:tf#d4:tf#d9:tf,idf
 
-                writerToPostingTerm.append('\n');
-                termFileCounter++;
-               // Indexer.addTerm();
+                    writerToPostingTerm.append('\n');
+                    // termFileCounter++;
+                    // Indexer.addTerm();
 
-            }
-            docCounter=0;
-           writerToPostingTerm.flush();
-           mergeTerms.clear();
-           chunksCount++;
-           writerToPostingTerm = new BufferedWriter(new FileWriter(postingPath + "/terms/postingTerm" + chunksCount + ".txt"));
+                }
+                docCounter = 0;
+                writerToPostingTerm.flush();
+                mergeTerms.clear();
+                chunksCount++;
+                writerToPostingTerm = new BufferedWriter(new FileWriter(postingPath + "/terms/postingTerm" + chunksCount + ".txt"));
 
 
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
+    }
     }
 
     private void margeToMainPostingFile() {
