@@ -15,10 +15,11 @@ public class Parse {
     private HashMap<String, Integer>transperToFormat;
 */
     private HashMap<String,Integer> allDocTerms;
+    private HashMap<String,Integer> entity;
+    private HashMap<String,Integer> termsWithCapitalLetters;
     private StringBuilder docLang;
     private StringBuilder articleType;
     private List<String> quotes;
-    private HashMap<String,Integer> entity;
     private int maxFreqTermInDoc;
 
     private String[] tokens;
@@ -35,7 +36,7 @@ public class Parse {
     private Pattern intPattern= Pattern.compile("[0-9]");
     private Pattern digitPattern= Pattern.compile("\\d");
     private Pattern doublePattern= Pattern.compile("[0-9]*"+"."+"[0-9]*");
-    private Pattern fractionPattern= Pattern.compile("[0-9]*"+"/"+"[0-9]*");
+    private Pattern fractionPattern= Pattern.compile("[0-9]"+"/"+"[0-9]");
 
 
     public Parse(Posting posting)
@@ -45,6 +46,7 @@ public class Parse {
         allDocTerms = new HashMap<>();
         quotes = new LinkedList<>();
         entity=new HashMap<>();
+        termsWithCapitalLetters=new HashMap<>();
         loadMonthMap();
         loadUnits();
         loadSymbols();
@@ -52,31 +54,41 @@ public class Parse {
 
     }
 
+
+    private void cleanParser()
+    {
+        allDocTerms.clear();
+        quotes.clear();
+        entity.clear();
+        termsWithCapitalLetters.clear();
+        currIndex=0;
+    }
+
     private void loadMonthMap()
     {
-        monthMap.put("january","01");
-        monthMap.put("jan","01");
-        monthMap.put("february","02");
-        monthMap.put("feb","02");
-        monthMap.put("march","03");
-        monthMap.put("mar","03");
-        monthMap.put("april","04");
-        monthMap.put("apr","04");
-        monthMap.put("may","05");
-        monthMap.put("june","06");
-        monthMap.put("jun","06");
-        monthMap.put("july","07");
-        monthMap.put("jul","07");
-        monthMap.put("august","08");
-        monthMap.put("aug","08");
-        monthMap.put("septmber","09");
-        monthMap.put("sep","09");
-        monthMap.put("october","10");
-        monthMap.put("oct","10");
-        monthMap.put("novmber","11");
-        monthMap.put("nov","11");
-        monthMap.put("december","12");
-        monthMap.put("dec","12");
+        monthMap.put("January","01");
+        monthMap.put("Jan","01");
+        monthMap.put("February","02");
+        monthMap.put("Feb","02");
+        monthMap.put("March","03");
+        monthMap.put("Mar","03");
+        monthMap.put("April","04");
+        monthMap.put("Apr","04");
+        monthMap.put("May","05");
+        monthMap.put("June","06");
+        monthMap.put("Jun","06");
+        monthMap.put("July","07");
+        monthMap.put("Jul","07");
+        monthMap.put("August","08");
+        monthMap.put("Aug","08");
+        monthMap.put("Septmber","09");
+        monthMap.put("Sep","09");
+        monthMap.put("October","10");
+        monthMap.put("Oct","10");
+        monthMap.put("November","11");
+        monthMap.put("Nov","11");
+        monthMap.put("December","12");
+        monthMap.put("Dec","12");
     }
 
     private void loadSymbols()
@@ -101,6 +113,7 @@ public class Parse {
         unitMap.put("m","M");
         unitMap.put("bn","B");
         unitMap.put("thousand","K");
+        unitMap.put("thousands","K");
     }
 
 
@@ -108,6 +121,7 @@ public class Parse {
 
     public void createDocument(StringBuilder content)
     {
+        currIndex=0;
         currDoc = new Document();
         text = content.toString();
         text = text.replaceAll("\n"," ");
@@ -118,9 +132,21 @@ public class Parse {
         findQuotes();
         // split text by delimters
         tokens= StringUtils.splitString(text," ():?[]!; "); // to add ""
+        handleLanguage();
+        handleArticleType();
+        if(tokens.length==0)
+        {
+            cleanParser();
+            return;
+        }
         parseText();
-        updateDoc();
+
+        handleCapitalTerms();
+        cleanParser();
+        //entityHandle();
+        //updateDoc();
     }
+
 
     private void updateDoc() {
 
@@ -163,18 +189,33 @@ public class Parse {
     }
 
 
-    private void parseText() {
-        currIndex=0;
-        handleLanguage();
-        handleArticleType();
-
-        while (currIndex < tokens.length) {
-            String concat = "";
+    private void parseText()
+    {
+        if(tokens.length==0)
+        {
+            return;
+        }
+        if(tokens[currIndex].equals("Text"))
+            currIndex++;
+        while (currIndex < tokens.length)
+        {
+            boolean cunterFlag=false;
+            if(currIndex==tokens.length-2)
+            {
+                int x=0;
+            }
+            String concat = cleanWord(tokens[currIndex]);
+            if(concat.isEmpty()||concat.contains("<")||concat.contains(">"))
+            {
+                currIndex++;
+                continue;
+            }
             boolean fractionFlag = false;
-
-            if (stopWords.contains(tokens[currIndex].toLowerCase())) {
-                if (tokens[currIndex].toLowerCase().equals("between")) {
-                    concat = concat + "between";
+            if (stopWords.contains(concat))
+            {
+                if (concat.toLowerCase().equals("between"))
+                {
+                    concat ="between";
                     currIndex++;
                     if (currIndex + 3 < tokens.length &&  // there more 3 tokens in the array
                             isPureNum(tokens[currIndex]) &&
@@ -183,107 +224,234 @@ public class Parse {
                         concat = tokens[currIndex] + "-" + tokens[currIndex + 2];
                         currIndex = currIndex + 3;
                     }
-                } else
+                }
+                else
+                {
                     currIndex++;
-
-            // containsNumber "10-part"/ "10bn" / "US$12.88"
-            } else if (containsNumber(tokens[currIndex])) {
-                if (isPureNum(tokens[currIndex])) {
-                    concat += tokens[currIndex];
+                    continue;
+                }
+            }
+            else if (containsNumber(concat)) // handle numbers
+            {
+                // handle pure numbers
+                if (isPureNum(concat))
+                {
                     currIndex++;
-
                     //fractionPattern- "22 2/3"
-                    if ((currIndex < tokens.length) && fractionPattern.matcher(tokens[currIndex]).find()) {
-                        fractionFlag = true;
-                        concat += " " + tokens[currIndex];
-                        currIndex++;
-                        if ((currIndex < tokens.length) && symbols.containsKey(tokens[currIndex].toLowerCase())) { //dollar, precent, %
-                            concat = concat + symbols.get(tokens[currIndex].toLowerCase());
+                    if(currIndex<tokens.length)
+                    {
+                        if (fractionPattern.matcher(tokens[currIndex]).find())
+                        {
+                            fractionFlag = true;
+                            concat += " " + tokens[currIndex];
                             currIndex++;
-                            if ((currIndex < tokens.length) && symbols.containsKey(tokens[currIndex].toLowerCase())) { //dollar, precent, %
-                                concat = concat + symbols.get(tokens[currIndex].toLowerCase());
-                                currIndex++;
+                            if(currIndex<tokens.length)
+                            {
+                                String temp=cleanWord(tokens[currIndex]).toLowerCase();
+                                if (symbols.containsKey(temp)) //dollar, precent, %
+                                {
+                                    concat = concat + symbols.get(temp);
+                                    currIndex++;
+                                    if(currIndex<tokens.length)
+                                    {
+                                        temp=cleanWord(tokens[currIndex]).toLowerCase();
+                                        if( symbols.containsKey(temp)) //dollar, precent, %
+                                        {
+                                            concat = concat + symbols.get(temp);
+                                            currIndex++;
+                                        }
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                currIndex--;
+                                cunterFlag=true;
                             }
                         }
+                        String unitToken = cleanWord(tokens[currIndex]).toLowerCase();
+                        if (unitMap.containsKey(unitToken))
+                        {
+                            currIndex++;
+                        }
+                        else
+                        {
+                            unitToken="";
+                        }
+                        boolean flag=false;
+                        if(currIndex<tokens.length)
+                        {
+                            String symbol=cleanWord(tokens[currIndex].toLowerCase());
+                            if ( symbols.containsKey(symbol))// if true is a price- there is "dollars"F
+                            {
+                                flag=true;
+                                if (symbols.get(symbol) == "%")
+                                {
+                                    concat = concat + "%";
+                                    currIndex++;
+                                }
+                                else
+                                {
+                                    if (unitToken != "")
+                                    {
+                                        concat = handlePriceNumbersAndUnits(concat, unitToken);
+                                    }
+                                    else
+                                    {
+                                        concat = handlePriceNumbers(concat);
+                                    }
+                                    currIndex++;
+                                    if(currIndex<tokens.length)
+                                    {
+                                        String symbol2=cleanWord(tokens[currIndex]).toLowerCase();
+                                        if (symbols.containsKey(symbol2))
+                                        {
+                                            currIndex++;
+                                        }
+                                    }
+                                }
+                            }
+                            else if ( (!fractionFlag) && monthMap.containsKey(symbol))
+                            {
+                                concat = monthHandler(concat, monthMap.get(symbol));
+                            }
+                            if (!fractionFlag && !flag)// its just a number
+                            {
+                                if (unitToken != "")
+                                {
+                                    concat = handleSimpleNumbersAndUnits(concat, unitToken);
+                                }
+                                else if (fractionFlag == false)
+                                {
+                                    concat = handleSimpleNumbers(concat);
+                                }
+                            }
+                        }
+                        else
+                        {
+                            concat = handleSimpleNumbersAndUnits(concat,unitToken);
+                        }
                     }
+                    else
+                    {
+                        concat = handleSimpleNumbers(concat);
+                    }
+                }
+                // finish handle pure numbers
 
-
-                    String unitToken = "";
-                    if ((currIndex < tokens.length) && unitMap.containsKey(tokens[currIndex].toLowerCase())) {
-                        unitToken = tokens[currIndex];
+                else // its not a pure number
+                {
+                    if(concat.contains("-"))
+                    {
+                        if(concat.charAt(0)!='-') // its not negative number
+                        {
+                            String[] words = concat.split("-");
+                            concat=words[0];
+                            int i;
+                            for (i=1; i<words.length;i++)
+                            {
+                                String word=cleanWord(words[i]);
+                                if (allDocTerms.containsKey(word))
+                                {
+                                    allDocTerms.replace(word, allDocTerms.get(word) + 1);
+                                    if(maxFreqTermInDoc<allDocTerms.get(word) + 1)
+                                        maxFreqTermInDoc=allDocTerms.get(word) + 1;
+                                }
+                                else
+                                    allDocTerms.put(word, 1);
+                                concat=concat+"-"+words[i];
+                            }
+                        }
                         currIndex++;
                     }
-
-                    if ((currIndex < tokens.length) && symbols.containsKey(tokens[currIndex].toLowerCase()))
-                        // if true is a price- there is "dollars"
+                    else if (concat.contains("$"))
                     {
-                        if ((currIndex<tokens.length)&&symbols.get(tokens[currIndex]) == "%") {
-                            concat = concat + "%";
-                            currIndex++;
-                        } else {
-                            currIndex++;
-                            if ((currIndex<tokens.length)&&symbols.containsKey(tokens[currIndex].toLowerCase())) {
-                                currIndex++;
+                        if (concat.charAt(0) == '$')
+                        {
+                            concat = concat.substring(1);
+
+                        }
+                        else if (concat.charAt(concat.length() - 1) == '$')
+                        {
+                            concat = concat.substring(0, concat.length() - 1);
+                        }
+                        else
+                        {
+                            if(concat.contains("US$"))
+                            {
+                                concat = concat.substring(3);
                             }
-                            if (unitToken != "") {
-                                concat = handlePriceNumbersAndUnits(concat, unitToken);
-                            } else {
+                            else if(concat.contains("U.S.$"))
+                            {
+                                concat = concat.substring(5);
+                            }
+                            else
+                            {
+                                //System.out.println(concat+" maybe we have a problem");
+                                currIndex++;
+                                continue;
+                            }
+                        }
+                        currIndex++;
+                        if(currIndex<tokens.length)
+                        {
+                            String temp=cleanWord(tokens[currIndex]).toLowerCase();
+                            if (unitMap.containsKey(temp))
+                            {
+                                concat = handlePriceNumbersAndUnits(concat, temp);
+                                currIndex++;
+                            } else if (fractionFlag == false )
+                            {
                                 concat = handlePriceNumbers(concat);
                             }
                         }
-
-                    } else if ((currIndex < tokens.length) && (!fractionFlag) && monthMap.containsKey(tokens[currIndex].toLowerCase())) {
-                        concat = monthHandler(concat, monthMap.get(tokens[currIndex].toLowerCase()));
-
-                    } else if (fractionFlag == false){ // its just a number
-                        if (unitToken != "") {
-                            concat = handleSimpleNumbersAndUnits(concat, unitToken);
-                        } else if (fractionFlag == false) {
-                            concat = handleSimpleNumbers(concat);
-                        }
-                    }
-                } else // its not a pure number
-                {
-                    concat = tokens[currIndex];
-                    currIndex++;
-                    // if contains $
-                    if (concat.contains("$")) {
-                        if (concat.charAt(0) == '$') {
-                            concat = concat.substring(1);
-
-                        } else if (concat.charAt(concat.length() - 1) == '$') {
-                            concat = concat.substring(0, concat.length() - 1);
-                        }
-                        else {
-                            if(concat.contains("US$")) {
-                                concat = concat.substring(3);
-                            }
-                            else
-                                continue;
-                        }
-                        if ((currIndex<tokens.length)&&unitMap.containsKey(tokens[currIndex].toLowerCase())) {
-                            concat = handlePriceNumbersAndUnits(concat, tokens[currIndex]);
-                            currIndex++;
-                        } else if (fractionFlag == false ) {
+                        else
+                        {
                             concat = handlePriceNumbers(concat);
                         }
                     }
                     // if contains bn/m
-                    else if (concat.contains("m") || concat.contains("bn")) {
-                        if ((currIndex<tokens.length)&&symbols.containsKey(tokens[currIndex].toLowerCase())) {
-                            currIndex++;
-                            if ((currIndex<tokens.length)&& symbols.containsKey(tokens[currIndex].toLowerCase())) {
+                    else if (concat.contains("m") || concat.contains("bn"))
+                    {
+                        currIndex++;
+                        if(currIndex<tokens.length)
+                        {
+                            String temp=cleanWord(tokens[currIndex]).toLowerCase();
+                            if (symbols.containsKey(temp))
+                            {
                                 currIndex++;
+                                if(currIndex<tokens.length)
+                                {
+                                    if (symbols.containsKey(cleanWord(tokens[currIndex]).toLowerCase())) {
+                                        currIndex++;
+                                    }
+                                }
+                                if (concat.contains("m"))
+                                {
+                                    String num = concat.substring(0, concat.length() - 1);
+                                    concat = handlePriceNumbersAndUnits(num, "million");
+                                }
+                                else
+                                {
+                                    String num = concat.substring(0, concat.length() - 2);
+                                    concat = handlePriceNumbersAndUnits(num, "billion");
+                                }
                             }
-                            if (concat.contains("m")) {
-                                String num = concat.substring(0, concat.length() - 1);
-                                concat = handlePriceNumbersAndUnits(num, "million");
-                            } else {
-                                String num = concat.substring(0, concat.length() - 2);
-                                concat = handlePriceNumbersAndUnits(num, "billion");
+                            else
+                            {
+                                if (concat.contains("m")) {
+                                    String num = concat.substring(0, concat.length() - 1);
+                                    concat = handleSimpleNumbersAndUnits(num, "million");
+                                } else {
+                                    String num = concat.substring(0, concat.length() - 2);
+                                    concat = handleSimpleNumbersAndUnits(num, "billion");
+                                }
                             }
-                        } else {
-                            if (concat.contains("m")) {
+                        }
+                        else
+                        {
+                            if (concat.contains("m"))
+                            {
                                 String num = concat.substring(0, concat.length() - 1);
                                 concat = handleSimpleNumbersAndUnits(num, "million");
                             } else {
@@ -291,44 +459,157 @@ public class Parse {
                                 concat = handleSimpleNumbersAndUnits(num, "billion");
                             }
                         }
-                    } else if (concat.contains("-")) {
-
                     }
-                    // if contains %
+                    else
+                    {
+                        currIndex++;
+                    }
                 }
-            } else if ((currIndex<tokens.length)&&monthMap.containsKey(tokens[currIndex].toLowerCase())) {
-                concat = monthMap.get(tokens[currIndex].toLowerCase());
-                currIndex++;
-                if ((currIndex<tokens.length) &&isMonthNumber(tokens[currIndex]) != -1) {
-                    concat = monthHandler(tokens[currIndex], concat);
-                    currIndex++;
-                }
-            } else if ((currIndex<tokens.length)&& tokens[currIndex].charAt(0) >= 'A' && tokens[currIndex].charAt(0) <= 'Z')// is a entity
+            }
+            //finish handle numbers
+
+            // check if its month
+
+            else if (monthMap.containsKey(concat))
             {
-                concat = entityHandler();
-            } else {
-                // to think what happens is concat is junk. like "--"
-                concat = tokens[currIndex];
+                if((currIndex+1<tokens.length)&&isMonthNumber(tokens[currIndex+1]) != -1)
+                {
+                    concat = monthMap.get(concat);
+                    currIndex++;
+                    String temp=cleanWord(tokens[currIndex]);
+                    concat = monthHandler(temp, concat);
+                }
+                else
+                {
+                    if(termsWithCapitalLetters.containsKey(concat))
+                    {
+                        termsWithCapitalLetters.put(concat,termsWithCapitalLetters.get(concat)+1);
+                    }
+                    else
+                    {
+                        termsWithCapitalLetters.put(concat,1);
+                    }
+                    currIndex++;
+                    continue;
+                }
+                currIndex++;
+            }
+            //finish handle month
+
+            else if (concat.charAt(0) >= 'A' && concat.charAt(0) <= 'Z')// is a entity or termWithCapitalLetter
+            {
+                if(stopWords.contains(concat.toLowerCase()))
+                {
+                    currIndex++;
+                    continue;
+                }
+                if(currIndex+1<tokens.length)
+                {
+                    if(tokens[currIndex+1].charAt(0)>='A' && tokens[currIndex+1].charAt(0)<='Z' &&!( tokens[currIndex].contains(",")||tokens[currIndex].contains(".")))
+                    {
+                        currIndex++;
+                        entityHandler(concat);
+                        continue;
+                    }
+                }
+                if(termsWithCapitalLetters.containsKey(concat))
+                {
+                    termsWithCapitalLetters.replace(concat,termsWithCapitalLetters.get(concat)+1);
+                }
+                else
+                {
+                    termsWithCapitalLetters.put(concat,1);
+                }
+                currIndex++;
+                continue;
+            }
+            // finish handle entities
+            // handle words contains -
+            else if(concat.contains("-"))
+            {
+                int j=0;
+                while (j<concat.length())
+                {
+                    if(concat.charAt(j)=='-')
+                    {
+                        j++;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+                concat=concat.substring(j);
+                if(concat.contains("-"))
+                {
+                    String[] words = tokens[currIndex].split("-");
+                    if(words.length==0)
+                    {
+                        currIndex++;
+                        continue;
+                    }
+                    concat=words[0];
+                    int i;
+                    for (i=1; i<words.length;i++)
+                    {
+                        if(words[i].isEmpty())
+                        {
+                            continue;
+                        }
+                        String word=cleanWord(words[i]);
+                        if (allDocTerms.containsKey(word))
+                        {
+                            allDocTerms.replace(word, allDocTerms.get(word) + 1);
+                            if(maxFreqTermInDoc<allDocTerms.get(word) + 1)
+                                maxFreqTermInDoc=allDocTerms.get(word) + 1;
+                        }
+                        else
+                            allDocTerms.put(word, 1);
+                        concat=concat+"-"+words[i];
+                    }
+                }
+                else if(concat!="")
+                {
+                    if(stopWords.contains(concat))
+                    {
+                        currIndex++;
+                        continue;
+                    }
+                }
+                concat=cleanWord(concat);
+                currIndex++;
+            }
+            else // its a regular word
+            {
                 currIndex++;
             }
 
-            if (!concat.isEmpty()) {
-                concat = cleanWord(concat);
-
-                if(debug2)
-                    System.out.println(concat);
-
-
-                if (allDocTerms.containsKey(concat)) {
+            if (!concat.isEmpty())
+            {
+                if(cunterFlag)
+                    currIndex++;
+                if((concat.length()==1)&& (concat.contains("*")||concat.contains("|")||concat.contains("/")||concat.contains("=")||concat.contains("%")||concat.contains("+")))
+                {
+                    continue;
+                }
+                else if (allDocTerms.containsKey(concat))
+                {
+                    //System.out.println(concat);
                     allDocTerms.replace(concat, allDocTerms.get(concat) + 1);
                     if(maxFreqTermInDoc<allDocTerms.get(concat) + 1)
                         maxFreqTermInDoc=allDocTerms.get(concat) + 1;
                 }
                 else
+                {
+                    //System.out.println(concat);
                     allDocTerms.put(concat, 1);
+                }
+
             }
         }
     }
+
+
 
     private void handleArticleType() {
         articleType= new StringBuilder();
@@ -341,6 +622,51 @@ public class Parse {
                    currIndex++;
                 }
             }
+        }
+    }
+
+    private void entityHandle()
+    {
+        for (String entityTerm:entity.keySet()
+             ) {
+            String []tokens=entityTerm.split(" ");
+            String entityString="";
+            for(int i=0; i<tokens.length;i++)
+            {
+                String lowerCase=tokens[i].toLowerCase();
+                if(allDocTerms.containsKey(lowerCase))
+                {
+                    allDocTerms.replace(lowerCase,allDocTerms.get(lowerCase)+entity.get(tokens[i]));
+                }
+                else
+                {
+                    entityString+=tokens[i]+" ";
+                }
+            }
+            String temp=entityString.substring(0,entityString.length()-1);
+            if(!temp.equals(entityTerm))
+            {
+                int num=entity.get(entityTerm);
+                entity.remove(entityTerm);
+                entity.put(entityString,num);
+            }
+        }
+        // asks chen what to do maybe merge and where to store
+    }
+
+    private void handleCapitalTerms()
+    {
+        for (String term:termsWithCapitalLetters.keySet()
+             ) {
+            if(allDocTerms.containsKey(term.toLowerCase()))
+            {
+                allDocTerms.replace(term.toLowerCase(),allDocTerms.get(term.toLowerCase())+termsWithCapitalLetters.get(term));
+               // termsWithCapitalLetters.remove(term);
+            }
+        }
+        if(!termsWithCapitalLetters.isEmpty())
+        {
+            // asks chen how to save them correctly;
         }
     }
 
@@ -424,6 +750,7 @@ public class Parse {
     private String handleSimpleNumbers(String sNumb)
     {
        String sNum= cleanPureNumber(sNumb);
+        String ans="";
        double number=0;
         try {
             number=Double.parseDouble(sNum);
@@ -432,10 +759,9 @@ public class Parse {
            return sNum;
        }
        String unit="";
-       if(number<9999)
+       if(number<1000)
        {
-          String ans = String.valueOf(number);
-          return ans;
+          ans=sNum;
        }
        else if(number<1000000)
        {
@@ -457,19 +783,22 @@ public class Parse {
            unit="T";
        }
        String sNumber=String.valueOf(number);
-       int position=sNumber.indexOf('.');
-       int diff=sNumber.length()-position;
-       if(diff>=3&&(position+4<=diff))
+       int position =sNumber.indexOf(".");
+       if(sNumber.length()>=position+4&& sNumber.charAt(position+3)!='0')
        {
-           String ans = sNumber.substring(0,position+4)+unit;
-           return ans;
+           ans=sNumber.substring(0,position+4);
+       }
+       else if(sNumber.length()>=position+3&& sNumber.charAt(position+2)!='0')
+       {
+           ans=sNumber.substring(0,position+3);
+       }
+       else if(sNumber.length()>=position+2 && sNumber.charAt(position+1)!='0')
+       {
+           ans=sNumber.substring(0,position+2);
        }
        else
-       {
-           String ans = sNumber.substring(0,position)+unit;
-           return ans;
-       }
-
+           ans=sNumber.substring(0,position);
+       return ans+unit;
     }
 
 
@@ -492,17 +821,15 @@ public class Parse {
        int countPoints=0;
        for (int i=0; i<val.length();i++)
        {
-           if((val.charAt(i)<='9' && val.charAt(i)>='0') || val.charAt(i)==','||val.charAt(i)=='.'||val.charAt(i)=='/')
+           if((val.charAt(i)<='9' && val.charAt(i)>='0') || val.charAt(i)==','||val.charAt(i)=='.')
            {
-               if(val.charAt(i)=='/')
-                   countSlech++;
                if(val.charAt(i)=='.')
                    countPoints++;
            }
            else
                 return false;
        }
-       if(countSlech<=1 || countPoints<=1)
+       if(countPoints<=1)
             return true;
        return false;
     }
@@ -516,28 +843,36 @@ public class Parse {
         return number;
     }
 
-    private String entityHandler()
+    private void entityHandler(String cleanToken)
     {
-        String concat="";
-        concat=tokens[currIndex++];
-        if(concat.equals("Text"))
-            return "";
-        while((currIndex<tokens.length)&& (tokens[currIndex].charAt(0)>='A' && tokens[currIndex].charAt(0)<='Z' &&
-                (!monthMap.containsKey(tokens[currIndex].toLowerCase()))))
+        String concat=cleanToken+" ";
+        while((currIndex<tokens.length)&& (tokens[currIndex].charAt(0)>='A' && tokens[currIndex].charAt(0)<='Z' && (!monthMap.containsKey(tokens[currIndex]))))
         {
-            concat=concat+" "+tokens[currIndex++];
+            String token=tokens[currIndex];
+            if(token.charAt(token.length()-1)=='.' || token.charAt(token.length()-1)==',')
+            {
+                String clean=cleanWord(token);
+                concat+=clean;
+                currIndex++;
+                break;
+            }
+            else
+            {
+                concat+=cleanWord(tokens[currIndex])+" ";
+                currIndex++;
+            }
         }
         concat=cleanWord(concat);
         if(entity.containsKey(concat))
         {
-            entity.replace(concat,entity.get(concat)+1);
+            entity.put(concat,entity.get(concat)+1);
         }
         else
         {
             entity.put(concat,1);
         }
-        return concat;
     }
+
     private String monthHandler(String number, String month)
     {
         String ans="";
@@ -578,15 +913,36 @@ public class Parse {
 
     public String cleanWord(String word)
     {
-        if(word.charAt(0)=='.'|| word.charAt(0)==','|| word.charAt(0)=='-')
+        int j=0;
+        for(int i=0;i<word.length();i++)
         {
-            word=word.substring(1);
+            if(word.charAt(i)=='.'|| word.charAt(i)==',' || word.charAt(i)==' ' || word.charAt(i)=='"'|| word.charAt(i)=='\'')
+            {
+                j++;
+            }
+            else
+            {
+                break;
+            }
         }
-        if(word.isEmpty()==false &&(word.charAt(word.length()-1)=='.' || word.charAt(word.length()-1)==','||
-                word.charAt(word.length()-1)=='-'))
+        word=word.substring(j);
+        j=word.length();
+        if(word.isEmpty())
         {
-            word=word.substring(0,word.length()-1);
+            return word;
         }
+        for(int i=word.length()-1;i>0;i--)
+        {
+            if(word.charAt(i)=='.'|| word.charAt(i)==',' || word.charAt(i)==' ' || word.charAt(i)=='"'|| word.charAt(i)=='\'')
+            {
+                j--;
+            }
+            else
+            {
+                break;
+            }
+        }
+        word=word.substring(0,j);
         return word;
     }
 

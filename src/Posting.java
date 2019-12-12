@@ -111,34 +111,4 @@ public class Posting {
             // create a new posting file
         }
     }
-
-
-
-
-
-
-
-
-/*
-    public void test ()
-    {
-        Term t1 = new Term("t1",1,"doc1");
-        Term t2 = new Term(("t2"),1,"doc1");
-        Term t3 = new Term("t3",1,"doc3");
-        Term t4 = new Term(("t4"),1,"doc4");
-        terms.add(t1);
-        terms.add(t2);
-        terms.add(t3);
-        terms.add(t4);
-        allDocTerms.put("t5",4);
-        allDocTerms.put("t",2);
-        allDocTerms.put("t2",5);
-        currDoc = new Document();
-        currDoc.setDocName("doc2");
-        mergeTerms();
-    }
-
-*/
-
-
 }
