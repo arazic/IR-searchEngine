@@ -4,7 +4,8 @@ import java.util.TreeSet;
 public class Term implements Comparable<Term>
 {
     private String stringTerm;
-    private int freq;
+    private int freq;// df- number of doc is appear in
+    private int totalTf;// how many times in all the corpus
     private Set<String> documents;
 
 
@@ -12,13 +13,8 @@ public class Term implements Comparable<Term>
         this.stringTerm = term;
         this.freq = freq;
         this.documents=new TreeSet<>();
+        this.totalTf = freq;
         documents.add(document+":"+freq);
-    }
-
-    public Term(String term, int freq) {
-        this.stringTerm = term;
-        this.freq = freq;
-        this.documents=new TreeSet<>();
     }
 
     public String getStringTerm() {
@@ -32,6 +28,15 @@ public class Term implements Comparable<Term>
     public void addDocToTerm(String sDoc, int frequency)
     {
         documents.add(sDoc+":"+frequency);
+        totalTf = totalTf +frequency;
+    }
+
+    public void setTotalTf(int totalTf) {
+        this.totalTf = totalTf;
+    }
+
+    public int getTotalTf() {
+        return totalTf;
     }
 
     public int getFreq()
