@@ -25,6 +25,7 @@ public class EngineManager {
         System.out.println("end "+ date2);
     }
 
+
     public EngineManager(String corpusPath, String postingPath, boolean stemming){
         this.corpusPath=corpusPath;
         this.postingPath=postingPath;
