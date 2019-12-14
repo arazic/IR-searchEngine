@@ -583,15 +583,18 @@ public class Parse {
                             continue;
                         }
                         String word=cleanWord(words[i]);
-                        if (allDocTerms.containsKey(word))
+                        if(!word.isEmpty())
                         {
-                            allDocTerms.replace(word, allDocTerms.get(word) + 1);
-                            if(maxFreqTermInDoc<allDocTerms.get(word) + 1)
-                                maxFreqTermInDoc=allDocTerms.get(word) + 1;
+                            if (allDocTerms.containsKey(word))
+                            {
+                                allDocTerms.replace(word, allDocTerms.get(word) + 1);
+                                if(maxFreqTermInDoc<allDocTerms.get(word) + 1)
+                                    maxFreqTermInDoc=allDocTerms.get(word) + 1;
+                            }
+                            else
+                                allDocTerms.put(word, 1);
+                            concat=concat+"-"+words[i];
                         }
-                        else
-                            allDocTerms.put(word, 1);
-                        concat=concat+"-"+words[i];
                     }
                 }
                 else if(concat!="")
@@ -677,6 +680,7 @@ public class Parse {
             }
             if(!allDocTerms.containsKey(token1)&& !allDocTerms.containsKey(token2))
             {
+                if(token1.isEmpty())
                 allDocTerms.put(token1,1);
                 allDocTerms.put(token2,1);
                 allDocTerms.put(concat,1);
@@ -722,29 +726,32 @@ public class Parse {
             int termFrequency=0;
             for(int i=0; i<length;i++)
             {
-                if(termsWithCapitalLetters.containsKey(splitName[i]))
+                if(!splitName[i].isEmpty())
                 {
-                    String token=splitName[i].toLowerCase();
-                    if(!(allDocTerms.containsKey(token)|| stopWords.contains(token)||token.equals("mr")|| token.equals("mrs")))
+                    if(termsWithCapitalLetters.containsKey(splitName[i]))
                     {
-                        allDocTerms.put(splitName[i],frequency+termsWithCapitalLetters.get(splitName[i]));
-                        termFrequency=termFrequency+termsWithCapitalLetters.get(splitName[i]);
-                        termsWithCapitalLetters.remove(splitName[i]);
+                        String token=splitName[i].toLowerCase();
+                        if(!(allDocTerms.containsKey(token)|| stopWords.contains(token)||token.equals("mr")|| token.equals("mrs")))
+                        {
+                            allDocTerms.put(splitName[i],frequency+termsWithCapitalLetters.get(splitName[i]));
+                            termFrequency=termFrequency+termsWithCapitalLetters.get(splitName[i]);
+                            termsWithCapitalLetters.remove(splitName[i]);
+                        }
                     }
-                }
-                else
-                {
-                    allDocTerms.put(splitName[i],frequency);
-                }
-                if(length>2)
-                {
-                    if(i!=0)
+                    else
                     {
-                        partOfName1=splitName[i]+" ";
+                        allDocTerms.put(splitName[i],frequency);
                     }
-                    if(i!=length-1)
+                    if(length>2)
                     {
-                        partOfName2=splitName[i]+" ";
+                        if(i!=0)
+                        {
+                            partOfName1=splitName[i]+" ";
+                        }
+                        if(i!=length-1)
+                        {
+                            partOfName2=splitName[i]+" ";
+                        }
                     }
                 }
             }
@@ -763,13 +770,16 @@ public class Parse {
     {
         for (String term:termsWithCapitalLetters.keySet()
              ) {
-            if(allDocTerms.containsKey(term.toLowerCase()))
+            if(!term.isEmpty())
             {
-                allDocTerms.replace(term.toLowerCase(),allDocTerms.get(term.toLowerCase())+termsWithCapitalLetters.get(term));
-            }
-            else
-            {
-                allDocTerms.put(term,termsWithCapitalLetters.get(term));
+                if(allDocTerms.containsKey(term.toLowerCase()))
+                {
+                    allDocTerms.replace(term.toLowerCase(),allDocTerms.get(term.toLowerCase())+termsWithCapitalLetters.get(term));
+                }
+                else
+                {
+                    allDocTerms.put(term,termsWithCapitalLetters.get(term));
+                }
             }
         }
     }
