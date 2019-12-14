@@ -114,7 +114,7 @@ public class Posting {
 /*                    if( (term.getStringTerm().equals("anc")|| term.getStringTerm().equals("ANC")| term.getStringTerm().equals("Anc")))
                         System.out.println("jump");*/
 
-                    if((!term.getStringTerm().equals("")) && (toUp.charAt(0)==term.getStringTerm().charAt(0)) &&
+                    if( (toUp.charAt(0)==term.getStringTerm().charAt(0)) &&
                          (!(term.getStringTerm().charAt(0) >= '0' && term.getStringTerm().charAt(0) <= '9'))){// the term is not number
                         if (((term.getStringTerm().toUpperCase())).compareTo(term.getStringTerm()) == 0){
                             if(term.getStringTerm().contains(" ")){
@@ -196,10 +196,10 @@ public class Posting {
                             if(cur==2){
                                 countPointer++;
                                 if(toAdd.contains("^u")){
-                                    String theFirstLetter= String.valueOf(split1[0].charAt(0));
-                                    String rest=split1[0].substring(1);
+                                    //String theFirstLetter= String.valueOf(split1[0].charAt(0));
+                                   // String rest=split1[0].substring(1);
                                    // Indexer.addTerm((theFirstLetter.toUpperCase()+rest), (mergeDocs(split1[1], split2[1]) + "!" +df+"!"+ freq));
-                                    Indexer.addTerm((theFirstLetter.toUpperCase()+rest), df+"!"+ freq+"!" + countPointer);
+                                    Indexer.addTerm(split1[0].toUpperCase(), df+"!"+ freq+"!" + countPointer);
                                 }
                                 else if(toAdd.contains("^e")){
                                    // Indexer.addTermToEntity(split1[0], (mergeDocs(split1[1], split2[1]) + "!" +df+"!"+ freq));
@@ -218,11 +218,11 @@ public class Posting {
                             writerToMargeTmpPosting.append('\n');
                             if(cur==2){
                                 countPointer++;
-                                String theFirstLetter= String.valueOf(split1[0].charAt(0));
-                                String rest=split1[0].substring(1);
+                                //String theFirstLetter= String.valueOf(split1[0].charAt(0));
+                                //String rest=split1[0].substring(1);
                                 if(firstFileLine.contains("^u")){
                                     //Indexer.addTerm((theFirstLetter.toUpperCase()+rest), split1[1] + "!" + split1[2]+"!"+split1[3]);
-                                    Indexer.addTerm((theFirstLetter.toUpperCase()+rest), split1[2]+"!"+split1[3]+"!"+countPointer);
+                                    Indexer.addTerm(split1[0].toUpperCase(), split1[2]+"!"+split1[3]+"!"+countPointer);
                                 }
                                 else if(firstFileLine.contains("^e")){
                                    // Indexer.addTermToEntity(split1[0], split1[1] + "!" + split1[2]+"!"+split1[3]);
@@ -240,11 +240,11 @@ public class Posting {
                             writerToMargeTmpPosting.append('\n');
                             if(cur==2) {
                                 countPointer++;
-                                String theFirstLetter = String.valueOf(split2[0].charAt(0));
-                                String rest = split2[0].substring(1);
+                                //String theFirstLetter = String.valueOf(split2[0].charAt(0));
+                                //String rest = split2[0].substring(1);
                                 if (secondFileLine.contains("^u")) {
                                    // Indexer.addTerm((theFirstLetter.toUpperCase() + rest), split2[1] + "!" + split2[2] + "!" + split2[3]);
-                                    Indexer.addTerm((theFirstLetter.toUpperCase() + rest),split2[2] + "!" + split2[3]+"!"+countPointer);
+                                    Indexer.addTerm(split2[0].toUpperCase(),split2[2] + "!" + split2[3]+"!"+countPointer);
                                 }
                                 else if(firstFileLine.contains("^e")){
                                    // Indexer.addTermToEntity(split2[0], split2[1] + "!" + split2[2]+"!"+split2[3]);
@@ -265,9 +265,9 @@ public class Posting {
                             countPointer++;
                             String[] split1 = splitLine(firstFileLine);
                             if (firstFileLine.contains("^u")) {
-                                String theFirstLetter = String.valueOf(split1[0].charAt(0));
-                                String rest = split1[0].substring(1);
-                                Indexer.addTerm((theFirstLetter.toUpperCase() + rest), split1[2] + "!" + split1[3]+"!"+countPointer);
+                              //  String theFirstLetter = String.valueOf(split1[0].charAt(0));
+                               // String rest = split1[0].substring(1);
+                                Indexer.addTerm(split1[0].toUpperCase(), split1[2] + "!" + split1[3]+"!"+countPointer);
                                // Indexer.addTerm((theFirstLetter.toUpperCase() + rest), split1[1] + "!" + split1[2] + "!" + split1[3]);
                             }
                             else if(firstFileLine.contains("^e")){
@@ -289,9 +289,9 @@ public class Posting {
                                 countPointer++;
                                 String[] split2 = splitLine(secondFileLine);
                                 if (secondFileLine.contains("^u")) {
-                                    String theFirstLetter = String.valueOf(split2[0].charAt(0));
-                                    String rest = split2[0].substring(1);
-                                    Indexer.addTerm((theFirstLetter.toUpperCase() + rest), split2[2] + "!" + split2[3]+"!"+countPointer);
+                                    //String theFirstLetter = String.valueOf(split2[0].charAt(0));
+                                    //String rest = split2[0].substring(1);
+                                    Indexer.addTerm(split2[0].toUpperCase(), split2[2] + "!" + split2[3]+"!"+countPointer);
                                    // Indexer.addTerm((theFirstLetter.toUpperCase() + rest), split2[1] + "!" + split2[2] + "!" + split2[3]);
                                 }
                                 else if(secondFileLine.contains("^e")){
@@ -335,9 +335,9 @@ public class Posting {
                             countPointer++;
                             String[] split1 = splitLine(firstFileLine);
                             if (firstFileLine.contains("^u")) {
-                                String theFirstLetter = String.valueOf(split1[0].charAt(0));
-                                String rest = split1[0].substring(1);
-                                Indexer.addTerm((theFirstLetter.toUpperCase() + rest),  split1[2] + "!" + split1[3]+"!"+ countPointer);
+                                //String theFirstLetter = String.valueOf(split1[0].charAt(0));
+                                //String rest = split1[0].substring(1);
+                                Indexer.addTerm(split1[0].toUpperCase(),  split1[2] + "!" + split1[3]+"!"+ countPointer);
                                 //Indexer.addTerm((theFirstLetter.toUpperCase() + rest), split1[1] + "!" + split1[2] + "!" + split1[3]);
                             }
                             else if(firstFileLine.contains("^e")){

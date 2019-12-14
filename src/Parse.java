@@ -149,8 +149,8 @@ public class Parse {
         }
         */
 
-        cleanParser();
-        //updateDoc();
+        //cleanParser();
+        updateDoc();
     }
 
 
