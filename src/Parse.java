@@ -15,8 +15,6 @@ public class Parse {
     private HashMap<String, Integer>transperToFormat;
 */
     private HashMap<String,Integer> allDocTerms;
-    private HashMap<String,Integer> entity;
-    private HashMap<String,Integer> termsWithCapitalLetters;
     private StringBuilder docLang;
     private StringBuilder articleType;
     private List<String> quotes;
@@ -44,8 +42,6 @@ public class Parse {
         debug2=false;
         allDocTerms = new HashMap<>();
         quotes = new LinkedList<>();
-        entity=new HashMap<>();
-        termsWithCapitalLetters=new HashMap<>();
         loadMonthMap();
         loadUnits();
         loadSymbols();
@@ -58,8 +54,6 @@ public class Parse {
     {
         allDocTerms.clear();
         quotes.clear();
-        entity.clear();
-        termsWithCapitalLetters.clear();
         currIndex=0;
     }
 
@@ -139,8 +133,6 @@ public class Parse {
             return;
         }
         parseText();
-        entityHandle();
-        handleCapitalTerms();
         /*
         for (String word:allDocTerms.keySet()
              ) {
@@ -489,19 +481,6 @@ public class Parse {
                     String temp=cleanWord(tokens[currIndex]);
                     concat = monthHandler(temp, concat);
                 }
-                else
-                {
-                    if(termsWithCapitalLetters.containsKey(concat))
-                    {
-                        termsWithCapitalLetters.put(concat,termsWithCapitalLetters.get(concat)+1);
-                    }
-                    else
-                    {
-                        termsWithCapitalLetters.put(concat,1);
-                    }
-                    currIndex++;
-                    continue;
-                }
                 currIndex++;
             }
             //finish handle month
@@ -538,16 +517,7 @@ public class Parse {
                     currIndex++;
                     continue;
                 }
-                if(termsWithCapitalLetters.containsKey(concat))
-                {
-                    termsWithCapitalLetters.replace(concat,termsWithCapitalLetters.get(concat)+1);
-                }
-                else
-                {
-                    termsWithCapitalLetters.put(concat,1);
-                }
                 currIndex++;
-                continue;
             }
             // finish handle entities
             // handle words contains -
@@ -709,7 +679,7 @@ public class Parse {
         }
         allDocTerms.put(concat,1);
     }
-
+/*
     private void entityHandle()
     {
         String [] splitName;
@@ -765,24 +735,7 @@ public class Parse {
             allDocTerms.put(entityName.toUpperCase(),frequency+termFrequency);
         }
     }
-
-    private void handleCapitalTerms()
-    {
-        for (String term:termsWithCapitalLetters.keySet()
-             ) {
-            if(!term.isEmpty())
-            {
-                if(allDocTerms.containsKey(term.toLowerCase()))
-                {
-                    allDocTerms.replace(term.toLowerCase(),allDocTerms.get(term.toLowerCase())+termsWithCapitalLetters.get(term));
-                }
-                else
-                {
-                    allDocTerms.put(term,termsWithCapitalLetters.get(term));
-                }
-            }
-        }
-    }
+    */
 
     private void handleLanguage() {
         docLang= new StringBuilder();
@@ -966,24 +919,42 @@ public class Parse {
             if(token.charAt(token.length()-1)=='.' || token.charAt(token.length()-1)==',')
             {
                 String clean=cleanWord(token);
+                if(allDocTerms.containsKey(clean))
+                {
+                    allDocTerms.put(clean,allDocTerms.get(clean)+1);
+                }
+                else
+                {
+                    allDocTerms.put(clean,1);
+                }
                 concat+=clean;
                 currIndex++;
                 break;
             }
             else
             {
-                concat+=cleanWord(tokens[currIndex])+" ";
+                String clean=cleanWord(tokens[currIndex]);
+                concat+=clean+" ";
+                if(allDocTerms.containsKey(clean))
+                {
+                    allDocTerms.put(clean,allDocTerms.get(clean)+1);
+                }
+                else
+                {
+                    allDocTerms.put(clean,1);
+                }
                 currIndex++;
             }
+
         }
         concat=cleanWord(concat);
-        if(entity.containsKey(concat))
+        if(allDocTerms.containsKey(concat))
         {
-            entity.put(concat,entity.get(concat)+1);
+            allDocTerms.put(concat,allDocTerms.get(concat)+1);
         }
         else
         {
-            entity.put(concat,1);
+            allDocTerms.put(concat,1);
         }
     }
 

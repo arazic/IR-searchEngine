@@ -114,7 +114,7 @@ public class Posting {
 /*                    if( (term.getStringTerm().equals("anc")|| term.getStringTerm().equals("ANC")| term.getStringTerm().equals("Anc")))
                         System.out.println("jump");*/
 
-                    if( (toUp.charAt(0)==term.getStringTerm().charAt(0)) &&
+                    if( (!term.getStringTerm().equals(""))&&(toUp.charAt(0)==term.getStringTerm().charAt(0)) &&
                          (!(term.getStringTerm().charAt(0) >= '0' && term.getStringTerm().charAt(0) <= '9'))){// the term is not number
                         if (((term.getStringTerm().toUpperCase())).compareTo(term.getStringTerm()) == 0){
                             if(term.getStringTerm().contains(" ")){
