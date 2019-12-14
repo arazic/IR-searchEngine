@@ -14,7 +14,7 @@ public class EngineManager {
         long millis=System.currentTimeMillis();
         java.util.Date date=new java.util.Date(millis);
         System.out.println("start "+ date);
-        EngineManager engineManager= new EngineManager("C:/Users/user/engine/corpus", "C:/Users/user/engine/posting",false);
+        EngineManager engineManager= new EngineManager("C:/Users/user/engine/lXcorpus", "C:/Users/user/engine/posting",false);
         //EngineManager engineManager= new EngineManager("C:/Users/gal/Desktop/FB396001", "C:/Users/user/posting",false);
 
         engineManager.startEngine();
