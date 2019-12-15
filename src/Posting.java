@@ -6,7 +6,6 @@ import java.util.*;
 
 public class Posting {
 
-    private int docFILE= 100; // how many doc in a postingDoc file
     private int chunkPostingSIZE =300; // how many doc in a postingTerm file
     private int chunksCount;
     private static TreeSet<Term> mergeTerms;

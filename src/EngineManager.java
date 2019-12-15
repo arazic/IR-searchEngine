@@ -39,7 +39,6 @@ public class EngineManager {
         Indexer.initIndexer();
         readFile.createDocuments();  //create also tmpPosting files
         posting.margeToMainPostingFile();
-
     }
 
 
