@@ -30,7 +30,6 @@ public class Parse {
     private boolean debug1;
     private boolean debug2;
 
-    //private Pattern priceLength4= Pattern.compile("(million|billion|trillion)"+ " "+"U.S."+ " "+"dollars");
     Pattern containsNumber= Pattern.compile(".*[0-9].*");
     Pattern pureNumberPattern= Pattern.compile("((([0-9]*)"+"[.,])*)"+"([0-9]*)");
     private Pattern fractionPattern= Pattern.compile("[0-9]"+"/"+"[0-9]");
@@ -42,6 +41,7 @@ public class Parse {
         debug2=false;
         allDocTerms = new HashMap<>();
         quotes = new LinkedList<>();
+        maxFreqTermInDoc=1;
         loadMonthMap();
         loadUnits();
         loadSymbols();
