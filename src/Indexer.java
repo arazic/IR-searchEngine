@@ -42,7 +42,7 @@ public class Indexer {
             System.out.println(termsDic.size());
             index.close();
 
-             index= new BufferedWriter(new FileWriter("C:/Users/gal/Desktop/FB396018/documents/terms"));
+             index= new BufferedWriter(new FileWriter("C:/Users/gal/Desktop/FB396018/documents/terms/indexerEntity.txt"));
              set= entityDic.entrySet();
              it = set.iterator();
 

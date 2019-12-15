@@ -15,7 +15,7 @@ public class EngineManager {
         java.util.Date date=new java.util.Date(millis);
         System.out.println("start "+ date);
         //EngineManager engineManager= new EngineManager("C:/Users/user/engine/lXcorpus", "C:/Users/user/engine/posting",false);
-        EngineManager engineManager= new EngineManager("C:/Users/gal/Desktop/FB396018", "C:/Users/gal/Desktop/FB396018/documents",false);
+        EngineManager engineManager= new EngineManager("C:/Users/gal/Desktop/FB396018/corpus", "C:/Users/gal/Desktop/FB396018/documents",false);
 
         engineManager.startEngine();
         System.out.println("chen is my queen! time" );
@@ -39,7 +39,6 @@ public class EngineManager {
         Indexer.initIndexer();
         readFile.createDocuments();  //create also tmpPosting files
         posting.margeToMainPostingFile();
-
     }
 
 

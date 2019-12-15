@@ -11,9 +11,9 @@ public class Parse {
     private static HashMap<String,String> unitMap = new HashMap<>();
     private static HashMap<String, String> symbols=new HashMap<>();
 
-/*
-    private HashMap<String, Integer>transperToFormat;
-*/
+    /*
+        private HashMap<String, Integer>transperToFormat;
+    */
     private HashMap<String,Integer> allDocTerms;
     private StringBuilder docLang;
     private StringBuilder articleType;
@@ -49,6 +49,48 @@ public class Parse {
 
     }
 
+    private void insertToAllDocTerms(String term)
+    {
+        if(term.isEmpty())
+        {
+            return;
+        }
+        //System.out.println(term);
+        if(term.charAt(0)>'Z'|| term.charAt(0)<'A') // is lowerCase
+        {
+            if(allDocTerms.containsKey(term))
+            {
+                allDocTerms.replace(term,allDocTerms.get(term)+1);
+                return;
+            }
+            String upper=term.toUpperCase();
+            if(upper.charAt(0)>='A'&& upper.charAt(0)<='Z')
+            {
+                if(allDocTerms.containsKey(upper))
+                {
+                    int freq=allDocTerms.get(upper);
+                    allDocTerms.remove(upper);
+                    allDocTerms.put(term,freq+1);
+                    return;
+                }
+            }
+            allDocTerms.put(term,1);
+            return;
+        }
+        String lowerCase=term.toLowerCase();
+        if(allDocTerms.containsKey(lowerCase))
+        {
+            allDocTerms.replace(lowerCase,allDocTerms.get(lowerCase)+1);
+            return;
+        }
+        String upperCase=term.toUpperCase();
+        if(allDocTerms.containsKey(upperCase))
+        {
+            allDocTerms.replace(upperCase,allDocTerms.get(upperCase)+1);
+            return;
+        }
+        allDocTerms.put(upperCase,1);
+    }
 
     private void cleanParser()
     {
@@ -133,15 +175,6 @@ public class Parse {
             return;
         }
         parseText();
-        /*
-        for (String word:allDocTerms.keySet()
-             ) {
-            System.out.println(word+"   "+allDocTerms.get(word));
-
-        }
-        */
-
-        //cleanParser();
         updateDoc();
     }
 
@@ -156,25 +189,21 @@ public class Parse {
                 maxFrequency=entry.getValue();
             }
         }
-
         //currDoc.addTermsToDoc(allDocTerms);
         currDoc.setDocLang(docLang);
         currDoc.setArticleType(articleType);
         currDoc.setMaxTerm(maxFrequency);
         currDoc.setUniqeTermsNum(allDocTerms.size());
-
         if (debug1)
             System.out.println("///////////////// finish to "+currDoc.getDocName() +" maxTerm:"+currDoc.getMaxTerm()+" unique:"+currDoc.getUniqeTermsNum());
 
-        //posting.postingDoc(currDoc);
-        posting.postingTerms(allDocTerms, currDoc.getDocName());
+        //  posting.postingDoc(currDoc);
+            posting.postingTerms(allDocTerms, currDoc.getDocName());
 
 
         maxFreqTermInDoc=0;
         allDocTerms.clear();
     }
-
-
 
     private void findQuotes()
     {
@@ -189,22 +218,19 @@ public class Parse {
 
     private void parseText()
     {
-        if(tokens.length==0)
-        {
-            return;
-        }
+
         if(tokens[currIndex].equals("Text"))
             currIndex++;
         while (currIndex < tokens.length)
         {
             boolean cunterFlag=false;
+            boolean fractionFlag = false;
             String concat = cleanWord(tokens[currIndex]);
             if(concat.isEmpty()||concat.contains("<")||concat.contains(">"))
             {
                 currIndex++;
                 continue;
             }
-            boolean fractionFlag = false;
             if (stopWords.contains(concat))
             {
                 if (concat.equals("between"))
@@ -332,7 +358,6 @@ public class Parse {
                     }
                 }
                 // finish handle pure numbers
-
                 else // its not a pure number
                 {
                     if(concat.contains("-"))
@@ -351,14 +376,7 @@ public class Parse {
                                     {
                                         word=handleSimpleNumbers(word);
                                     }
-                                    if (allDocTerms.containsKey(word))
-                                    {
-                                        allDocTerms.replace(word, allDocTerms.get(word) + 1);
-                                        if(maxFreqTermInDoc<allDocTerms.get(word) + 1)
-                                            maxFreqTermInDoc=allDocTerms.get(word) + 1;
-                                    }
-                                    else
-                                        allDocTerms.put(word, 1);
+                                    insertToAllDocTerms(word);
                                     concat=concat+"-"+words[i];
                                 }
                             }
@@ -371,7 +389,6 @@ public class Parse {
                         if (concat.charAt(0) == '$')
                         {
                             concat = concat.substring(1);
-
                         }
                         else if (concat.charAt(concat.length() - 1) == '$')
                         {
@@ -481,6 +498,12 @@ public class Parse {
                     String temp=cleanWord(tokens[currIndex]);
                     concat = monthHandler(temp, concat);
                 }
+                else
+                {
+                    insertToAllDocTerms(concat);
+                    currIndex++;
+                    continue;
+                }
                 currIndex++;
             }
             //finish handle month
@@ -511,15 +534,29 @@ public class Parse {
                             continue;
                         }
                     }
+                    else
+                    {
+                        if(stopWords.contains(concat.toLowerCase()))
+                        {
+                            currIndex++;
+                            continue;
+                        }
+                        insertToAllDocTerms(concat);
+                        currIndex++;
+                        continue;
+                    }
                 }
                 if(stopWords.contains(concat.toLowerCase()))
                 {
                     currIndex++;
                     continue;
                 }
+                insertToAllDocTerms(concat);
                 currIndex++;
+                continue;
             }
             // finish handle entities
+
             // handle words contains -
             else if(concat.contains("-"))
             {
@@ -555,14 +592,7 @@ public class Parse {
                         String word=cleanWord(words[i]);
                         if(!word.isEmpty())
                         {
-                            if (allDocTerms.containsKey(word))
-                            {
-                                allDocTerms.replace(word, allDocTerms.get(word) + 1);
-                                if(maxFreqTermInDoc<allDocTerms.get(word) + 1)
-                                    maxFreqTermInDoc=allDocTerms.get(word) + 1;
-                            }
-                            else
-                                allDocTerms.put(word, 1);
+                            insertToAllDocTerms(word);
                             concat=concat+"-"+words[i];
                         }
                     }
@@ -591,19 +621,10 @@ public class Parse {
                 {
                     continue;
                 }
-                else if (allDocTerms.containsKey(concat))
-                {
-                 //   System.out.println(concat);
-                    allDocTerms.replace(concat, allDocTerms.get(concat) + 1);
-                    if(maxFreqTermInDoc<allDocTerms.get(concat) + 1)
-                        maxFreqTermInDoc=allDocTerms.get(concat) + 1;
-                }
                 else
                 {
-                   // System.out.println(concat);
-                    allDocTerms.put(concat, 1);
+                    insertToAllDocTerms(concat);
                 }
-
             }
         }
     }
@@ -617,8 +638,8 @@ public class Parse {
                 currIndex++;
                 if(tokens[currIndex].toLowerCase().contains("type")){
                     currIndex++;
-                   articleType.append(tokens[currIndex]);
-                   currIndex++;
+                    articleType.append(tokens[currIndex]);
+                    currIndex++;
                 }
             }
         }
@@ -630,112 +651,28 @@ public class Parse {
         String token1=cleanWord(tokens[currIndex]);
         String token2=cleanWord(tokens[currIndex+2]);
         boolean flag=false;
-            if(currIndex+4<tokens.length)
-            {
-                String temp=cleanWord(tokens[currIndex+3]).toLowerCase();
-                if(symbols.containsKey(temp))
-                {
-                    token1=token1+symbols.get(temp);
-                    token2=token2+symbols.get(temp);
-                    concat=token1+"-"+token2;
-                    currIndex=currIndex+4;
-                }
-                else
-                    flag=true;
-            }
-            if(flag)
-            {
-                concat = token1 + "-" + token2;
-                currIndex = currIndex + 3;
-            }
-            if(!allDocTerms.containsKey(token1)&& !allDocTerms.containsKey(token2))
-            {
-                if(token1.isEmpty())
-                allDocTerms.put(token1,1);
-                allDocTerms.put(token2,1);
-                allDocTerms.put(concat,1);
-                return;
-            }
-            if(!allDocTerms.containsKey(token1))
-            {
-                allDocTerms.put(token1,1);
-                allDocTerms.replace(token2,allDocTerms.get(token2)+1);
-                allDocTerms.put(concat,1);
-                return;
-            }
-        if(!allDocTerms.containsKey(token2))
+        if(currIndex+4<tokens.length)
         {
-            allDocTerms.put(token2,1);
-            allDocTerms.replace(token1,allDocTerms.get(token1)+1);
-            allDocTerms.put(concat,1);
-            return;
+            String temp=cleanWord(tokens[currIndex+3]).toLowerCase();
+            if(symbols.containsKey(temp))
+            {
+                token1=token1+symbols.get(temp);
+                token2=token2+symbols.get(temp);
+                concat=token1+"-"+token2;
+                currIndex=currIndex+4;
+            }
+            else
+                flag=true;
         }
-        allDocTerms.replace(token1,allDocTerms.get(token1)+1);
-        allDocTerms.replace(token2,allDocTerms.get(token2)+1);
-        if(allDocTerms.containsKey(concat))
+        if(flag)
         {
-            allDocTerms.replace(concat,allDocTerms.get(concat)+1);
-            return;
+            concat = token1 + "-" + token2;
+            currIndex = currIndex + 3;
         }
-        allDocTerms.put(concat,1);
+        insertToAllDocTerms(token1);
+        insertToAllDocTerms(token2);
+        insertToAllDocTerms(concat);
     }
-/*
-    private void entityHandle()
-    {
-        String [] splitName;
-        int length=0;
-
-        for (String entityName:entity.keySet()
-             )
-        {
-            splitName=entityName.split(" ");
-            length=splitName.length;
-            int frequency=entity.get(entityName);
-            String partOfName1="";
-            String partOfName2="";
-            int termFrequency=0;
-            for(int i=0; i<length;i++)
-            {
-                if(!splitName[i].isEmpty())
-                {
-                    if(termsWithCapitalLetters.containsKey(splitName[i]))
-                    {
-                        String token=splitName[i].toLowerCase();
-                        if(!(allDocTerms.containsKey(token)|| stopWords.contains(token)||token.equals("mr")|| token.equals("mrs")))
-                        {
-                            allDocTerms.put(splitName[i],frequency+termsWithCapitalLetters.get(splitName[i]));
-                            termFrequency=termFrequency+termsWithCapitalLetters.get(splitName[i]);
-                            termsWithCapitalLetters.remove(splitName[i]);
-                        }
-                    }
-                    else
-                    {
-                        allDocTerms.put(splitName[i],frequency);
-                    }
-                    if(length>2)
-                    {
-                        if(i!=0)
-                        {
-                            partOfName1=splitName[i]+" ";
-                        }
-                        if(i!=length-1)
-                        {
-                            partOfName2=splitName[i]+" ";
-                        }
-                    }
-                }
-            }
-            if(length>2)
-            {
-                partOfName1=partOfName1.substring(0,partOfName1.length()-1).toUpperCase();
-                partOfName2=partOfName2.substring(0,partOfName2.length()-1).toUpperCase();
-                allDocTerms.put(partOfName1,frequency);
-                allDocTerms.put(partOfName2,frequency);
-            }
-            allDocTerms.put(entityName.toUpperCase(),frequency+termFrequency);
-        }
-    }
-    */
 
     private void handleLanguage() {
         docLang= new StringBuilder();
@@ -816,90 +753,57 @@ public class Parse {
 
     private String handleSimpleNumbers(String sNumb)
     {
-       String sNum= cleanPureNumber(sNumb);
+        String sNum= cleanPureNumber(sNumb);
         String ans="";
-       double number=0;
+        double number=0;
         try {
             number=Double.parseDouble(sNum);
-       }
-       catch (Exception  e){
-           return sNum;
-       }
-       String unit="";
-       if(number<1000)
-       {
-          ans=sNum;
-       }
-       else if(number<1000000)
-       {
-           number=number/1000;
-           unit="K";
-       }
-       else if(number<1000000000)
-       {
-           number=number/1000000;
-           unit="M";
-       }
-       else if((number/1000)<1000000000)
-       {
-           number=number/1000000000;
-           unit="B";
-       }
-       else
-       {
-           unit="T";
-       }
-       String sNumber=String.valueOf(number);
-       int position =sNumber.indexOf(".");
-       if(sNumber.length()>=position+4&& sNumber.charAt(position+3)!='0')
-       {
-           ans=sNumber.substring(0,position+4);
-       }
-       else if(sNumber.length()>=position+3&& sNumber.charAt(position+2)!='0')
-       {
-           ans=sNumber.substring(0,position+3);
-       }
-       else if(sNumber.length()>=position+2 && sNumber.charAt(position+1)!='0')
-       {
-           ans=sNumber.substring(0,position+2);
-       }
-       else
-           ans=sNumber.substring(0,position);
-       return ans+unit;
+        }
+        catch (Exception  e){
+            return sNum;
+        }
+        String unit="";
+        if(number<1000)
+        {
+            ans=sNum;
+        }
+        else if(number<1000000)
+        {
+            number=number/1000;
+            unit="K";
+        }
+        else if(number<1000000000)
+        {
+            number=number/1000000;
+            unit="M";
+        }
+        else if((number/1000)<1000000000)
+        {
+            number=number/1000000000;
+            unit="B";
+        }
+        else
+        {
+            unit="T";
+        }
+        String sNumber=String.valueOf(number);
+        int position =sNumber.indexOf(".");
+        if(sNumber.length()>=position+4&& sNumber.charAt(position+3)!='0')
+        {
+            ans=sNumber.substring(0,position+4);
+        }
+        else if(sNumber.length()>=position+3&& sNumber.charAt(position+2)!='0')
+        {
+            ans=sNumber.substring(0,position+3);
+        }
+        else if(sNumber.length()>=position+2 && sNumber.charAt(position+1)!='0')
+        {
+            ans=sNumber.substring(0,position+2);
+        }
+        else
+            ans=sNumber.substring(0,position);
+        return ans+unit;
     }
-
-
-    //private boolean containsNumber(String word)
-   // {
-      //  for(int i=0; i<10; i++)
-     //   {
-      //      String s=String.valueOf(i);
-        //    if(word.contains(s))
-      //      {
-      //          return true;
-     //       }
-     //   }
-      //  return false;
-   // }
-
-
-   // private Boolean isPureNum(String val){
-       //int countSlech=0;
-       //int countPoints=0;
-      // for (int i=0; i<val.length();i++)
-      // {
-       //    if((val.charAt(i)<='9' && val.charAt(i)>='0') || val.charAt(i)==','||val.charAt(i)=='.')
-       //    {
-         //      if(val.charAt(i)=='.')
-          //         countPoints++;
-         //  }
-         //  else
-         //       return false;
-     //  }
-     //  if(countPoints<=1)
-    //        return true;
-    //   return false;
-   // }
 
     private String cleanPureNumber(String number)
     {
@@ -916,46 +820,25 @@ public class Parse {
         while((currIndex<tokens.length)&& (tokens[currIndex].charAt(0)>='A' && tokens[currIndex].charAt(0)<='Z' && (!monthMap.containsKey(tokens[currIndex]))))
         {
             String token=tokens[currIndex];
+            String clean=cleanWord(token);
+            if(!stopWords.contains(clean.toLowerCase()))
+            {
+                insertToAllDocTerms(clean);
+            }
             if(token.charAt(token.length()-1)=='.' || token.charAt(token.length()-1)==',')
             {
-                String clean=cleanWord(token);
-                if(allDocTerms.containsKey(clean))
-                {
-                    allDocTerms.put(clean,allDocTerms.get(clean)+1);
-                }
-                else
-                {
-                    allDocTerms.put(clean,1);
-                }
                 concat+=clean;
                 currIndex++;
                 break;
             }
             else
             {
-                String clean=cleanWord(tokens[currIndex]);
-                concat+=clean+" ";
-                if(allDocTerms.containsKey(clean))
-                {
-                    allDocTerms.put(clean,allDocTerms.get(clean)+1);
-                }
-                else
-                {
-                    allDocTerms.put(clean,1);
-                }
+                concat+=cleanWord(tokens[currIndex])+" ";
                 currIndex++;
             }
-
         }
         concat=cleanWord(concat);
-        if(allDocTerms.containsKey(concat))
-        {
-            allDocTerms.put(concat,allDocTerms.get(concat)+1);
-        }
-        else
-        {
-            allDocTerms.put(concat,1);
-        }
+        insertToAllDocTerms(concat);
     }
 
     private String monthHandler(String number, String month)
@@ -979,19 +862,19 @@ public class Parse {
 
     private int isMonthNumber(String word)
     {
-       word=cleanWord(word);
-       try {
-           int number=Integer.parseInt(word);
-           if(number<=31 && number>0)
-           {
-               return 0;
-           }
-           return 1;
-       }
-       catch (Exception e)
-       {
-           return -1;
-       }
+        word=cleanWord(word);
+        try {
+            int number=Integer.parseInt(word);
+            if(number<=31 && number>0)
+            {
+                return 0;
+            }
+            return 1;
+        }
+        catch (Exception e)
+        {
+            return -1;
+        }
     }
 
 
