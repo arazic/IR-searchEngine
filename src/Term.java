@@ -53,6 +53,10 @@ public class Term implements Comparable<Term>
     {
         return this.stringTerm.compareTo(stringTerm);
     }
+    public int compareNoSensitivity(String stringTerm)
+    {
+        return this.stringTerm.toLowerCase().compareTo(stringTerm.toLowerCase());
+    }
 
     public void setFreq(int freq)
     {

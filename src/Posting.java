@@ -21,6 +21,7 @@ public class Posting {
     private BufferedReader readFromTmpPostingTerm2;
     private BufferedWriter writerToPostingTerm;
     private BufferedWriter writerToMargeTmpPosting;
+    private BufferedWriter writerToPostingDoc;
 
 
     public Posting(String postingPath){
@@ -31,35 +32,31 @@ public class Posting {
         pointerTermPosting="";
         this.postingPath=postingPath;
         chunksCount=1;
-
-    }
-
-    //create posting file
-/*    public void postingDoc(Document document) {
-           writerToPostingDoc = new BufferedWriter(new FileWriter(postingPath + "/documents/postingDoc" + chunksCount + ".txt"));
-
         try {
-             writerToPostingDoc = new BufferedWriter(new FileWriter(postingPath + "/documents/postingDoc" + chunksCount + ".txt"));
-
-            if(docFileCounter<=docFILE) {
-                writerToPostingDoc.append(document.getMaxTerm() + " " + document.getUniqeTermsNum());
-                writerToPostingDoc.append('\n');
-                pointerDocPosting = String.valueOf(chunksCount) + "," + docFileCounter;
-                docFileCounter++;
-                Indexer.addDoc(document.getDocName(), pointerDocPosting);
-
-            }
-            else {
-                writerToPostingDoc.flush();
-                chunksCount++;
-                docFileCounter=1;
-                writerToPostingDoc = new BufferedWriter(new FileWriter(postingPath + "/documents/postingDoc" + chunksCount + ".txt"));
-            }
+            writerToPostingDoc = new BufferedWriter(new FileWriter(postingPath + "/documents/postingDoc.txt"));
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-    }*/
+
+    }
+
+    //create posting file
+    public void postingDoc(Document document) {
+        try {
+
+                String toAdd= document.getDocName()+"!"+document.getMaxTerm()+"!"+document.getUniqeTermsNum();
+                writerToPostingDoc.append(toAdd);
+                writerToPostingDoc.append('\n');
+                Indexer.addDoc(document.getDocName(), String.valueOf(docFileCounter));
+                docFileCounter++;
+                writerToPostingDoc.flush();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+    }
 
     public void postingTerms(HashMap<String, Integer> docTerms, String docName) {
         if (!docTerms.isEmpty()){
@@ -181,8 +178,10 @@ public class Posting {
                         String[] split1 = splitLine(firstFileLine);
                         String[] split2 = splitLine(secondFileLine);
 
+                        if(split1[0].equals("a")|| split2[0].equals("a"))
+                            System.out.println("jump");
 
-                        int option = split1[0].compareTo(split2[0]);
+                        int option = split1[0].toLowerCase().compareTo(split2[0].toLowerCase());
                         if (option == 0) {
                             int df = Integer.parseInt(split1[2]) + Integer.parseInt(split2[2]);
                             int freq= Integer.parseInt(split1[3]) + Integer.parseInt(split2[3]);
@@ -376,7 +375,9 @@ public class Posting {
                 m = m + "m";
             }
 
-            Indexer.print();
+            Indexer.printTerms();
+            Indexer.printDocs();
+
         } catch ( IOException e) {
             e.printStackTrace();
         }
