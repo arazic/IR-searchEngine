@@ -29,7 +29,7 @@ public class Indexer {
 
     public static void print() {
         try {
-            BufferedWriter index= new BufferedWriter(new FileWriter("C:/Users/user/engine/posting/terms/indexer.txt"));
+            BufferedWriter index= new BufferedWriter(new FileWriter("C:/Users/gal/Desktop/FB396018/documents/terms/indexer.txt"));
             Set set= termsDic.entrySet();
             Iterator it = set.iterator();
 
@@ -42,7 +42,7 @@ public class Indexer {
             System.out.println(termsDic.size());
             index.close();
 
-             index= new BufferedWriter(new FileWriter("C:/Users/user/engine/posting/terms/indexerEntity.txt"));
+             index= new BufferedWriter(new FileWriter("C:/Users/gal/Desktop/FB396018/documents/terms"));
              set= entityDic.entrySet();
              it = set.iterator();
 
