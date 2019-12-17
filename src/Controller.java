@@ -8,12 +8,12 @@ public class Controller extends Observable implements Observer {
 
     @Override
     public void update(Observable o, Object arg) {
-        if (o == view){
-
-        }
-        else if( o == model){
-
-        }
+//        if (o == view){
+//
+//        }
+//        else if( o == model){
+//
+//        }
     }
 
 

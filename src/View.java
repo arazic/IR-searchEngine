@@ -1,4 +1,6 @@
 //package PACKAGE_NAME;
 
-public class view {
+import java.util.Observable;
+
+public class View extends Observable {
 }

@@ -6,16 +6,19 @@ public class Term implements Comparable<Term>
     private String stringTerm;
     private int freq;// df- number of doc is appear in
     private int totalTf;// how many times in all the corpus
+    private String title;
     private Set<String> documents;
 
 
     public Term(String term, int freq, String document) {
-        this.stringTerm = term;
+        this.stringTerm= term;
         this.freq = freq;
         this.documents=new TreeSet<>();
         this.totalTf = freq;
         documents.add(document+":"+freq);
+
     }
+
 
     public String getStringTerm() {
         return stringTerm;
@@ -23,6 +26,14 @@ public class Term implements Comparable<Term>
 
     public Set<String> getDocuments() {
         return documents;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
     }
 
     public void addDocToTerm(String sDoc, int frequency)

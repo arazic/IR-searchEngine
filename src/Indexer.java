@@ -18,7 +18,7 @@ public class Indexer {
 
         public static void addDoc(String docName, String pointer){
             docDic.put(docName,pointer);
-           // System.out.println(docDic);
+          //  System.out.println(docDic);
         }
 
     public static void addTerm(String stringTerm, String info) {
@@ -27,10 +27,10 @@ public class Indexer {
             termsDic.put(stringTerm,info);
     }
 
-    public static void printTerms() {
+    public static void print() {
         try {
             //BufferedWriter index= new BufferedWriter(new FileWriter("C:/Users/gal/Desktop/FB396018/documents/terms/indexer.txt"));
-            BufferedWriter index= new BufferedWriter(new FileWriter("C:/Users/user/engine/posting/terms/indexerTerms.txt"));
+            BufferedWriter index= new BufferedWriter(new FileWriter("C:/Users/user/engine/posting/terms/indexer.txt"));
             Set set= termsDic.entrySet();
             Iterator it = set.iterator();
 
@@ -65,27 +65,6 @@ public class Indexer {
     }
 
 
-    public static void printDocs() {
-        try {
-            //BufferedWriter index= new BufferedWriter(new FileWriter("C:/Users/gal/Desktop/FB396018/documents/terms/indexer.txt"));
-            BufferedWriter index = new BufferedWriter(new FileWriter("C:/Users/user/engine/posting/documents/indexerDocs.txt"));
-            Set set = docDic.entrySet();
-            Iterator it = set.iterator();
-
-            while (it.hasNext()) {
-                Map.Entry cur = (Map.Entry) it.next();
-                index.append(cur.getKey() + "," + cur.getValue());
-                index.append("\n");
-            }
-            index.flush();
-            System.out.println(docDic.size());
-            index.close();
-
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
 /*
     public static void print() {
         System.out.println(termsDic.size());

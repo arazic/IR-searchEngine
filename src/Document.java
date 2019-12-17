@@ -9,18 +9,18 @@ public class Document {
     private int uniqeTermsNum;
     private StringBuilder docLang;
     private StringBuilder articleType;
-  //  private TreeMap <String,Integer> docTerms;
+ //   private TreeMap <String,Integer> docTerms;
 
 
     public Document()
     {
-        //docTerms = new TreeMap<>();
+   //     docTerms = new TreeMap<>();
         docLang= new StringBuilder();
         articleType= new StringBuilder();
     }
 
-   // public TreeMap<String, Integer> getDocTerms() {
-    //    return docTerms;
+    //public TreeMap<String, Integer> getDocTerms() {
+     //   return docTerms;
     //}
 
 

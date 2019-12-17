@@ -18,6 +18,8 @@ public class Parse {
     private StringBuilder docLang;
     private StringBuilder articleType;
     private List<String> quotes;
+    private boolean isStem;
+    private Stemmer stemmer;
     private int maxFreqTermInDoc;
 
     private String[] tokens;
@@ -30,6 +32,7 @@ public class Parse {
     private boolean debug1;
     private boolean debug2;
 
+
     Pattern containsNumber= Pattern.compile(".*[0-9].*");
     Pattern pureNumberPattern= Pattern.compile("((([0-9]*)"+"[.,])*)"+"([0-9]*)");
     private Pattern fractionPattern= Pattern.compile("[0-9]"+"/"+"[0-9]");
@@ -39,6 +42,8 @@ public class Parse {
     {
         debug1=false;
         debug2=false;
+        stemmer= new Stemmer();
+        isStem=false;
         allDocTerms = new HashMap<>();
         quotes = new LinkedList<>();
         maxFreqTermInDoc=1;
@@ -112,6 +117,7 @@ public class Parse {
 
     private void loadMonthMap()
     {
+        // regular case
         monthMap.put("January","01");
         monthMap.put("Jan","01");
         monthMap.put("February","02");
@@ -135,6 +141,31 @@ public class Parse {
         monthMap.put("Nov","11");
         monthMap.put("December","12");
         monthMap.put("Dec","12");
+
+        //lowerCase
+        monthMap.put("january","01");
+        monthMap.put("jan","01");
+        monthMap.put("february","02");
+        monthMap.put("feb","02");
+        monthMap.put("march","03");
+        monthMap.put("mar","03");
+        monthMap.put("april","04");
+        monthMap.put("apr","04");
+        monthMap.put("may","05");
+        monthMap.put("june","06");
+        monthMap.put("jun","06");
+        monthMap.put("july","07");
+        monthMap.put("jul","07");
+        monthMap.put("august","08");
+        monthMap.put("aug","08");
+        monthMap.put("septmber","09");
+        monthMap.put("sep","09");
+        monthMap.put("october","10");
+        monthMap.put("oct","10");
+        monthMap.put("november","11");
+        monthMap.put("nov","11");
+        monthMap.put("december","12");
+        monthMap.put("dec","12");
     }
 
     private void loadSymbols()
@@ -175,7 +206,7 @@ public class Parse {
         getHeader();
         getText();
         // find qoutes in text
-        findQuotes();
+        //findQuotes();
         // split text by delimters
         tokens= StringUtils.splitString(text," ():?[]!; "); // to add ""
         handleLanguage();
@@ -186,6 +217,29 @@ public class Parse {
             return;
         }
         parseText();
+        if(isStem)
+        {
+            HashMap<String,Integer> termsAfterStemming= new HashMap<>();
+            for (String beforeStem:allDocTerms.keySet()
+                    ) {
+                if(containsNumber.matcher(beforeStem).matches())
+                {
+                    termsAfterStemming.put(beforeStem,allDocTerms.get(beforeStem));
+                }
+                else
+                {
+                    String afterStem=stemmer.stem(beforeStem);
+                    if(termsAfterStemming.containsKey(afterStem))
+                    {
+                        termsAfterStemming.replace(afterStem,termsAfterStemming.get(afterStem)+allDocTerms.get(beforeStem));
+                    }
+                    else
+                    {
+                        termsAfterStemming.put(afterStem,allDocTerms.get(beforeStem));
+                    }
+                }
+            }
+        }
         updateDoc();
     }
 
@@ -201,8 +255,8 @@ public class Parse {
         if (debug1)
             System.out.println("///////////////// finish to "+currDoc.getDocName() +" maxTerm:"+currDoc.getMaxTerm()+" unique:"+currDoc.getUniqeTermsNum());
 
-        //  posting.postingDoc(currDoc);
-            posting.postingTerms(allDocTerms, currDoc.getDocName());
+        posting.postingDoc(currDoc);
+        posting.postingTerms(allDocTerms, currDoc.getDocName());
 
 
         maxFreqTermInDoc=0;
@@ -306,6 +360,11 @@ public class Parse {
                         if(currIndex<tokens.length)
                         {
                             String symbol=cleanWord(tokens[currIndex].toLowerCase());
+                            if(symbol.isEmpty()&& currIndex+1<tokens.length)
+                            {
+                                currIndex++;
+                                symbol=cleanWord(tokens[currIndex].toLowerCase());
+                            }
                             if ( symbols.containsKey(symbol))// if true is a price- there is "dollars"F
                             {
                                 flag=true;
@@ -370,8 +429,7 @@ public class Parse {
                         {
                             String[] words = concat.split("-");
                             concat=words[0];
-                            int i;
-                            for (i=1; i<words.length;i++)
+                            for (int i=1; i<words.length;i++)
                             {
                                 String word=cleanWord(words[i]);
                                 if(!word.isEmpty())
@@ -410,7 +468,8 @@ public class Parse {
                             }
                             else
                             {
-                                //System.out.println(concat+" maybe we have a problem");
+                                // System.out.println(concat+" maybe we have a problem");
+                                insertToAllDocTerms(concat);
                                 currIndex++;
                                 continue;
                             }
@@ -514,7 +573,6 @@ public class Parse {
 
             else if (concat.charAt(0) >= 'A' && concat.charAt(0) <= 'Z')// is a entity or termWithCapitalLetter
             {
-
                 if(currIndex+1<tokens.length)
                 {
                     if (concat.equals("Between"))
@@ -665,6 +723,20 @@ public class Parse {
                 concat=token1+"-"+token2;
                 currIndex=currIndex+4;
             }
+            else if(monthMap.containsKey(temp))
+            {
+                token1=monthHandler(token1,monthMap.get(temp));
+                concat=token1+"-"+token2;
+                token2=monthHandler(token2,monthMap.get(temp));
+                currIndex=currIndex+4;
+            }
+            else if(unitMap.containsKey(temp))
+            {
+                token1=handleSimpleNumbersAndUnits(token1,temp);
+                token2=handleSimpleNumbersAndUnits(token2,temp);
+                concat=token1+"-"+token2;
+                currIndex=currIndex+4;
+            }
             else
                 flag=true;
         }
@@ -673,6 +745,7 @@ public class Parse {
             concat = token1 + "-" + token2;
             currIndex = currIndex + 3;
         }
+
         insertToAllDocTerms(token1);
         insertToAllDocTerms(token2);
         insertToAllDocTerms(concat);
