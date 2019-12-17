@@ -1,5 +1,6 @@
-import java.util.Observable;
+//package PACKAGE_NAME;
 
-public class Model extends Observable {
+public class model
+{
 
 }

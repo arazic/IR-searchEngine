@@ -60,7 +60,10 @@ public class Parse {
         {
             if(allDocTerms.containsKey(term))
             {
-                allDocTerms.replace(term,allDocTerms.get(term)+1);
+                int freq = allDocTerms.get(term)+1;
+                allDocTerms.replace(term,freq);
+                if(freq>maxFreqTermInDoc)
+                    maxFreqTermInDoc=freq;
                 return;
             }
             String upper=term.toUpperCase();
@@ -68,9 +71,11 @@ public class Parse {
             {
                 if(allDocTerms.containsKey(upper))
                 {
-                    int freq=allDocTerms.get(upper);
+                    int freq=allDocTerms.get(upper)+1;
                     allDocTerms.remove(upper);
-                    allDocTerms.put(term,freq+1);
+                    allDocTerms.put(term,freq);
+                    if(freq>maxFreqTermInDoc)
+                        maxFreqTermInDoc=freq;
                     return;
                 }
             }
@@ -80,13 +85,19 @@ public class Parse {
         String lowerCase=term.toLowerCase();
         if(allDocTerms.containsKey(lowerCase))
         {
-            allDocTerms.replace(lowerCase,allDocTerms.get(lowerCase)+1);
+            int freq=allDocTerms.get(lowerCase)+1;
+            allDocTerms.replace(lowerCase,freq);
+            if(freq>maxFreqTermInDoc)
+                maxFreqTermInDoc=freq;
             return;
         }
         String upperCase=term.toUpperCase();
         if(allDocTerms.containsKey(upperCase))
         {
-            allDocTerms.replace(upperCase,allDocTerms.get(upperCase)+1);
+            int freq=allDocTerms.get(upperCase)+1;
+            allDocTerms.replace(upperCase,freq);
+            if(freq>maxFreqTermInDoc)
+                maxFreqTermInDoc=freq;
             return;
         }
         allDocTerms.put(upperCase,1);
@@ -181,18 +192,11 @@ public class Parse {
 
     private void updateDoc() {
 
-        int maxFrequency=0;
-        for (HashMap.Entry<String,Integer> entry : allDocTerms.entrySet())
-        {
-            if(entry.getValue()>maxFrequency)
-            {
-                maxFrequency=entry.getValue();
-            }
-        }
+
         //currDoc.addTermsToDoc(allDocTerms);
         currDoc.setDocLang(docLang);
         currDoc.setArticleType(articleType);
-        currDoc.setMaxTerm(maxFrequency);
+        currDoc.setMaxTerm(maxFreqTermInDoc);
         currDoc.setUniqeTermsNum(allDocTerms.size());
         if (debug1)
             System.out.println("///////////////// finish to "+currDoc.getDocName() +" maxTerm:"+currDoc.getMaxTerm()+" unique:"+currDoc.getUniqeTermsNum());
