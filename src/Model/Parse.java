@@ -1,3 +1,5 @@
+package Model;
+
 import com.sun.deploy.util.StringUtils;
 
 import java.util.*;
@@ -31,6 +33,7 @@ public class Parse {
     private int currIndex;
     private boolean debug1;
     private boolean debug2;
+    private boolean FinishDoc;
 
 
     Pattern containsNumber= Pattern.compile(".*[0-9].*");
@@ -51,6 +54,7 @@ public class Parse {
         loadUnits();
         loadSymbols();
         this.posting=posting;
+        FinishDoc=false;
 
     }
 
@@ -246,10 +250,7 @@ public class Parse {
 
     private void updateDoc() {
 
-
-        //currDoc.addTermsToDoc(allDocTerms);
-        currDoc.setDocLang(docLang);
-        currDoc.setArticleType(articleType);
+        //currDoc.addTermsToDocallDocTerms);
         currDoc.setMaxTerm(maxFreqTermInDoc);
         currDoc.setUniqeTermsNum(allDocTerms.size());
         if (debug1)
@@ -257,7 +258,6 @@ public class Parse {
 
         posting.postingDoc(currDoc);
         posting.postingTerms(allDocTerms, currDoc.getDocName());
-
 
         maxFreqTermInDoc=0;
         allDocTerms.clear();
@@ -1037,4 +1037,8 @@ public class Parse {
         currDoc.setDocName(docName);
     }
 
+    public void setFinishDoc(boolean b) {
+        this.FinishDoc= b;
+        posting.setFinishDoc(b);
+    }
 }

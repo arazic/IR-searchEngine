@@ -1,3 +1,5 @@
+package Model;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -27,7 +29,6 @@ public class ReadFile {
         this.stemming = false;
         this.totalDocNum = 0;
         this.parse = parse;
-        readStopWords();
     }
 
     public void readStopWords()
@@ -52,8 +53,10 @@ public class ReadFile {
 
 
     public void createDocuments(){
+        readStopWords();
         File path= new File(this.corpusPath);
         getToFile(path);
+        parse.setFinishDoc(true);
     }
 
     public void getToFile(File path){
@@ -62,7 +65,6 @@ public class ReadFile {
             if (fileEntry.isDirectory()) {
                 getToFile(fileEntry);
             } else {
-                //degug// System.out.println(fileEntry.getName());
                 StringBuilder sb = new StringBuilder();
                 try (BufferedReader br = new BufferedReader(new FileReader(fileEntry)))
                 {
@@ -80,7 +82,6 @@ public class ReadFile {
                 } catch (IOException e) {
                     System.err.format("IOException: %s%n", e);
                 }
-                //System.out.println(sb);
             }
         }
     }

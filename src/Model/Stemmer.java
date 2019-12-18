@@ -1,4 +1,4 @@
-
+package Model;
 
 public class Stemmer
 {
@@ -21,7 +21,7 @@ public class Stemmer
      */
 
     /**
-     * The Stemmer class transforms a word into its root form.  The input
+     * The Model.Model.Stemmer class transforms a word into its root form.  The input
      * word can be provided a character at time (by calling add()), or at once
      * by calling one of the various stem(something) methods.
      */
@@ -446,7 +446,7 @@ public class Stemmer
             return stem(word, 0, wordLen);
         }
 
-        /** Stem the word placed into the Stemmer buffer through calls to add().
+        /** Stem the word placed into the Model.Model.Stemmer buffer through calls to add().
          * Returns true if the stemming process resulted in a word different
          * from the input.  You can retrieve the result with
          * getResultLength()/getResultBuffer() or toString().
