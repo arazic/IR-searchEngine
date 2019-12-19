@@ -39,6 +39,23 @@ public class EngineManager {
         posting.margeToMainPostingFile();
     }
 
+/*
+    public static void main(String[] args) {
+        System.out.println("We are Google!");
+        long millis=System.currentTimeMillis();
+        java.util.Date date=new java.util.Date(millis);
+        System.out.println("start "+ date);
+        // EngineManager engineManager= new EngineManager("C:/Users/user/engine/corpus", "C:/Users/user/engine/posting",false);
+        EngineManager engineManager= new EngineManager("C:/Users/gal/Desktop/FB396018/corpus", "C:/Users/gal/Desktop/FB396018/documents/terms",false);
+
+        engineManager.startEngine();
+        System.out.println("chen is my queen! time" );
+
+        long millis2=System.currentTimeMillis();
+        java.util.Date date2=new java.util.Date(millis2);
+        System.out.println("end "+ date2);
+    }
+*/
 
     public boolean existCorpusPath() {
         if(this.corpusPath==null)

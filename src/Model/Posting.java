@@ -40,12 +40,11 @@ public class Posting {
                 else
                     writerToPostingDoc = new BufferedWriter(new FileWriter(postingPath + "/postingDocumentsNoStemming.txt"));
             }
-                        String toAdd = document.getDocName() + "!" + document.getMaxTerm() + "!" + document.getUniqeTermsNum();
+                        String toAdd = document.getDocName() + "!" + document.getMaxTerm() + "!" + document.getUniqeTermsNum()+ "!"+ document.getTotalTerms();
                         writerToPostingDoc.write(toAdd);
                         writerToPostingDoc.write('\n');
                         Indexer.addDoc(document.getDocName(), String.valueOf(docFileCounter+1));
                         docFileCounter++;
-           // writerToPostingDoc.flush();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -88,7 +87,6 @@ public class Posting {
                             mergeTerms.put(newTerm, "!" + docs + "!" + df + "!" + freq + "^" + title);
 
                         } else {
-                         //   System.out.println(newTerm+"![" + docName + ":" + newFreq + "]!" + 1 + "!" + newFreq + "^" + title);
                             mergeTerms.put(newTerm, "![" + docName + ":" + newFreq + "]!" + 1 + "!" + newFreq + "^" + title);
                         }
 
@@ -99,8 +97,6 @@ public class Posting {
 
             if (docCounter > chunkPostingSIZE) {
                 try {
-                    //LocalDateTime myDateObj = LocalDateTime.now();
-                    //System.out.println("time start chunk :+ "+ myDateObj);
                     int counterWriter=0;
                     if(isStemming)
                         writerToPostingTerm = new BufferedWriter(new FileWriter(postingPath + "/postingTerm!S" + chunksCount + ".txt"));
@@ -124,8 +120,6 @@ public class Posting {
                     mergeTerms.clear();
                     chunksCount++;
                     writerToPostingTerm.close();
-                    // myDateObj = LocalDateTime.now();
-                    //System.out.println("time end chunk :+ "+ myDateObj);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -135,8 +129,6 @@ public class Posting {
 
     public void margeToMainPostingFile() {
 
-        //String m = "m"; // First round of merge
-        //String h="";
         String m;
         String h;
         String k;
@@ -276,13 +268,6 @@ public class Posting {
                     String firstFileLine = readFromTmpPostingTerm1.readLine();
                     int counterWriter=0;
 
-                    Path pathToRemove = Paths.get((postingPath + "/postingTerm" + k+(cur)+h + ".txt"));
-                    File fToRemove = pathToRemove .toFile();
-
-                    //if(fToRemove.renameTo(new File(postingPath + "/terms/postingTerm" + countMarge + m + ".txt"))){
-                    //   System.out.println("remane to"+ postingPath + "/terms/postingTerm" + countMarge + m + ".txt");
-                    //}
-
                     while (firstFileLine != null) {
                         writerToMargeTmpPosting.append(firstFileLine);
                         writerToMargeTmpPosting.append("\n");
@@ -298,7 +283,6 @@ public class Posting {
                         writerToMargeTmpPosting.flush();
                     }
 
-                    //    writerToMargeTmpPosting.flush();
                     writerToMargeTmpPosting.close();
                     readFromTmpPostingTerm1.close();
                     f1.close();
@@ -372,7 +356,7 @@ public class Posting {
 
                             }
                             else if(toAdd.contains("^e")){
-                                Indexer.addTermToEntity(split1[0], df+"!"+ freq+"!" + countPointer);
+                                Indexer.addTerm(split1[0].toUpperCase(), df+"!"+ freq+"!" + countPointer);
                                 writerToMargeTmpPosting.append(split1[0].toUpperCase()+"!"+docs+"!"+df+"!"+freq);
                                 counterWriter++;
 
@@ -399,7 +383,7 @@ public class Posting {
 
                             }
                             else if(firstFileLine.contains("^e")){
-                                Indexer.addTermToEntity(split1[0].toUpperCase(), split1[2]+"!"+ split1[3]+"!" + countPointer);
+                                Indexer.addTerm(split1[0].toUpperCase(), split1[2]+"!"+ split1[3]+"!" + countPointer);
                                 writerToMargeTmpPosting.append(split1[0].toUpperCase()+"!"+split1[1]+"!"+split1[2]+"!"+ split1[3]);
                                 writerToMargeTmpPosting.append('\n');
                                 counterWriter++;
@@ -423,7 +407,7 @@ public class Posting {
                                 counterWriter++;
                             }
                             else if(secondFileLine.contains("^e")){
-                                Indexer.addTermToEntity(split2[0].toUpperCase(), split2[2]+"!"+ split2[3]+"!" + countPointer);
+                                Indexer.addTerm(split2[0].toUpperCase(), split2[2]+"!"+ split2[3]+"!" + countPointer);
                                 writerToMargeTmpPosting.append(split2[0].toUpperCase()+"!"+split2[1]+"!"+split2[2]+"!"+ split2[3]);
                                 writerToMargeTmpPosting.append('\n');
                                 counterWriter++;
@@ -452,7 +436,7 @@ public class Posting {
 
                         }
                         else if(firstFileLine.contains("^e")){
-                            Indexer.addTermToEntity(split1[0].toUpperCase(), split1[2]+"!"+ split1[3]+"!" + countPointer);
+                            Indexer.addTerm(split1[0].toUpperCase(), split1[2]+"!"+ split1[3]+"!" + countPointer);
                             writerToMargeTmpPosting.append(split1[0].toUpperCase()+"!"+split1[1]+"!"+split1[2]+"!"+ split1[3]);
                             writerToMargeTmpPosting.append('\n');
                             counterWriter++;
@@ -483,7 +467,7 @@ public class Posting {
 
                         }
                         else if(secondFileLine.contains("^e")){
-                            Indexer.addTermToEntity(split2[0].toUpperCase(), split2[2]+"!"+ split2[3]+"!" + countPointer);
+                            Indexer.addTerm(split2[0].toUpperCase(), split2[2]+"!"+ split2[3]+"!" + countPointer);
                             writerToMargeTmpPosting.append(split2[0].toUpperCase()+"!"+split2[1]+"!"+split2[2]+"!"+ split2[3]);
                             writerToMargeTmpPosting.append('\n');
                             counterWriter++;

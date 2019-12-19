@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -26,19 +27,19 @@ public class ReadFile {
         String sPath = this.corpusPath+"/stopWords.txt";
         File path= new File(sPath);
         String line;
-        List <String> stopWords = new LinkedList<>();
+        HashSet<String> sWords = new HashSet<>();
         try(BufferedReader br = new BufferedReader(new FileReader(path)))
         {
             while ((line = br.readLine()) != null)
             {
-                stopWords.add(line);
+                sWords.add(line);
             }
         }
         catch (IOException i)
         {
             i.printStackTrace();
         }
-        parse.createStopWords(stopWords);
+        parse.createStopWords(sWords);
     }
 
 
@@ -64,6 +65,7 @@ public class ReadFile {
                         if(line.equals("</DOC>")){
                             sb.append(line).append("\n");
                             parse.createDocument(sb);
+                            totalDocNum++;
                             sb.setLength(0);
                         }
                         else

@@ -8,28 +8,19 @@ import java.util.regex.Pattern;
 
 public class Parse {
 
-    private static HashSet<String> stopWords = new HashSet<>();
+    private static HashSet<String> stopWords;
     private static HashMap<String,String> monthMap = new HashMap<>();
     private static HashMap<String,String> unitMap = new HashMap<>();
     private static HashMap<String, String> symbols=new HashMap<>();
-
-    /*
-        private HashMap<String, Integer>transperToFormat;
-    */
     private HashMap<String,Integer> allDocTerms;
-    private StringBuilder docLang;
-    private StringBuilder articleType;
-    private List<String> quotes;
     private boolean isStemming;
     private Stemmer stemmer;
     private int maxFreqTermInDoc;
-
+    private int totalTermsInDoc;
     private String[] tokens;
     private String text;
     private Document currDoc;
     private Posting posting;
-
-    private String header;
     private int currIndex;
     private boolean debug1;
     private boolean debug2;
@@ -48,74 +39,67 @@ public class Parse {
         stemmer= new Stemmer();
         this.isStemming =isStemming;
         allDocTerms = new HashMap<>();
-        quotes = new LinkedList<>();
         maxFreqTermInDoc=1;
         loadMonthMap();
         loadUnits();
         loadSymbols();
         this.posting=posting;
         FinishDoc=false;
+        totalTermsInDoc=0;
 
     }
 
     private void insertToAllDocTerms(String term)
     {
-        if(term.isEmpty())
-        {
+        if (term.isEmpty() || term.contains(">")||term.contains("<")) {
             return;
         }
-        //System.out.println(term);
-        if(term.charAt(0)>'Z'|| term.charAt(0)<'A') // is lowerCase
+        totalTermsInDoc++;
+        if (term.charAt(0) > 'Z' || term.charAt(0) < 'A') // is lowerCase
         {
-            if(allDocTerms.containsKey(term))
-            {
-                int freq = allDocTerms.get(term)+1;
-                allDocTerms.replace(term,freq);
-                if(freq>maxFreqTermInDoc)
-                    maxFreqTermInDoc=freq;
+            if (allDocTerms.containsKey(term)) {
+                int freq = allDocTerms.get(term) + 1;
+                allDocTerms.replace(term, freq);
+                if (freq > maxFreqTermInDoc)
+                    maxFreqTermInDoc = freq;
                 return;
             }
-            String upper=term.toUpperCase();
-            if(upper.charAt(0)>='A'&& upper.charAt(0)<='Z')
-            {
-                if(allDocTerms.containsKey(upper))
-                {
-                    int freq=allDocTerms.get(upper)+1;
+            String upper = term.toUpperCase();
+            if (upper.charAt(0) >= 'A' && upper.charAt(0) <= 'Z') {
+                if (allDocTerms.containsKey(upper)) {
+                    int freq = allDocTerms.get(upper) + 1;
                     allDocTerms.remove(upper);
-                    allDocTerms.put(term,freq);
-                    if(freq>maxFreqTermInDoc)
-                        maxFreqTermInDoc=freq;
+                    allDocTerms.put(term, freq);
+                    if (freq > maxFreqTermInDoc)
+                        maxFreqTermInDoc = freq;
                     return;
                 }
             }
-            allDocTerms.put(term,1);
+            allDocTerms.put(term, 1);
             return;
         }
-        String lowerCase=term.toLowerCase();
-        if(allDocTerms.containsKey(lowerCase))
-        {
-            int freq=allDocTerms.get(lowerCase)+1;
-            allDocTerms.replace(lowerCase,freq);
-            if(freq>maxFreqTermInDoc)
-                maxFreqTermInDoc=freq;
+        String lowerCase = term.toLowerCase();
+        if (allDocTerms.containsKey(lowerCase)) {
+            int freq = allDocTerms.get(lowerCase) + 1;
+            allDocTerms.replace(lowerCase, freq);
+            if (freq > maxFreqTermInDoc)
+                maxFreqTermInDoc = freq;
             return;
         }
-        String upperCase=term.toUpperCase();
-        if(allDocTerms.containsKey(upperCase))
-        {
-            int freq=allDocTerms.get(upperCase)+1;
-            allDocTerms.replace(upperCase,freq);
-            if(freq>maxFreqTermInDoc)
-                maxFreqTermInDoc=freq;
+        String upperCase = term.toUpperCase();
+        if (allDocTerms.containsKey(upperCase)) {
+            int freq = allDocTerms.get(upperCase) + 1;
+            allDocTerms.replace(upperCase, freq);
+            if (freq > maxFreqTermInDoc)
+                maxFreqTermInDoc = freq;
             return;
         }
-        allDocTerms.put(upperCase,1);
+        allDocTerms.put(upperCase, 1);
     }
 
     private void cleanParser()
     {
         allDocTerms.clear();
-        quotes.clear();
         currIndex=0;
     }
 
@@ -207,14 +191,8 @@ public class Parse {
         text = content.toString();
         text = text.replaceAll("\n"," ");
         getDocName();
-        getHeader();
         getText();
-        // find qoutes in text
-        //findQuotes();
-        // split text by delimters
-        tokens= StringUtils.splitString(text," ():?[]!; "); // to add ""
-        handleLanguage();
-        handleArticleType();
+        tokens= StringUtils.splitString(text," ():?[]!;*#+| "); // to add ""
         if(tokens.length==0)
         {
             cleanParser();
@@ -226,7 +204,7 @@ public class Parse {
             HashMap<String,Integer> termsAfterStemming= new HashMap<>();
             for (String beforeStem:allDocTerms.keySet()
                     ) {
-                if(containsNumber.matcher(beforeStem).matches())
+                if(containsNumber.matcher(beforeStem).matches()|| beforeStem.contains(" "))
                 {
                     termsAfterStemming.put(beforeStem,allDocTerms.get(beforeStem));
                 }
@@ -243,19 +221,16 @@ public class Parse {
                     }
                 }
             }
+            allDocTerms=termsAfterStemming;
         }
         updateDoc();
     }
 
 
     private void updateDoc() {
-
-        //currDoc.addTermsToDocallDocTerms);
+        currDoc.setTotalTerms(totalTermsInDoc);
         currDoc.setMaxTerm(maxFreqTermInDoc);
         currDoc.setUniqeTermsNum(allDocTerms.size());
-        if (debug1)
-            System.out.println("///////////////// finish to "+currDoc.getDocName() +" maxTerm:"+currDoc.getMaxTerm()+" unique:"+currDoc.getUniqeTermsNum());
-
         posting.postingDoc(currDoc);
         posting.postingTerms(allDocTerms, currDoc.getDocName());
 
@@ -263,15 +238,6 @@ public class Parse {
         allDocTerms.clear();
     }
 
-    private void findQuotes()
-    {
-        Pattern p = Pattern.compile("\"([^\"]*)\"");
-        Matcher m = p.matcher(text);
-        while (m.find())
-        {
-            quotes.add(m.group(1));
-        }
-    }
 
 
     private void parseText()
@@ -692,21 +658,6 @@ public class Parse {
     }
 
 
-
-    private void handleArticleType() {
-        articleType= new StringBuilder();
-        if (currIndex < tokens.length) {
-            if(tokens[currIndex].toLowerCase().equals("article")){
-                currIndex++;
-                if(tokens[currIndex].toLowerCase().contains("type")){
-                    currIndex++;
-                    articleType.append(tokens[currIndex]);
-                    currIndex++;
-                }
-            }
-        }
-    }
-
     private void handleBetweenCase()
     {
         String concat="";
@@ -749,19 +700,6 @@ public class Parse {
         insertToAllDocTerms(token1);
         insertToAllDocTerms(token2);
         insertToAllDocTerms(concat);
-    }
-
-    private void handleLanguage() {
-        docLang= new StringBuilder();
-        if (currIndex<tokens.length) {
-            if(tokens[currIndex].toLowerCase().equals("language")){
-                currIndex++;
-                if(tokens[currIndex].equals("<F")&&tokens[currIndex+1].equals("P=105>")) {
-                    docLang.append(tokens[currIndex+2]);
-                    currIndex=currIndex + 4;
-                }
-            }
-        }
     }
 
 
@@ -996,12 +934,9 @@ public class Parse {
     }
 
 
-    public void createStopWords( List<String> stringList) // create stop words hash
+    public void createStopWords( HashSet sWords) // create stop words hash
     {
-        for (String word:stringList)
-        {
-            stopWords.add(word);
-        }
+        stopWords=sWords;
     }
 
 
@@ -1013,17 +948,6 @@ public class Parse {
         while (m.find()) {
             text =m.group(1);
         }
-    }
-
-    private void getHeader()
-    {
-        Pattern p = Pattern.compile("<TI>(.*)</TI>");
-        Matcher m = p.matcher(text);
-        while (m.find()) {
-            header =m.group(1);
-        }
-        //parse header like text and insert him to header doc
-
     }
 
     private void getDocName()

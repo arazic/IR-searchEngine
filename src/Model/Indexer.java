@@ -6,16 +6,12 @@ import java.util.*;
 public class Indexer {
 
         private static TreeMap<String, String> termsDic; // margePostingTerm
-        private static TreeMap<String, String> entityDic; // margePostingTerm
         private static HashMap<String, String> docDic; // docName, <postingFileName><postingPlaceInFile>
-        private static int sizeWithSteem;
-        private static int sizeWithpoutSteem;
         private static String postingPath;
         private static boolean isStemming;
 
         public static void initIndexer(String post, boolean isStemm){
             termsDic= new TreeMap<>();
-            entityDic= new TreeMap<>();
             docDic= new HashMap<>();
             postingPath=post;
             isStemming=isStemm;
@@ -24,11 +20,9 @@ public class Indexer {
 
         public static void addDoc(String docName, String pointer){
             docDic.put(docName,pointer);
-          //  System.out.println(docDic);
         }
 
     public static void addTerm(String stringTerm, String info) {
-            // if the term did not exist- we need to add with info from mearged posting file.
         if(!termsDic.containsKey(stringTerm))
             termsDic.put(stringTerm,info);
     }
@@ -63,15 +57,8 @@ public class Indexer {
     }
 
 
-/*
-    public static void print() {
-        System.out.println(termsDic.size());
-        System.out.println(entityDic.size());
-    }
-*/
-
-    public static void addTermToEntity(String entityName, String info) {
-        entityDic.put(entityName,info);
+    public static int getSizeWithSteem() {
+        return termsDic.size();
     }
 
 

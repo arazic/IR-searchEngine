@@ -1,15 +1,18 @@
 package Model;
 
-import java.util.*;
+
 
 public class Document {
 
     private String docName;
-    private String header;
-    private String popularTerm;
     private int maxTerm;
     private int uniqeTermsNum;
+    private int totalTerms;
 
+    public Document()
+    {
+        totalTerms=0;
+    }
 
 
     public String getDocName()
@@ -27,6 +30,15 @@ public class Document {
 
 
 
+    public int getTotalTerms()
+    {
+        return totalTerms;
+    }
+
+    public void setTotalTerms(int terms)
+    {
+        totalTerms=terms;
+    }
 
     public void setDocName(String name)
     {
@@ -47,10 +59,4 @@ public class Document {
         this.uniqeTermsNum= uniqeTermsNum;
 
     }
-    public void setHeader(String header)
-    {
-        this.header=header;
-    }
-
-
 }
