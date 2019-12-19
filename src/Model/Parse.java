@@ -20,7 +20,7 @@ public class Parse {
     private StringBuilder docLang;
     private StringBuilder articleType;
     private List<String> quotes;
-    private boolean isStem;
+    private boolean isStemming;
     private Stemmer stemmer;
     private int maxFreqTermInDoc;
 
@@ -41,12 +41,12 @@ public class Parse {
     private Pattern fractionPattern= Pattern.compile("[0-9]"+"/"+"[0-9]");
 
 
-    public Parse(Posting posting)
+    public Parse(Posting posting, boolean isStemming)
     {
         debug1=false;
         debug2=false;
         stemmer= new Stemmer();
-        isStem=false;
+        this.isStemming =isStemming;
         allDocTerms = new HashMap<>();
         quotes = new LinkedList<>();
         maxFreqTermInDoc=1;
@@ -221,7 +221,7 @@ public class Parse {
             return;
         }
         parseText();
-        if(isStem)
+        if(isStemming)
         {
             HashMap<String,Integer> termsAfterStemming= new HashMap<>();
             for (String beforeStem:allDocTerms.keySet()
@@ -1040,5 +1040,9 @@ public class Parse {
     public void setFinishDoc(boolean b) {
         this.FinishDoc= b;
         posting.setFinishDoc(b);
+    }
+
+    public void setIsStemming(boolean isStemming) {
+            this.isStemming=isStemming;
     }
 }

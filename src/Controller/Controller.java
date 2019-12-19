@@ -2,6 +2,8 @@ package Controller;
 
 import java.util.Observable;
 import java.util.Observer;
+import java.util.TreeMap;
+
 import Model.Model;
 import View.View;
 
@@ -15,15 +17,29 @@ public class Controller extends Observable implements Observer {
         if (o == view){
             switch((String) arg){
                 case "startEngine":
-                    model.startEngine(view.txtfld_corpusPath.getText(),view.txtfld_postingPath.getText(),view.isSteeming);
+                    model.startEngine(view.txtfld_corpusPath.getText(),view.txtfld_postingPath.getText(),view.isStemming);
                     break;
                 case "loadDictionary":
-                    model.loadDictionary(view.loadDic,view.isSteeming);
+                    if(model.loadDictionary(view.loadDic,view.isStemming))
+                        view.SetLoadDictionarySuccessfully(true);
+                    else
+                        view.SetLoadDictionarySuccessfully(false);
                     break;
-
+                case "showDictionary":
+                    model.showDictionary();
+                    break;
+                case "reset":
+                    model.reset();
+                    break;
             }
         }
         else if( o == model){
+            switch((String) arg) {
+                case "showDictionary":
+                    view.setDictionary(((Model)o).getTerms());
+                    break;
+
+            }
 
         }
     }

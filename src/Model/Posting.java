@@ -7,7 +7,6 @@ import java.util.*;
 
 public class Posting {
 
-    private int docFILE= 900; // how many doc in a postingDoc file
     private int chunkPostingSIZE =300; // how many doc in a postingTerm file
     private int writeToBuff=400;
     private int chunksCount;
@@ -21,8 +20,10 @@ public class Posting {
     private BufferedWriter writerToMargeTmpPosting;
     private BufferedWriter writerToPostingDoc;
     private boolean finishDoc;
+    private boolean isStemming;
 
-    public Posting(String postingPath){
+    public Posting(String postingPath, boolean isStemming){
+        this.isStemming= isStemming;
         mergeTerms = new HashMap<>();
         docFileCounter=0;
         this.postingPath=postingPath;
@@ -34,7 +35,10 @@ public class Posting {
     public void postingDoc(Document document) {
         try {
             if(writerToPostingDoc==null){
-                writerToPostingDoc = new BufferedWriter(new FileWriter(postingPath + "/postingDoc.txt"));
+                if(isStemming)
+                    writerToPostingDoc = new BufferedWriter(new FileWriter(postingPath + "/postingDocumentsWithStemming.txt"));
+                else
+                    writerToPostingDoc = new BufferedWriter(new FileWriter(postingPath + "/postingDocumentsNoStemming.txt"));
             }
                         String toAdd = document.getDocName() + "!" + document.getMaxTerm() + "!" + document.getUniqeTermsNum();
                         writerToPostingDoc.write(toAdd);
@@ -98,9 +102,12 @@ public class Posting {
                     //LocalDateTime myDateObj = LocalDateTime.now();
                     //System.out.println("time start chunk :+ "+ myDateObj);
                     int counterWriter=0;
-                    writerToPostingTerm = new BufferedWriter(new FileWriter(postingPath + "/postingTerm" + chunksCount + ".txt"));
-                    TreeMap<String,String> sortedTerms= new TreeMap<>(mergeTerms);
+                    if(isStemming)
+                        writerToPostingTerm = new BufferedWriter(new FileWriter(postingPath + "/postingTerm!S" + chunksCount + ".txt"));
+                    else
+                        writerToPostingTerm = new BufferedWriter(new FileWriter(postingPath + "/postingTerm!R" + chunksCount + ".txt"));
 
+                    TreeMap<String,String> sortedTerms= new TreeMap<>(mergeTerms);
                     for (Map.Entry entry : sortedTerms.entrySet()) {
                         writerToPostingTerm.append(entry.getKey().toString()+ entry.getValue().toString());
                         writerToPostingTerm.append('\n');
@@ -128,8 +135,21 @@ public class Posting {
 
     public void margeToMainPostingFile() {
 
-            String m = "m"; // First round of merge
-            String h="";
+        //String m = "m"; // First round of merge
+        //String h="";
+        String m;
+        String h;
+        String k;
+        if(isStemming){
+            m = "S"; // First round of merge
+            h="";
+            k="!S";
+        }
+        else{
+            m = "R"; // First round of merge
+            h="";
+            k="!R";
+        }
             int cur=chunksCount-1;
             int totalNewMarge = 0;
             int countMarge=1;
@@ -142,11 +162,11 @@ public class Posting {
                     else
                         totalNewMarge= (cur/2)+1;
 
-                    FileReader f1 = new FileReader((postingPath + "/postingTerm" + (i)+h + ".txt"));
-                    FileReader f2 = new FileReader((postingPath + "/postingTerm" + (i + 1)+h + ".txt"));
+                    FileReader f1 = new FileReader((postingPath + "/postingTerm" +k+ (i)+h + ".txt"));
+                    FileReader f2 = new FileReader((postingPath + "/postingTerm" +k+ (i + 1)+h + ".txt"));
                     readFromTmpPostingTerm1 = new BufferedReader(f1);
                     readFromTmpPostingTerm2 = new BufferedReader(f2);
-                    writerToMargeTmpPosting = new BufferedWriter(new FileWriter((postingPath) + "/postingTerm" + countMarge + m + ".txt"));
+                    writerToMargeTmpPosting = new BufferedWriter(new FileWriter((postingPath) + "/postingTerm" + k+countMarge + m + ".txt"));
                     int counterWriter=0;
 
                     String firstFileLine = readFromTmpPostingTerm1.readLine();
@@ -237,10 +257,10 @@ public class Posting {
                     f1.close();
                     f2.close();
 
-                    Path path = Paths.get((postingPath + "/postingTerm" + (i)+h + ".txt"));
+                    Path path = Paths.get((postingPath + "/postingTerm"+k + (i)+h + ".txt"));
                     File f = path.toFile();
                     f.delete();
-                    Path path2 = Paths.get((postingPath + "/postingTerm" + (i+1)+h + ".txt"));
+                    Path path2 = Paths.get((postingPath + "/postingTerm" +k+ (i+1)+h + ".txt"));
                     File ff = path2.toFile();
                     ff.delete();
 
@@ -249,14 +269,14 @@ public class Posting {
                 }
                 if (totalNewMarge-(countMarge-1) > 0) {
 
-                    FileReader f1 = new FileReader((postingPath + "/postingTerm" + (cur)+h + ".txt"));
-                    FileWriter f2 = new FileWriter((postingPath) + "/postingTerm" + countMarge + m + ".txt");
+                    FileReader f1 = new FileReader((postingPath + "/postingTerm" +k+ (cur)+h + ".txt"));
+                    FileWriter f2 = new FileWriter((postingPath) + "/postingTerm" + k+countMarge + m + ".txt");
                     readFromTmpPostingTerm1 = new BufferedReader(f1);
                     writerToMargeTmpPosting = new BufferedWriter(f2);
                     String firstFileLine = readFromTmpPostingTerm1.readLine();
                     int counterWriter=0;
 
-                    Path pathToRemove = Paths.get((postingPath + "/postingTerm" + (cur)+h + ".txt"));
+                    Path pathToRemove = Paths.get((postingPath + "/postingTerm" + k+(cur)+h + ".txt"));
                     File fToRemove = pathToRemove .toFile();
 
                     //if(fToRemove.renameTo(new File(postingPath + "/terms/postingTerm" + countMarge + m + ".txt"))){
@@ -284,7 +304,7 @@ public class Posting {
                     f1.close();
                     f2.close();
 
-                    Path path = Paths.get((postingPath + "/postingTerm" + (cur)+h + ".txt"));
+                    Path path = Paths.get((postingPath + "/postingTerm" + k+(cur)+h + ".txt"));
                     File f = path.toFile();
                     f.delete();
 
@@ -294,8 +314,12 @@ public class Posting {
                 countMarge=1;
                 cur= totalNewMarge;
                 h=m;
-                m = m + "m";
-            } catch ( IOException e) {
+                if(isStemming)
+                     m = m + "S";
+                else
+                    m = m + "R";
+
+                } catch ( IOException e) {
                 e.printStackTrace();
             }
             }
@@ -304,11 +328,14 @@ public class Posting {
             if(cur==2){
                 int countPointer=0;
                 try {
-                    FileReader f1 = new FileReader((postingPath + "/postingTerm" + (1)+h + ".txt"));
-                    FileReader f2 = new FileReader((postingPath + "/postingTerm" + (2)+h + ".txt"));
+                    FileReader f1 = new FileReader((postingPath + "/postingTerm" + k+(1)+h + ".txt"));
+                    FileReader f2 = new FileReader((postingPath + "/postingTerm" + k+(2)+h + ".txt"));
                     readFromTmpPostingTerm1 = new BufferedReader(f1);
                     readFromTmpPostingTerm2 = new BufferedReader(f2);
-                    writerToMargeTmpPosting = new BufferedWriter(new FileWriter((postingPath) + "/postingTerm" + countMarge + m + ".txt"));
+                    if (k=="!R")
+                         writerToMargeTmpPosting = new BufferedWriter(new FileWriter((postingPath) + "/finalPostingNoStemming" + ".txt"));
+                    else
+                        writerToMargeTmpPosting = new BufferedWriter(new FileWriter((postingPath) + "/finalPostingWithStemming" + ".txt"));
                     int counterWriter=0;
 
                     String firstFileLine = readFromTmpPostingTerm1.readLine();
@@ -486,10 +513,10 @@ public class Posting {
                     f1.close();
                     f2.close();
 
-                    Path path = Paths.get((postingPath + "/postingTerm" + (1)+h + ".txt"));
+                    Path path = Paths.get((postingPath + "/postingTerm" +k+ (1)+h + ".txt"));
                     File f = path.toFile();
                     f.delete();
-                    Path path2 = Paths.get((postingPath + "/postingTerm" + (2)+h + ".txt"));
+                    Path path2 = Paths.get((postingPath + "/postingTerm" +k+ (2)+h + ".txt"));
                     File ff = path2.toFile();
                     ff.delete();
 
@@ -597,5 +624,44 @@ public class Posting {
 
     public void setFinishDoc(boolean b) {
         this.finishDoc=b;
+    }
+
+    public void setIsStemming(boolean isStemming) {
+        this.isStemming=isStemming;
+    }
+
+    public void reset() {
+        try {
+            writerToPostingDoc.close();
+
+            Path path = Paths.get((postingPath + "/finalPostingWithStemming.txt"));
+            File f = path.toFile();
+            if(f.exists())
+                f.delete();
+            path = Paths.get((postingPath + "/indexerWithStemming.txt"));
+            f = path.toFile();
+            if(f.exists())
+                f.delete();
+            path = Paths.get((postingPath + "/postingDocumentsWithStemming.txt"));
+            f = path.toFile();
+            if(f.exists())
+                f.delete();
+
+             path = Paths.get((postingPath + "/finalPostingNoStemming.txt"));
+             f = path.toFile();
+            if(f.exists())
+                f.delete();
+            path = Paths.get((postingPath + "/indexerNoStemming.txt"));
+            f = path.toFile();
+            if(f.exists())
+                f.delete();
+            path = Paths.get((postingPath + "/postingDocumentsNoStemming.txt"));
+            f = path.toFile();
+            if(f.exists())
+                f.delete();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

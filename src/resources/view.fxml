@@ -38,7 +38,7 @@
             <Label prefHeight="27.0" prefWidth="154.0" text="corpus path" GridPane.columnIndex="1" GridPane.rowIndex="2" />
             <Label prefHeight="27.0" prefWidth="154.0" text="posting path" GridPane.columnIndex="1" GridPane.rowIndex="3" />
             <Button mnemonicParsing="false" onAction="#startEngine" prefHeight="39.0" prefWidth="216.0" text="start" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="4" />
-            <Button mnemonicParsing="false" onAction="#resetAll" prefHeight="39.0" prefWidth="222.0" text="reset" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="6" GridPane.valignment="CENTER">
+            <Button mnemonicParsing="false" onAction="#reset" prefHeight="39.0" prefWidth="222.0" text="reset" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="6" GridPane.valignment="CENTER">
                <GridPane.margin>
                   <Insets />
                </GridPane.margin>
@@ -54,7 +54,7 @@
                 <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
               </rowConstraints>
                <children>
-                  <Button mnemonicParsing="false" onAction="#show_dictionary" text="show dictionary" GridPane.columnIndex="1" GridPane.halignment="CENTER" />
+                  <Button fx:id="showDictionary" mnemonicParsing="false" onAction="#show_dictionary" disable="true" text="show dictionary" GridPane.columnIndex="1" GridPane.halignment="CENTER" />
                   <Button mnemonicParsing="false" onAction="#load_dictionary" text="load dictionary" GridPane.halignment="CENTER" />
                </children>
             </GridPane>

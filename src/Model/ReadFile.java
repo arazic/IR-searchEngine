@@ -10,23 +10,13 @@ import java.util.List;
 public class ReadFile {
 
     private String corpusPath;
-    private String outPath;
-    private boolean stemming;
-    private static volatile int totalDocNum;
+    private static int totalDocNum;
     private Parse parse;
 
-    public ReadFile(String corpusPath, String outPath, boolean stemming) {
-        this.corpusPath = corpusPath;
-        this.outPath = outPath;
-        this.stemming = stemming;
-        this.totalDocNum = 0;
-    }
 
     public ReadFile(String corpusPath,Parse parse)
     {
         this.corpusPath = corpusPath;
-        this.outPath = "";
-        this.stemming = false;
         this.totalDocNum = 0;
         this.parse = parse;
     }

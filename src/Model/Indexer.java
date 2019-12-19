@@ -11,12 +11,14 @@ public class Indexer {
         private static int sizeWithSteem;
         private static int sizeWithpoutSteem;
         private static String postingPath;
+        private static boolean isStemming;
 
-        public static void initIndexer(String post){
+        public static void initIndexer(String post, boolean isStemm){
             termsDic= new TreeMap<>();
             entityDic= new TreeMap<>();
             docDic= new HashMap<>();
             postingPath=post;
+            isStemming=isStemm;
         }
 
 
@@ -33,8 +35,14 @@ public class Indexer {
 
     public static void print() {
         try {
-            //BufferedWriter index= new BufferedWriter(new FileWriter("C:/Users/gal/Desktop/FB396018/documents/terms/indexer.txt"));
-            BufferedWriter index= new BufferedWriter(new FileWriter(postingPath+ "/indexer.txt"));
+
+            BufferedWriter index;
+            if(isStemming)
+                 index= new BufferedWriter(new FileWriter(postingPath+ "/indexerWithStemming.txt"));
+            else
+                 index= new BufferedWriter(new FileWriter(postingPath+ "/indexerNoStemming.txt"));
+
+
             Set set= termsDic.entrySet();
             Iterator it = set.iterator();
 
@@ -67,9 +75,13 @@ public class Indexer {
     }
 
 
-    public static void loadData() {
+    public static boolean loadData() {
         try {
-            FileReader fr = new FileReader(postingPath+ "/indexer.txt");
+            FileReader fr;
+            if(isStemming)
+                 fr = new FileReader(postingPath+ "/indexerWithStemming.txt");
+            else
+                 fr = new FileReader(postingPath+ "/indexerNoStemming.txt");
             BufferedReader readerIndex= new BufferedReader(fr);
             String line= readerIndex.readLine();
 
@@ -81,11 +93,20 @@ public class Indexer {
                 line= readerIndex.readLine();
             }
 
-
+        return true;
         } catch (FileNotFoundException e) {
-            e.printStackTrace();
+            // e.printStackTrace();
         } catch (IOException e) {
-            e.printStackTrace();
+           // e.printStackTrace();
         }
+        return false;
+    }
+
+    public static void setIsStemming(boolean isStemm) {
+        isStemming=isStemm;
+    }
+
+    public static TreeMap<String, String> getTermsDic(){
+        return termsDic;
     }
 }
