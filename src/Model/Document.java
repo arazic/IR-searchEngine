@@ -1,7 +1,10 @@
 package Model;
 
 
-
+/**
+ * document class represent document in the corpus
+ * the document save max frequency, length, number of unique terms
+ */
 public class Document {
 
     private String docName;
@@ -52,11 +55,9 @@ public class Document {
     public void setMaxTerm(int max)
     {
      this.maxTerm=max;
-
     }
 
     public void setUniqeTermsNum(int uniqeTermsNum){
         this.uniqeTermsNum= uniqeTermsNum;
-
     }
 }

@@ -3,6 +3,12 @@ package Model;
 import java.util.Set;
 import java.util.TreeSet;
 
+/**
+ * term represent set of words
+ * each document is consists of a collection of terms
+ * term save is total frequency, number of document that contains the term
+ * and for each document we save the frequency in the document
+ */
 public class Term implements Comparable<Term>
 {
     private String stringTerm;
@@ -18,7 +24,11 @@ public class Term implements Comparable<Term>
         this.documents=new TreeSet<>();
         this.totalTf = freq;
         documents.add(document+":"+freq);
-
+    }
+    public Term(String term,int freq)
+    {
+        this.stringTerm= term;
+        this.freq = freq;
     }
 
 
@@ -75,7 +85,6 @@ public class Term implements Comparable<Term>
     {
         this.freq = freq;
     }
-
 
     public boolean equals(Term term, String sTerm)
     {

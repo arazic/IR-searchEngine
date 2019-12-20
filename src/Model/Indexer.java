@@ -2,6 +2,7 @@ package Model;
 
 import java.io.*;
 import java.util.*;
+import java.util.regex.Pattern;
 
 public class Indexer {
 
@@ -9,6 +10,13 @@ public class Indexer {
         private static HashMap<String, String> docDic; // docName, <postingFileName><postingPlaceInFile>
         private static String postingPath;
         private static boolean isStemming;
+
+        private static int termsNumber=0;
+        public static int containsNumber=0;
+        public static int pureNumbera=0;
+        private static PriorityQueue<Term> frequencyMap= new PriorityQueue<Term>(new TermComparator());
+        private static Pattern containsNumberPattern= Pattern.compile(".*[0-9].*");
+        private static Pattern pureNumberPattern= Pattern.compile("((([0-9]*)"+"[.,])*)"+"([0-9]*)");
 
         public static void initIndexer(String post, boolean isStemm){
             termsDic= new TreeMap<>();
@@ -22,10 +30,45 @@ public class Indexer {
             docDic.put(docName,pointer);
         }
 
-    public static void addTerm(String stringTerm, String info) {
-        if(!termsDic.containsKey(stringTerm))
-            termsDic.put(stringTerm,info);
-    }
+         public static void termsFrequency(String term,int frequency)
+         {
+             Term t= new Term(term,frequency);
+             frequencyMap.add(t);
+         }
+
+         public static void printFrequency()
+         {
+             try
+             {
+                 int rank=1;
+                 BufferedWriter writer = new BufferedWriter(new FileWriter("C:/Users/gal/Desktop/FB396018/documents/frequency.txt"));
+                 for (Term term:frequencyMap
+                      ) {
+                     writer.write(String.valueOf(rank)+"           "+ String.valueOf(term.getFreq()));
+                     writer.newLine();
+                 }
+             }
+             catch (IOException e){
+
+             }
+
+         }
+         public static void addTerm(String stringTerm, String info)
+         {
+             if(!termsDic.containsKey(stringTerm))
+                {
+                    termsDic.put(stringTerm,info);
+                     termsNumber++;
+                }
+             if(containsNumberPattern.matcher(stringTerm).matches())
+             {
+                containsNumber++;
+                if(pureNumberPattern.matcher(stringTerm).matches())
+                {
+                    pureNumbera++;
+                }
+             }
+         }
 
     public static void print() {
         try {
@@ -35,12 +78,10 @@ public class Indexer {
                  index= new BufferedWriter(new FileWriter(postingPath+ "/indexerWithStemming.txt"));
             else
                  index= new BufferedWriter(new FileWriter(postingPath+ "/indexerNoStemming.txt"));
-
-
             Set set= termsDic.entrySet();
             Iterator it = set.iterator();
-
-            while(it.hasNext()) {
+            while(it.hasNext())
+            {
                 Map.Entry cur = (Map.Entry)it.next();
                 index.append(cur.getKey()+","+ cur.getValue());
                 index.append("\n");
@@ -61,6 +102,10 @@ public class Indexer {
         return termsDic.size();
     }
 
+    public static int getTermsNumber()
+    {
+        return termsNumber;
+    }
 
     public static boolean loadData() {
         try {

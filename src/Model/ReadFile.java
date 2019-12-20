@@ -8,11 +8,17 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 
+/**
+ * read each document in the corpus and transform it to parse
+ * create a collection of stop words ans transfer to parse
+ *
+ */
 public class ReadFile {
 
     private String corpusPath;
     private static int totalDocNum;
     private Parse parse;
+
 
 
     public ReadFile(String corpusPath,Parse parse)
@@ -22,7 +28,11 @@ public class ReadFile {
         this.parse = parse;
     }
 
-    public void readStopWords()
+    /**
+     * read all stop-words and transfer to parse
+     */
+
+    private void readStopWords()
     {
         String sPath = this.corpusPath+"/stopWords.txt";
         File path= new File(sPath);
@@ -42,7 +52,12 @@ public class ReadFile {
         parse.createStopWords(sWords);
     }
 
-
+    /**
+     * the main functionality
+     * create stop words collection'
+     * read all document and transfer it to parse document by document
+     * sends an end message at the end of the process
+     */
     public void createDocuments(){
         readStopWords();
         File path= new File(this.corpusPath);
@@ -50,7 +65,11 @@ public class ReadFile {
         parse.setFinishDoc(true);
     }
 
-    public void getToFile(File path){
+    /**
+     * read all files in corpus
+     * @param path
+     */
+    private void getToFile(File path){
         for ( File fileEntry : path.listFiles())
         {
             if (fileEntry.isDirectory()) {

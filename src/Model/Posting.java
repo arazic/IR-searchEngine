@@ -4,23 +4,27 @@ import java.io.*;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.regex.Pattern;
 
 public class Posting {
 
-    private int chunkPostingSIZE =300; // how many doc in a postingTerm file
-    private int writeToBuff=400;
-    private int chunksCount;
-    private static HashMap<String,String> mergeTerms;
+    private static HashMap<String,String> mergeTerms; // all terms from difrrent documents
+    private String postingPath;
+    private boolean finishDoc;
+    private boolean isStemming;
+
+    private int chunkPostingSIZE =300; // how many doc in a temporary postingTerm file
+    private int writeToBuff=400;// how many tersms to writw each write to disk
+    private int chunksCount; // how many docs beeen posting
     private int docCounter; // how many docs are merging in the memory;
     private int docFileCounter; // how many doc in a posting file;
-    private String postingPath;
+
     private BufferedReader readFromTmpPostingTerm1;
     private BufferedReader readFromTmpPostingTerm2;
     private BufferedWriter writerToPostingTerm;
     private BufferedWriter writerToMargeTmpPosting;
     private BufferedWriter writerToPostingDoc;
-    private boolean finishDoc;
-    private boolean isStemming;
+
 
     public Posting(String postingPath, boolean isStemming){
         this.isStemming= isStemming;
@@ -28,8 +32,6 @@ public class Posting {
         docFileCounter=0;
         this.postingPath=postingPath;
         chunksCount=1;
-
-
     }
 
     public void postingDoc(Document document) {
@@ -40,11 +42,11 @@ public class Posting {
                 else
                     writerToPostingDoc = new BufferedWriter(new FileWriter(postingPath + "/postingDocumentsNoStemming.txt"));
             }
-                        String toAdd = document.getDocName() + "!" + document.getMaxTerm() + "!" + document.getUniqeTermsNum()+ "!"+ document.getTotalTerms();
-                        writerToPostingDoc.write(toAdd);
-                        writerToPostingDoc.write('\n');
-                        Indexer.addDoc(document.getDocName(), String.valueOf(docFileCounter+1));
-                        docFileCounter++;
+            String toAdd = document.getDocName() + "!" + document.getMaxTerm() + "!" + document.getUniqeTermsNum()+ "!"+ document.getTotalTerms();
+            writerToPostingDoc.write(toAdd);
+            writerToPostingDoc.write('\n');
+            Indexer.addDoc(document.getDocName(), String.valueOf(docFileCounter+1));
+            docFileCounter++;
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -54,47 +56,58 @@ public class Posting {
     public void postingTerms(HashMap<String, Integer> docTerms, String docName) {
         if (!docTerms.isEmpty()) {
             if (docCounter <= chunkPostingSIZE) {
-                    for (Map.Entry entry : docTerms.entrySet()) {
+                for (Map.Entry entry : docTerms.entrySet()) {
 
-                        String original = String.valueOf(entry.getKey());
-                        String newTerm = original.toLowerCase();
-                        int newFreq = (int) entry.getValue();
-                        String title;
+                    String original = String.valueOf(entry.getKey());
+                    String newTerm = original.toLowerCase();
+                    int newFreq = (int) entry.getValue();
+                    String title;
 
-                        if (original.charAt(0) > 'Z' || original.charAt(0) < 'A')
-                            title = "l";
-                        else if (original.contains(" "))
-                            title = "s";
-                        else
-                            title = "u";
-
-                        String info = "";
-                        if (mergeTerms.containsKey(newTerm)) {
-                            info = mergeTerms.get(newTerm);
-                            String[] infoArray = mergeInfo(info);
-                            String docs = mergeDocs(infoArray[0], (docName + ":" + newFreq));
-                            int df = Integer.parseInt(infoArray[1]) + 1;
-                            int freq = newFreq + Integer.parseInt(infoArray[2]);
-                            if (!title.equals(infoArray[3])) {// both start with upper letter
-                                if (infoArray[3].equals("e"))
-                                    title = "e";
-                                else
-                                    title = "l";
-                            } else if (title.equals("s")) {
+                    if (original.charAt(0) > 'Z' || original.charAt(0) < 'A')
+                        title = "l";
+                    else if (original.contains(" "))
+                        title = "s";
+                    else
+                        title = "u";
+                    String info = "";
+                    if (mergeTerms.containsKey(newTerm))
+                    {
+                        info = mergeTerms.get(newTerm);
+                        String[] infoArray = mergeInfo(info);
+                        String docs = mergeDocs(infoArray[0], (docName + ":" + newFreq));
+                        int df = Integer.parseInt(infoArray[1]) + 1;
+                        int freq = newFreq + Integer.parseInt(infoArray[2]);
+                        if (!title.equals(infoArray[3])) {// both start with upper letter
+                            if (infoArray[3].equals("e"))
                                 title = "e";
-                            }
-
+                            else
+                                title = "l";
+                        } else if (title.equals("s")) {
+                            title = "e";
+                        }
+                        if(title!="l")
+                        {
                             mergeTerms.put(newTerm, "!" + docs + "!" + df + "!" + freq + "^" + title);
-
-                        } else {
+                        }
+                        else
+                        {
+                            mergeTerms.put(original, "!" + docs + "!" + df + "!" + freq + "^" + title);
+                        }
+                    }
+                    else
+                    {
+                        if(title!="l")
+                        {
                             mergeTerms.put(newTerm, "![" + docName + ":" + newFreq + "]!" + 1 + "!" + newFreq + "^" + title);
                         }
-
+                        else
+                        {
+                            mergeTerms.put(original, "![" + docName + ":" + newFreq + "]!" + 1 + "!" + newFreq + "^" + title);
+                        }
                     }
-
+                }
                 docCounter++;
             }
-
             if (docCounter > chunkPostingSIZE) {
                 try {
                     int counterWriter=0;
@@ -102,11 +115,10 @@ public class Posting {
                         writerToPostingTerm = new BufferedWriter(new FileWriter(postingPath + "/postingTerm!S" + chunksCount + ".txt"));
                     else
                         writerToPostingTerm = new BufferedWriter(new FileWriter(postingPath + "/postingTerm!R" + chunksCount + ".txt"));
-
                     TreeMap<String,String> sortedTerms= new TreeMap<>(mergeTerms);
                     for (Map.Entry entry : sortedTerms.entrySet()) {
                         writerToPostingTerm.append(entry.getKey().toString()+ entry.getValue().toString());
-                        writerToPostingTerm.append('\n');
+                        writerToPostingTerm.newLine();
                         counterWriter++;
                         if(counterWriter>= writeToBuff) {
                             writerToPostingTerm.flush();
@@ -126,7 +138,6 @@ public class Posting {
             }
         }
     }
-
     public void margeToMainPostingFile() {
 
         String m;
@@ -142,12 +153,12 @@ public class Posting {
             h="";
             k="!R";
         }
-            int cur=chunksCount-1;
-            int totalNewMarge = 0;
-            int countMarge=1;
-            while(cur>2)
-            {
-                try {
+        int cur=chunksCount-1;
+        int totalNewMarge = 0;
+        int countMarge=1;
+        while(cur>2)
+        {
+            try {
                 for (int i = 1; i < cur; i += 2) {
                     if(cur%2==0)
                         totalNewMarge = cur / 2;
@@ -187,7 +198,7 @@ public class Posting {
                                 toAdd= toAdd+"^l";
 
                             writerToMargeTmpPosting.append(toAdd);
-                            writerToMargeTmpPosting.append('\n');
+                            writerToMargeTmpPosting.newLine();
                             counterWriter++;
                             firstFileLine = readFromTmpPostingTerm1.readLine();
                             secondFileLine = readFromTmpPostingTerm2.readLine();
@@ -195,15 +206,15 @@ public class Posting {
                         } else if (option <= -1) {
 
                             writerToMargeTmpPosting.append(firstFileLine);
-                            writerToMargeTmpPosting.append('\n');
+                            writerToMargeTmpPosting.newLine();
                             counterWriter++;
                             firstFileLine = readFromTmpPostingTerm1.readLine();
 
                         }
                         else
-                            {
+                        {
                             writerToMargeTmpPosting.append(secondFileLine);
-                            writerToMargeTmpPosting.append('\n');
+                            writerToMargeTmpPosting.newLine();
                             counterWriter++;
                             secondFileLine = readFromTmpPostingTerm2.readLine();
                         }
@@ -217,7 +228,7 @@ public class Posting {
 
                     while (firstFileLine != null) {
                         writerToMargeTmpPosting.append(firstFileLine);
-                        writerToMargeTmpPosting.append('\n');
+                        writerToMargeTmpPosting.newLine();
                         counterWriter++;
                         if(counterWriter>=writeToBuff){
                             writerToMargeTmpPosting.flush();
@@ -229,7 +240,7 @@ public class Posting {
 
                     while (secondFileLine != null) {
                         writerToMargeTmpPosting.append(secondFileLine);
-                        writerToMargeTmpPosting.append('\n');
+                        writerToMargeTmpPosting.newLine();
                         counterWriter++;
                         if(counterWriter>=writeToBuff){
                             writerToMargeTmpPosting.flush();
@@ -242,7 +253,6 @@ public class Posting {
                         writerToMargeTmpPosting.flush();
                     }
 
-                   // writerToMargeTmpPosting.flush();
                     writerToMargeTmpPosting.close();
                     readFromTmpPostingTerm1.close();
                     readFromTmpPostingTerm2.close();
@@ -299,219 +309,542 @@ public class Posting {
                 cur= totalNewMarge;
                 h=m;
                 if(isStemming)
-                     m = m + "S";
+                    m = m + "S";
                 else
                     m = m + "R";
 
-                } catch ( IOException e) {
+            } catch ( IOException e) {
                 e.printStackTrace();
             }
-            }
+        }
+        if(cur==2){
+            int numberPointer=0;
+            int capitalPointer=0;
+            int lowerPointer1=0;
+            int lowerPointer2=0;
+            int lowerPointer3=0;
+            try {
+                FileReader f1 = new FileReader((postingPath + "/postingTerm" + k+(1)+h + ".txt"));
+                FileReader f2 = new FileReader((postingPath + "/postingTerm" + k+(2)+h + ".txt"));
+                readFromTmpPostingTerm1 = new BufferedReader(f1);
+                readFromTmpPostingTerm2 = new BufferedReader(f2);
+                BufferedWriter numberWriter=null;
+                BufferedWriter capitalWriter=null;
+                BufferedWriter lowerWriter1=null;
+                BufferedWriter lowerWriter2=null;
+                BufferedWriter lowerWriter3=null;
+                FileWriter numberFile=null;
+                FileWriter capitalFile=null;
+                FileWriter lowerFile1=null;
+                FileWriter lowerFile2=null;
+                FileWriter lowerFile3=null;
+                if (k=="!R")
+                {
+                    numberFile = new FileWriter((postingPath) + "/finalPostingNumbersNoStemming" + ".txt");
+                    capitalFile= new FileWriter((postingPath) + "/finalPostingCapitalNoStemming" + ".txt");
+                    lowerFile1 = new FileWriter((postingPath) + "/finalPostingLowertNoStemmingD" + ".txt");
+                    lowerFile2 = new FileWriter((postingPath) + "/finalPostingLowertNoStemmingP" + ".txt");
+                    lowerFile3 = new FileWriter((postingPath) + "/finalPostingLowertNoStemmingZ" + ".txt");
+                    lowerWriter1 = new BufferedWriter(lowerFile1);
+                    lowerWriter2 = new BufferedWriter(lowerFile2);
+                    lowerWriter3 = new BufferedWriter(lowerFile3);
+                    numberWriter=new BufferedWriter(numberFile);
+                    capitalWriter=new BufferedWriter(capitalFile);
 
-
-            if(cur==2){
-                int countPointer=0;
-                try {
-                    FileReader f1 = new FileReader((postingPath + "/postingTerm" + k+(1)+h + ".txt"));
-                    FileReader f2 = new FileReader((postingPath + "/postingTerm" + k+(2)+h + ".txt"));
-                    readFromTmpPostingTerm1 = new BufferedReader(f1);
-                    readFromTmpPostingTerm2 = new BufferedReader(f2);
-                    if (k=="!R")
-                         writerToMargeTmpPosting = new BufferedWriter(new FileWriter((postingPath) + "/finalPostingNoStemming" + ".txt"));
-                    else
-                        writerToMargeTmpPosting = new BufferedWriter(new FileWriter((postingPath) + "/finalPostingWithStemming" + ".txt"));
-                    int counterWriter=0;
-
-                    String firstFileLine = readFromTmpPostingTerm1.readLine();
-                    String secondFileLine = readFromTmpPostingTerm2.readLine();
-
-                    while (firstFileLine != null && secondFileLine != null) {
-                        String[] split1 = splitLine(firstFileLine);
-                        String[] split2 = splitLine(secondFileLine);
-
-                        int option = split1[0].compareTo(split2[0]);
-                        if (option == 0) {
-                            int df = Integer.parseInt(split1[2]) + Integer.parseInt(split2[2]);
-                            int freq= Integer.parseInt(split1[3]) + Integer.parseInt(split2[3]);
-                            String docs=mergeDocs(split1[1], split2[1]);
-                            String toAdd= split1[0] + "!" + docs + "!"+df+"!"+freq;
-                            if(split1[4].equals(split2[4])) {// e,e  s,s  u,u  l,l
-                                if (split1[4].equals("s")||split1[4].equals("e"))
-                                    toAdd = toAdd + "^e";
-                                else if(split1[4].equals("u"))
-                                    toAdd= toAdd+"^u";
-                                else if(split1[4].equals("l"))
-                                    toAdd= toAdd+"^l";
-                            }
-                            else if(split1[4].equals("e")||split2[4].equals("e"))
-                                toAdd= toAdd +"^e";
-                            else
+                }
+                else
+                {
+                    numberFile=new FileWriter((postingPath) + "/finalPostingNumbersWithStemming" + ".txt");
+                    capitalFile=new FileWriter((postingPath) + "/finalPostingCapitalWithStemming" + ".txt");
+                    lowerFile1=new FileWriter((postingPath) + "/finalPostingLowerWithStemmingD" + ".txt");
+                    lowerFile2=new FileWriter((postingPath) + "/finalPostingLowerWithStemmingP" + ".txt");
+                    lowerFile3=new FileWriter((postingPath) + "/finalPostingLowerWithStemmingZ" + ".txt");
+                    lowerWriter1=new BufferedWriter(lowerFile1);
+                    lowerWriter2=new BufferedWriter(lowerFile2);
+                    lowerWriter3=new BufferedWriter(lowerFile3);
+                    numberWriter=new BufferedWriter(numberFile);
+                    capitalWriter=new BufferedWriter(capitalFile);
+                }
+                int counterLowerWriter1=0;
+                int counterLowerWriter2=0;
+                int counterLowerWriter3=0;
+                int counterCapitalWriter=0;
+                int counterNumberWriter=0;
+                String firstFileLine = readFromTmpPostingTerm1.readLine();
+                String secondFileLine = readFromTmpPostingTerm2.readLine();
+                while (firstFileLine != null && secondFileLine != null)
+                {
+                    String[] split1 = splitLine(firstFileLine);
+                    String[] split2 = splitLine(secondFileLine);
+                    int option = split1[0].compareTo(split2[0]);
+                    if (option == 0)
+                    {
+                        int df = Integer.parseInt(split1[2]) + Integer.parseInt(split2[2]);
+                        int freq= Integer.parseInt(split1[3]) + Integer.parseInt(split2[3]);
+                        String docs=mergeDocs(split1[1], split2[1]);
+                        String toAdd= split1[0] + "!" + docs + "!"+df+"!"+freq;
+                        if(split1[4].equals(split2[4])) {// e,e  s,s  u,u  l,l
+                            if (split1[4].equals("s")||split1[4].equals("e"))
+                                toAdd = toAdd + "^e";
+                            else if(split1[4].equals("u"))
+                                toAdd= toAdd+"^u";
+                            else if(split1[4].equals("l"))
                                 toAdd= toAdd+"^l";
-
-                            countPointer++;
-                            if(toAdd.contains("^u")){
-                                Indexer.addTerm(split1[0].toUpperCase(), df+"!"+ freq+"!" + countPointer);
-                                writerToMargeTmpPosting.append(split1[0].toUpperCase()+"!"+docs+"!"+df+"!"+freq);
-                                counterWriter++;
+                        }
+                        else if(split1[4].equals("e")||split2[4].equals("e"))
+                            toAdd= toAdd +"^e";
+                        else
+                            toAdd= toAdd+"^l";
+                        if(toAdd.contains("^u")||toAdd.contains("^e"))
+                        {
+                            capitalPointer++;
+                            counterCapitalWriter++;
+                            Indexer.termsFrequency(split1[0].toUpperCase(),freq);
+                            Indexer.addTerm(split1[0].toUpperCase(), df+"!"+ freq+"!" +capitalPointer);
+                            capitalWriter.append(split1[0].toUpperCase()+"!"+docs+"!"+df+"!"+freq);
+                            capitalWriter.newLine();
+                            if(counterCapitalWriter>writeToBuff/2)
+                            {
+                                capitalWriter.flush();
+                                counterCapitalWriter=0;
+                            }
+                        }
+                        else if(toAdd.contains("^l"))
+                        {
+                            if(split1[0].charAt(0)>'9' || split1[0].charAt(0)<'0')
+                            {
+                                if(split1[0].charAt(0)<='d')
+                                {
+                                    lowerPointer1++;
+                                    counterLowerWriter1++;
+                                    Indexer.termsFrequency(split1[0].toLowerCase(),freq);
+                                    Indexer.addTerm(split1[0].toLowerCase(), df + "!" + freq + "!" + lowerPointer1);
+                                    lowerWriter1.append(split1[0].toLowerCase()+"!"+docs+"!"+df+"!"+freq);
+                                    lowerWriter1.newLine();
+                                    if(counterLowerWriter1>writeToBuff/2)
+                                    {
+                                        lowerWriter1.flush();
+                                        counterLowerWriter1=0;
+                                    }
+                                }
+                                else if(split1[0].charAt(0)<='p')
+                                {
+                                    lowerPointer2++;
+                                    counterLowerWriter2++;
+                                    Indexer.termsFrequency(split1[0].toLowerCase(),freq);
+                                    Indexer.addTerm(split1[0].toLowerCase(), df + "!" + freq + "!" + lowerPointer2);
+                                    lowerWriter2.append(split1[0].toLowerCase()+"!"+docs+"!"+df+"!"+freq);
+                                    lowerWriter2.newLine();
+                                    if(counterLowerWriter2>writeToBuff/2)
+                                    {
+                                        lowerWriter2.flush();
+                                        counterLowerWriter2=0;
+                                    }
+                                }
+                                else
+                                {
+                                    lowerPointer3++;
+                                    counterLowerWriter3++;
+                                    Indexer.termsFrequency(split1[0].toLowerCase(),freq);
+                                    Indexer.addTerm(split1[0].toLowerCase(), df + "!" + freq + "!" + lowerPointer3);
+                                    lowerWriter3.append(split1[0].toLowerCase()+"!"+docs+"!"+df+"!"+freq);
+                                    lowerWriter3.newLine();
+                                    if(counterLowerWriter3>writeToBuff/2)
+                                    {
+                                        lowerWriter3.flush();
+                                        counterLowerWriter3=0;
+                                    }
+                                }
 
                             }
-                            else if(toAdd.contains("^e")){
-                                Indexer.addTerm(split1[0].toUpperCase(), df+"!"+ freq+"!" + countPointer);
-                                writerToMargeTmpPosting.append(split1[0].toUpperCase()+"!"+docs+"!"+df+"!"+freq);
-                                counterWriter++;
+                            else
+                            {
+                                numberPointer++;
+                                counterNumberWriter++;
+                                Indexer.termsFrequency(split1[0],freq);
+                                Indexer.addTerm(split1[0], df+"!"+ freq+"!" +numberPointer);
+                                numberWriter.append(split1[0]+"!"+docs+"!"+df+"!"+freq);
+                                numberWriter.newLine();
+                                if(counterNumberWriter>writeToBuff/2)
+                                {
+                                    numberWriter.flush();
+                                    counterNumberWriter=0;
+                                }
+                            }
+                        }
+                        firstFileLine = readFromTmpPostingTerm1.readLine();
+                        secondFileLine = readFromTmpPostingTerm2.readLine();
+                    }
+                    else if (option <= -1)
+                    {
+                        if(firstFileLine.contains("^u")||firstFileLine.contains("^e"))
+                        {
+                            capitalPointer++;
+                            counterCapitalWriter++;
+                            Indexer.termsFrequency(split1[0].toUpperCase(),Integer.parseInt(split1[3]));
+                            Indexer.addTerm(split1[0].toUpperCase(), split1[2]+"!"+ split1[3]+"!" + capitalPointer);
+                            capitalWriter.append(split1[0].toUpperCase()+"!"+split1[1]+"!"+split1[2]+"!"+ split1[3]);
+                            capitalWriter.newLine();
+                            if(counterCapitalWriter>writeToBuff/2)
+                            {
+                                capitalWriter.flush();
+                                counterCapitalWriter=0;
+                            }
+                        }
+                        else if(firstFileLine.contains("^l"))
+                        {
+                            if(split1[0].charAt(0)>'9' || split1[0].charAt(0)<'0')
+                            {
+                                if(split1[0].charAt(0)<='d')
+                                {
+                                    lowerPointer1++;
+                                    counterLowerWriter1++;
+                                    Indexer.termsFrequency(split1[0].toLowerCase(),Integer.parseInt(split1[3]));
+                                    Indexer.addTerm(split1[0].toLowerCase(), split1[2]+"!"+ split1[3]+"!" + lowerPointer1);
+                                    lowerWriter1.append(split1[0].toLowerCase()+"!"+split1[1]+"!"+split1[2]+"!"+ split1[3]);
+                                    lowerWriter1.newLine();
+                                    if(counterLowerWriter1>writeToBuff/2)
+                                    {
+                                        counterLowerWriter1=0;
+                                        lowerWriter1.flush();
+                                    }
+                                }
+                                else if(split1[0].charAt(0)<='p')
+                                {
+                                    lowerPointer2++;
+                                    counterLowerWriter2++;
+                                    Indexer.termsFrequency(split1[0].toLowerCase(),Integer.parseInt(split1[3]));
+                                    Indexer.addTerm(split1[0].toLowerCase(), split1[2]+"!"+ split1[3]+"!" + lowerPointer2);
+                                    lowerWriter2.append(split1[0].toLowerCase()+"!"+split1[1]+"!"+split1[2]+"!"+ split1[3]);
+                                    lowerWriter2.newLine();
+                                    if(counterLowerWriter2>writeToBuff/2)
+                                    {
+                                        counterLowerWriter2=0;
+                                        lowerWriter2.flush();
+                                    }
+                                }
+                                else
+                                {
+                                    lowerPointer3++;
+                                    counterLowerWriter3++;
+                                    Indexer.termsFrequency(split1[0].toLowerCase(),Integer.parseInt(split1[3]));
+                                    Indexer.addTerm(split1[0].toLowerCase(), split1[2]+"!"+ split1[3]+"!" + lowerPointer3);
+                                    lowerWriter3.append(split1[0].toLowerCase()+"!"+split1[1]+"!"+split1[2]+"!"+ split1[3]);
+                                    lowerWriter3.newLine();
+                                    if(counterLowerWriter3>writeToBuff/2)
+                                    {
+                                        counterLowerWriter3=0;
+                                        lowerWriter3.flush();
+                                    }
+                                }
 
                             }
-                            else {
-                                Indexer.addTerm(split1[0], df + "!" + freq + "!" + countPointer);
-                                writerToMargeTmpPosting.append(split1[0]+"!"+docs+"!"+df+"!"+freq);
-                                counterWriter++;
+                            else
+                            {
+                                numberPointer++;
+                                counterNumberWriter++;
+                                Indexer.termsFrequency(split1[0],Integer.parseInt(split1[3]));
+                                Indexer.addTerm(split1[0], split1[2]+"!"+ split1[3]+"!" + numberPointer);
+                                numberWriter.append(split1[0]+"!"+split1[1]+"!"+split1[2]+"!"+ split1[3]);
+                                numberWriter.newLine();
+                                if(counterNumberWriter>writeToBuff/2)
+                                {
+                                    counterNumberWriter=0;
+                                    numberWriter.flush();
+                                }
+                            }
+                        }
+                        firstFileLine = readFromTmpPostingTerm1.readLine();
+                    }
+                    else
+                    {
+                        if(secondFileLine.contains("^u")||secondFileLine.contains("^e"))
+                        {
+                            capitalPointer++;
+                            counterCapitalWriter++;
+                            Indexer.termsFrequency(split2[0].toUpperCase(),Integer.parseInt(split1[3]));
+                            Indexer.addTerm(split2[0].toUpperCase(), split2[2]+"!"+ split2[3]+"!" + capitalPointer);
+                            capitalWriter.append(split2[0].toUpperCase()+"!"+split2[1]+"!"+split2[2]+"!"+ split2[3]);
+                            capitalWriter.newLine();
+                            if(counterCapitalWriter>writeToBuff/2)
+                            {
+                                counterCapitalWriter=0;
+                                capitalWriter.flush();
+                            }
+                        }
+                        else if(secondFileLine.contains("^l"))
+                        {
+                            if(split2[0].charAt(0)<'0' || split2[0].charAt(0)>'9')
+                            {
+                                if( split2[0].charAt(0)<='d')
+                                {
+                                    lowerPointer1++;
+                                    counterLowerWriter1++;
+                                    Indexer.termsFrequency(split2[0].toLowerCase(),Integer.parseInt(split1[3]));
+                                    Indexer.addTerm(split2[0].toLowerCase(), split2[2]+"!"+ split2[3]+"!" + lowerPointer1);
+                                    lowerWriter1.append(split2[0].toLowerCase()+"!"+split2[1]+"!"+split2[2]+"!"+ split2[3]);
+                                    lowerWriter1.newLine();
+                                    if(lowerPointer1>writeToBuff/2)
+                                    {
+                                        lowerWriter1.flush();
+                                        counterLowerWriter1=0;
+                                    }
+                                }
+                                else if( split2[0].charAt(0)<='p')
+                                {
+                                    lowerPointer2++;
+                                    counterLowerWriter2++;
+                                    Indexer.termsFrequency(split2[0].toLowerCase(),Integer.parseInt(split1[3]));
+                                    Indexer.addTerm(split2[0].toLowerCase(), split2[2]+"!"+ split2[3]+"!" + lowerPointer2);
+                                    lowerWriter2.append(split2[0].toLowerCase()+"!"+split2[1]+"!"+split2[2]+"!"+ split2[3]);
+                                    lowerWriter2.newLine();
+                                    if(lowerPointer2>writeToBuff/2)
+                                    {
+                                        lowerWriter2.flush();
+                                        counterLowerWriter2=0;
+                                    }
+                                }
+                                else
+                                {
+                                    lowerPointer3++;
+                                    counterLowerWriter3++;
+                                    Indexer.termsFrequency(split2[0].toLowerCase(),Integer.parseInt(split1[3]));
+                                    Indexer.addTerm(split2[0].toLowerCase(), split2[2]+"!"+ split2[3]+"!" + lowerPointer3);
+                                    lowerWriter3.append(split2[0].toLowerCase()+"!"+split2[1]+"!"+split2[2]+"!"+ split2[3]);
+                                    lowerWriter3.newLine();
+                                    if(lowerPointer3>writeToBuff/2)
+                                    {
+                                        lowerWriter3.flush();
+                                        counterLowerWriter3=0;
+                                    }
+                                }
+
+                            }
+                            else
+                            {
+                                numberPointer++;
+                                counterNumberWriter++;
+                                Indexer.termsFrequency(split2[0],Integer.parseInt(split1[3]));
+                                Indexer.addTerm(split2[0], split2[2]+"!"+ split2[3]+"!" + numberPointer);
+                                numberWriter.append(split2[0]+"!"+split2[1]+"!"+split2[2]+"!"+ split2[3]);
+                                numberWriter.newLine();
+                                if(counterNumberWriter>writeToBuff/2)
+                                {
+                                    counterNumberWriter=0;
+                                    numberWriter.flush();
+                                }
                             }
 
-                            writerToMargeTmpPosting.append('\n');
-
-                            firstFileLine = readFromTmpPostingTerm1.readLine();
-                            secondFileLine = readFromTmpPostingTerm2.readLine();
-
-                        } else if (option <= -1) {
-
-                            countPointer++;
-                            if(firstFileLine.contains("^u")){
-                                Indexer.addTerm(split1[0].toUpperCase(), split1[2]+"!"+ split1[3]+"!" + countPointer);
-                                writerToMargeTmpPosting.append(split1[0].toUpperCase()+"!"+split1[1]+"!"+split1[2]+"!"+ split1[3]);
-                                writerToMargeTmpPosting.append('\n');
-                                counterWriter++;
-
+                        }
+                        secondFileLine = readFromTmpPostingTerm2.readLine();
+                    }
+                }
+                while (firstFileLine != null)
+                {
+                    String[] split1 = splitLine(firstFileLine);
+                    if(firstFileLine.contains("^u")||firstFileLine.contains("^e"))
+                    {
+                        capitalPointer++;
+                        counterCapitalWriter++;
+                        Indexer.termsFrequency(split1[0].toUpperCase(),Integer.parseInt(split1[3]));
+                        Indexer.addTerm(split1[0].toUpperCase(), split1[2]+"!"+ split1[3]+"!" + capitalPointer);
+                        capitalWriter.append(split1[0].toUpperCase()+"!"+split1[1]+"!"+split1[2]+"!"+ split1[3]);
+                        capitalWriter.newLine();
+                        if(counterCapitalWriter>writeToBuff/2)
+                        {
+                            capitalWriter.flush();
+                            counterCapitalWriter=0;
+                        }
+                    }
+                    else if(firstFileLine.contains("^l"))
+                    {
+                        if(split1[0].charAt(0)>'9' || split1[0].charAt(0)<'0')
+                        {
+                            if(split1[0].charAt(0)<='d')
+                            {
+                                lowerPointer1++;
+                                counterLowerWriter1++;
+                                Indexer.termsFrequency(split1[0],Integer.parseInt(split1[3]));
+                                Indexer.addTerm(split1[0].toLowerCase(), split1[2]+"!"+ split1[3]+"!" + lowerPointer1);
+                                lowerWriter1.append(split1[0].toLowerCase()+"!"+split1[1]+"!"+split1[2]+"!"+ split1[3]);
+                                lowerWriter1.newLine();
+                                if(counterLowerWriter1>writeToBuff/2)
+                                {
+                                    lowerWriter1.flush();
+                                    counterLowerWriter1=0;
+                                }
                             }
-                            else if(firstFileLine.contains("^e")){
-                                Indexer.addTerm(split1[0].toUpperCase(), split1[2]+"!"+ split1[3]+"!" + countPointer);
-                                writerToMargeTmpPosting.append(split1[0].toUpperCase()+"!"+split1[1]+"!"+split1[2]+"!"+ split1[3]);
-                                writerToMargeTmpPosting.append('\n');
-                                counterWriter++;
+                            else if(split1[0].charAt(0)<='p')
+                            {
+                                lowerPointer2++;
+                                counterLowerWriter2++;
+                                Indexer.termsFrequency(split1[0],Integer.parseInt(split1[3]));
+                                Indexer.addTerm(split1[0].toLowerCase(), split1[2]+"!"+ split1[3]+"!" + lowerPointer2);
+                                lowerWriter2.append(split1[0].toLowerCase()+"!"+split1[1]+"!"+split1[2]+"!"+ split1[3]);
+                                lowerWriter2.newLine();
+                                if(counterLowerWriter2>writeToBuff/2)
+                                {
+                                    lowerWriter2.flush();
+                                    counterLowerWriter2=0;
+                                }
                             }
-                            else if(firstFileLine.contains("^l")){
-                                Indexer.addTerm(split1[0], split1[2]+"!"+ split1[3]+"!" + countPointer);
-                                writerToMargeTmpPosting.append(split1[0]+"!"+split1[1]+"!"+split1[2]+"!"+ split1[3]);
-                                writerToMargeTmpPosting.append('\n');
-                                counterWriter++;
+                            else
+                            {
+                                lowerPointer3++;
+                                counterLowerWriter3++;
+                                Indexer.termsFrequency(split1[0],Integer.parseInt(split1[3]));
+                                Indexer.addTerm(split1[0].toLowerCase(), split1[2]+"!"+ split1[3]+"!" + lowerPointer3);
+                                lowerWriter3.append(split1[0].toLowerCase()+"!"+split1[1]+"!"+split1[2]+"!"+ split1[3]);
+                                lowerWriter3.newLine();
+                                if(counterLowerWriter3>writeToBuff/2)
+                                {
+                                    lowerWriter3.flush();
+                                    counterLowerWriter3=0;
+                                }
                             }
-                            firstFileLine = readFromTmpPostingTerm1.readLine();
+                        }
+                        else
+                        {
+                            numberPointer++;
+                            counterNumberWriter++;
+                            Indexer.termsFrequency(split1[0],Integer.parseInt(split1[3]));
+                            Indexer.addTerm(split1[0], split1[2]+"!"+ split1[3]+"!" + numberPointer);
+                            numberWriter.append(split1[0]+"!"+split1[1]+"!"+split1[2]+"!"+ split1[3]);
+                            numberWriter.newLine();
+                            if(counterNumberWriter>writeToBuff/2)
+                            {
+                                counterNumberWriter=0;
+                                numberWriter.flush();
+                            }
+                        }
+                    }
+                    firstFileLine = readFromTmpPostingTerm1.readLine();
+                }
+                while (secondFileLine != null)
+                {
+                    String[] split2 = splitLine(secondFileLine);
+                    if(secondFileLine.contains("^u")||secondFileLine.contains("^e"))
+                    {
+                        capitalPointer++;
+                        counterCapitalWriter++;
+                        Indexer.termsFrequency(split2[0].toUpperCase(),Integer.parseInt(split2[3]));
+                        Indexer.addTerm(split2[0].toUpperCase(), split2[2]+"!"+ split2[3]+"!" + capitalPointer);
+                        capitalWriter.append(split2[0].toUpperCase()+"!"+split2[1]+"!"+split2[2]+"!"+ split2[3]);
+                        capitalWriter.newLine();
+                        if(counterCapitalWriter>writeToBuff/2)
+                        {
+                            capitalWriter.flush();
+                            counterCapitalWriter=0;
+                        }
+                    }
+                    else if(secondFileLine.contains("^l"))
+                    {
+                        if(split2[0].charAt(0)<'0' || split2[0].charAt(0)>'9')
+                        {
+                            if(split2[0].charAt(0)<='d')
+                            {
+                                lowerPointer1++;
+                                counterLowerWriter1++;
+                                Indexer.termsFrequency(split2[0],Integer.parseInt(split2[3]));
+                                Indexer.addTerm(split2[0].toLowerCase(), split2[2]+"!"+ split2[3]+"!" + lowerPointer1);
+                                lowerWriter1.append(split2[0].toLowerCase()+"!"+split2[1]+"!"+split2[2]+"!"+ split2[3]);
+                                lowerWriter1.newLine();
+                                if(counterLowerWriter1>writeToBuff/2)
+                                {
+                                    counterLowerWriter1=0;
+                                    lowerWriter1.flush();
+                                }
+                            }
+                            else if (split2[0].charAt(0)<='p')
+                            {
+                                lowerPointer2++;
+                                counterLowerWriter2++;
+                                Indexer.termsFrequency(split2[0],Integer.parseInt(split2[3]));
+                                Indexer.addTerm(split2[0].toLowerCase(), split2[2]+"!"+ split2[3]+"!" + lowerPointer2);
+                                lowerWriter2.append(split2[0].toLowerCase()+"!"+split2[1]+"!"+split2[2]+"!"+ split2[3]);
+                                lowerWriter2.newLine();
+                                if(counterLowerWriter2>writeToBuff/2)
+                                {
+                                    counterLowerWriter2=0;
+                                    lowerWriter2.flush();
+                                }
+                            }
+                            else
+                            {
+                                lowerPointer2++;
+                                counterLowerWriter2++;
+                                Indexer.termsFrequency(split2[0],Integer.parseInt(split2[3]));
+                                Indexer.addTerm(split2[0].toLowerCase(), split2[2]+"!"+ split2[3]+"!" + lowerPointer2);
+                                lowerWriter2.append(split2[0].toLowerCase()+"!"+split2[1]+"!"+split2[2]+"!"+ split2[3]);
+                                lowerWriter2.newLine();
+                                if(counterLowerWriter2>writeToBuff/2)
+                                {
+                                    counterLowerWriter2=0;
+                                    lowerWriter2.flush();
+                                }
+                            }
 
                         }
                         else
                         {
-                            countPointer++;
-                            if(secondFileLine.contains("^u")){
-                                Indexer.addTerm(split2[0].toUpperCase(), split2[2]+"!"+ split2[3]+"!" + countPointer);
-                                writerToMargeTmpPosting.append(split2[0].toUpperCase()+"!"+split2[1]+"!"+split2[2]+"!"+ split2[3]);
-                                writerToMargeTmpPosting.append('\n');
-                                counterWriter++;
+                            numberPointer++;
+                            counterNumberWriter++;
+                            Indexer.termsFrequency(split2[0],Integer.parseInt(split2[3]));
+                            Indexer.addTerm(split2[0], split2[2]+"!"+ split2[3]+"!" + numberPointer);
+                            numberWriter.append(split2[0]+"!"+split2[1]+"!"+split2[2]+"!"+ split2[3]);
+                            numberWriter.newLine();
+                            if(counterNumberWriter>writeToBuff/2)
+                            {
+                                counterNumberWriter=0;
+                                numberWriter.flush();
                             }
-                            else if(secondFileLine.contains("^e")){
-                                Indexer.addTerm(split2[0].toUpperCase(), split2[2]+"!"+ split2[3]+"!" + countPointer);
-                                writerToMargeTmpPosting.append(split2[0].toUpperCase()+"!"+split2[1]+"!"+split2[2]+"!"+ split2[3]);
-                                writerToMargeTmpPosting.append('\n');
-                                counterWriter++;
-                            }
-                            else if(secondFileLine.contains("^l")){
-                                Indexer.addTerm(split2[0], split2[2]+"!"+ split2[3]+"!" + countPointer);
-                                writerToMargeTmpPosting.append(split2[0]+"!"+split2[1]+"!"+split2[2]+"!"+ split2[3]);
-                                writerToMargeTmpPosting.append('\n');
-                                counterWriter++;
-                            }
-                            secondFileLine = readFromTmpPostingTerm2.readLine();
-                        }
-                        if(counterWriter>=writeToBuff){
-                            writerToMargeTmpPosting.flush();
-                            counterWriter=0;
                         }
                     }
-                    while (firstFileLine != null) {
-                        countPointer++;
-                        String[] split1 = splitLine(firstFileLine);
-                        if(firstFileLine.contains("^u")){
-                            Indexer.addTerm(split1[0].toUpperCase(), split1[2]+"!"+ split1[3]+"!" + countPointer);
-                            writerToMargeTmpPosting.append(split1[0].toUpperCase()+"!"+split1[1]+"!"+split1[2]+"!"+ split1[3]);
-                            writerToMargeTmpPosting.append('\n');
-                            counterWriter++;
-
-                        }
-                        else if(firstFileLine.contains("^e")){
-                            Indexer.addTerm(split1[0].toUpperCase(), split1[2]+"!"+ split1[3]+"!" + countPointer);
-                            writerToMargeTmpPosting.append(split1[0].toUpperCase()+"!"+split1[1]+"!"+split1[2]+"!"+ split1[3]);
-                            writerToMargeTmpPosting.append('\n');
-                            counterWriter++;
-
-                        }
-                        else if(firstFileLine.contains("^l")){
-                            Indexer.addTerm(split1[0], split1[2]+"!"+ split1[3]+"!" + countPointer);
-                            writerToMargeTmpPosting.append(split1[0]+"!"+split1[1]+"!"+split1[2]+"!"+ split1[3]);
-                            writerToMargeTmpPosting.append('\n');
-                            counterWriter++;
-
-                        }
-                        if(counterWriter>=writeToBuff){
-                            writerToMargeTmpPosting.flush();
-                            counterWriter=0;
-                        }
-                        firstFileLine = readFromTmpPostingTerm1.readLine();
-                    }
-
-                    while (secondFileLine != null) {
-                        countPointer++;
-                        String[] split2 = splitLine(secondFileLine);
-                        if(secondFileLine.contains("^u")){
-                            Indexer.addTerm(split2[0].toUpperCase(), split2[2]+"!"+ split2[3]+"!" + countPointer);
-                            writerToMargeTmpPosting.append(split2[0].toUpperCase()+"!"+split2[1]+"!"+split2[2]+"!"+ split2[3]);
-                            writerToMargeTmpPosting.append('\n');
-                            counterWriter++;
-
-                        }
-                        else if(secondFileLine.contains("^e")){
-                            Indexer.addTerm(split2[0].toUpperCase(), split2[2]+"!"+ split2[3]+"!" + countPointer);
-                            writerToMargeTmpPosting.append(split2[0].toUpperCase()+"!"+split2[1]+"!"+split2[2]+"!"+ split2[3]);
-                            writerToMargeTmpPosting.append('\n');
-                            counterWriter++;
-
-                        }
-                        else if(secondFileLine.contains("^l")){
-                            Indexer.addTerm(split2[0], split2[2]+"!"+ split2[3]+"!" + countPointer);
-                            writerToMargeTmpPosting.append(split2[0]+"!"+split2[1]+"!"+split2[2]+"!"+ split2[3]);
-                            writerToMargeTmpPosting.append('\n');
-                            counterWriter++;
-
-                        }
-                        if(counterWriter>=writeToBuff){
-                            writerToMargeTmpPosting.flush();
-                            counterWriter=0;
-                        }
-                        secondFileLine = readFromTmpPostingTerm2.readLine();
-                    }
-                    if( counterWriter!=0){
-                        writerToMargeTmpPosting.flush();
-                    }
-
-                    // writerToMargeTmpPosting.flush();
-                    writerToMargeTmpPosting.close();
-                    readFromTmpPostingTerm1.close();
-                    readFromTmpPostingTerm2.close();
-                    f1.close();
-                    f2.close();
-
-                    Path path = Paths.get((postingPath + "/postingTerm" +k+ (1)+h + ".txt"));
-                    File f = path.toFile();
-                    f.delete();
-                    Path path2 = Paths.get((postingPath + "/postingTerm" +k+ (2)+h + ".txt"));
-                    File ff = path2.toFile();
-                    ff.delete();
-
-
-                } catch ( IOException e) {
-                    e.printStackTrace();
+                    secondFileLine = readFromTmpPostingTerm2.readLine();
                 }
+                if( counterLowerWriter1!=0){
+                    lowerWriter1.flush();
+                }
+                if( counterLowerWriter2!=0){
+                    lowerWriter2.flush();
+                }
+                if( counterLowerWriter3!=0){
+                    lowerWriter3.flush();
+                }
+                if(counterCapitalWriter!=0)
+                {
+                    capitalWriter.flush();
+                }
+                if(counterNumberWriter!=0)
+                {
+                    numberWriter.flush();
+                }
+                lowerWriter1.close();
+                lowerWriter2.close();
+                lowerWriter3.close();
+                numberWriter.close();
+                capitalWriter.close();
+                lowerFile1.close();
+                lowerFile2.close();
+                lowerFile3.close();
+                numberFile.close();
+                capitalFile.close();
+                readFromTmpPostingTerm1.close();
+                readFromTmpPostingTerm2.close();
+                f1.close();
+                f2.close();
+                Path path = Paths.get((postingPath + "/postingTerm" +k+ (1)+h + ".txt"));
+                File f = path.toFile();
+                f.delete();
+                Path path2 = Paths.get((postingPath + "/postingTerm" +k+ (2)+h + ".txt"));
+                File ff = path2.toFile();
+                ff.delete();
+            } catch ( IOException e) {
+                e.printStackTrace();
             }
-
-            Indexer.print();
-
+        }
+        Indexer.printFrequency();
+        Indexer.print();
     }
 
     private String mergeDocs(String s1, String s2) {
@@ -532,7 +865,7 @@ public class Posting {
                 i++;
             }
             else
-                {
+            {
                 mergeDocs= mergeDocs.append(secondDocs[j]+",");
                 j++;
             }
@@ -631,8 +964,8 @@ public class Posting {
             if(f.exists())
                 f.delete();
 
-             path = Paths.get((postingPath + "/finalPostingNoStemming.txt"));
-             f = path.toFile();
+            path = Paths.get((postingPath + "/finalPostingNoStemming.txt"));
+            f = path.toFile();
             if(f.exists())
                 f.delete();
             path = Paths.get((postingPath + "/indexerNoStemming.txt"));

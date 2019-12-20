@@ -8,20 +8,28 @@ import java.util.regex.Pattern;
 
 public class Parse {
 
+
+    // static table for fast search of smbils,units, stop words,month list
     private static HashSet<String> stopWords;
     private static HashMap<String,String> monthMap = new HashMap<>();
     private static HashMap<String,String> unitMap = new HashMap<>();
     private static HashMap<String, String> symbols=new HashMap<>();
+
+    // save terms and frequency in the document
     private HashMap<String,Integer> allDocTerms;
-    private boolean isStemming;
-    private Stemmer stemmer;
-    private int maxFreqTermInDoc;
-    private int totalTermsInDoc;
-    private String[] tokens;
-    private String text;
+    // object the parse connect with
     private Document currDoc;
     private Posting posting;
+    private Stemmer stemmer;
+    private boolean isStemming; // if need to use the stemmer
+    // help attributes for the parsing method
+    private int maxFreqTermInDoc;
+    private int totalTermsInDoc;
     private int currIndex;
+    private String[] tokens;
+    private String text;
+
+
     private boolean debug1;
     private boolean debug2;
     private boolean FinishDoc;
@@ -47,6 +55,66 @@ public class Parse {
         FinishDoc=false;
         totalTermsInDoc=0;
 
+    }
+
+
+    // the methods call by read file and say that the read stage finished
+    public void setFinishDoc(boolean b)
+    {
+        this.FinishDoc= b;
+        posting.setFinishDoc(b);
+    }
+
+    // set the stemmer T/F
+    public void setIsStemming(boolean isStemming) {
+        this.isStemming=isStemming;
+    }
+    // set the stop words for the corpus
+    public void createStopWords( HashSet sWords) // create stop words hash
+    {
+        stopWords=sWords;
+    }
+    // handle all the stage from parsing the text to transfer the data to posting stage.
+    public void createDocument(StringBuilder content)
+    {
+        currIndex=0;
+        currDoc = new Document();
+        text = content.toString();
+        text = text.replaceAll("\n"," ");
+        getDocName();
+        getText();
+        tokens= StringUtils.splitString(text," ():?[]!;*#+| "); // to add ""
+        if(tokens.length==0)
+        {
+            cleanParser();
+            return;
+        }
+        parseText();
+        if(isStemming)
+        {
+            HashMap<String,Integer> termsAfterStemming= new HashMap<>();
+            for (String beforeStem:allDocTerms.keySet()
+            ) {
+                if(containsNumber.matcher(beforeStem).matches()|| beforeStem.contains(" "))
+                {
+                    termsAfterStemming.put(beforeStem,allDocTerms.get(beforeStem));
+                }
+                else
+                {
+                    String afterStem=stemmer.stem(beforeStem);
+                    if(termsAfterStemming.containsKey(afterStem))
+                    {
+                        termsAfterStemming.replace(afterStem,termsAfterStemming.get(afterStem)+allDocTerms.get(beforeStem));
+                    }
+                    else
+                    {
+                        termsAfterStemming.put(afterStem,allDocTerms.get(beforeStem));
+                    }
+                }
+            }
+            allDocTerms=termsAfterStemming;
+        }
+        updateDoc();
     }
 
     private void insertToAllDocTerms(String term)
@@ -103,129 +171,6 @@ public class Parse {
         currIndex=0;
     }
 
-    private void loadMonthMap()
-    {
-        // regular case
-        monthMap.put("January","01");
-        monthMap.put("Jan","01");
-        monthMap.put("February","02");
-        monthMap.put("Feb","02");
-        monthMap.put("March","03");
-        monthMap.put("Mar","03");
-        monthMap.put("April","04");
-        monthMap.put("Apr","04");
-        monthMap.put("May","05");
-        monthMap.put("June","06");
-        monthMap.put("Jun","06");
-        monthMap.put("July","07");
-        monthMap.put("Jul","07");
-        monthMap.put("August","08");
-        monthMap.put("Aug","08");
-        monthMap.put("Septmber","09");
-        monthMap.put("Sep","09");
-        monthMap.put("October","10");
-        monthMap.put("Oct","10");
-        monthMap.put("November","11");
-        monthMap.put("Nov","11");
-        monthMap.put("December","12");
-        monthMap.put("Dec","12");
-
-        //lowerCase
-        monthMap.put("january","01");
-        monthMap.put("jan","01");
-        monthMap.put("february","02");
-        monthMap.put("feb","02");
-        monthMap.put("march","03");
-        monthMap.put("mar","03");
-        monthMap.put("april","04");
-        monthMap.put("apr","04");
-        monthMap.put("may","05");
-        monthMap.put("june","06");
-        monthMap.put("jun","06");
-        monthMap.put("july","07");
-        monthMap.put("jul","07");
-        monthMap.put("august","08");
-        monthMap.put("aug","08");
-        monthMap.put("septmber","09");
-        monthMap.put("sep","09");
-        monthMap.put("october","10");
-        monthMap.put("oct","10");
-        monthMap.put("november","11");
-        monthMap.put("nov","11");
-        monthMap.put("december","12");
-        monthMap.put("dec","12");
-    }
-
-    private void loadSymbols()
-    {
-        symbols.put("u.s","");
-        symbols.put("u.s.","");
-        symbols.put("us","");
-        symbols.put("US","");
-        symbols.put("dollars"," Dollars");
-        symbols.put("dollar"," Dollars");
-        symbols.put("%","%");
-        symbols.put("percent","%");
-        symbols.put("percentage","%");
-        symbols.put("$"," Dollars");
-    }
-
-    private void loadUnits()
-    {
-        unitMap.put("million","M");
-        unitMap.put("billion","B");
-        unitMap.put("trillion","T");
-        unitMap.put("m","M");
-        unitMap.put("bn","B");
-        unitMap.put("thousand","K");
-        unitMap.put("thousands","K");
-    }
-
-
-
-
-    public void createDocument(StringBuilder content)
-    {
-        currIndex=0;
-        currDoc = new Document();
-        text = content.toString();
-        text = text.replaceAll("\n"," ");
-        getDocName();
-        getText();
-        tokens= StringUtils.splitString(text," ():?[]!;*#+| "); // to add ""
-        if(tokens.length==0)
-        {
-            cleanParser();
-            return;
-        }
-        parseText();
-        if(isStemming)
-        {
-            HashMap<String,Integer> termsAfterStemming= new HashMap<>();
-            for (String beforeStem:allDocTerms.keySet()
-                    ) {
-                if(containsNumber.matcher(beforeStem).matches()|| beforeStem.contains(" "))
-                {
-                    termsAfterStemming.put(beforeStem,allDocTerms.get(beforeStem));
-                }
-                else
-                {
-                    String afterStem=stemmer.stem(beforeStem);
-                    if(termsAfterStemming.containsKey(afterStem))
-                    {
-                        termsAfterStemming.replace(afterStem,termsAfterStemming.get(afterStem)+allDocTerms.get(beforeStem));
-                    }
-                    else
-                    {
-                        termsAfterStemming.put(afterStem,allDocTerms.get(beforeStem));
-                    }
-                }
-            }
-            allDocTerms=termsAfterStemming;
-        }
-        updateDoc();
-    }
-
 
     private void updateDoc() {
         currDoc.setTotalTerms(totalTermsInDoc);
@@ -233,7 +178,6 @@ public class Parse {
         currDoc.setUniqeTermsNum(allDocTerms.size());
         posting.postingDoc(currDoc);
         posting.postingTerms(allDocTerms, currDoc.getDocName());
-
         maxFreqTermInDoc=0;
         allDocTerms.clear();
     }
@@ -242,7 +186,6 @@ public class Parse {
 
     private void parseText()
     {
-
         if(tokens[currIndex].equals("Text"))
             currIndex++;
         while (currIndex < tokens.length)
@@ -313,7 +256,12 @@ public class Parse {
                                 cunterFlag=true;
                             }
                         }
-                        String unitToken = cleanWord(tokens[currIndex]).toLowerCase();
+
+                        String unitToken="";
+                        if(currIndex<tokens.length)
+                        {
+                            unitToken = cleanWord(tokens[currIndex]).toLowerCase();
+                        }
                         if (unitMap.containsKey(unitToken))
                         {
                             currIndex++;
@@ -362,7 +310,17 @@ public class Parse {
                             }
                             else if ( (!fractionFlag) && monthMap.containsKey(symbol))
                             {
+                                if(currIndex+1<tokens.length)
+                                {
+                                    String temp=cleanWord(tokens[currIndex+1]);
+                                    if(pureNumberPattern.matcher(temp).matches())
+                                    {
+                                        insertToAllDocTerms(monthHandler(temp,monthMap.get(symbol)));
+                                        currIndex++;
+                                    }
+                                }
                                 concat = monthHandler(concat, monthMap.get(symbol));
+                                currIndex++;
                             }
                             if (!fractionFlag && !flag)// its just a number
                             {
@@ -393,22 +351,109 @@ public class Parse {
                     {
                         if(concat.charAt(0)!='-') // its not negative number
                         {
-                            String[] words = concat.split("-");
-                            concat=words[0];
-                            for (int i=1; i<words.length;i++)
+                            String[] splirWords=concat.split("-");
+                            if(splirWords.length>1)
                             {
-                                String word=cleanWord(words[i]);
-                                if(!word.isEmpty())
+                                String first=cleanWord(splirWords[0]);
+                                String second=cleanWord(splirWords[1]);
+                                if(pureNumberPattern.matcher(first).matches())
                                 {
-                                    if(pureNumberPattern.matcher(word).matches())
+                                    if(unitMap.containsKey(second.toLowerCase()))
                                     {
-                                        word=handleSimpleNumbers(word);
+                                        concat=handleSimpleNumbersAndUnits(first,second);
                                     }
-                                    insertToAllDocTerms(word);
-                                    concat=concat+"-"+words[i];
+                                    else if(monthMap.containsKey(second))
+                                    {
+                                        concat=monthHandler(first,monthMap.get(second));
+                                    }
+                                    else if(symbols.containsKey(second.toLowerCase()))
+                                    {
+                                        concat=first+symbols.get(second.toLowerCase());
+                                        if(splirWords.length>3)
+                                        {
+                                            if(symbols.containsKey(splirWords[2].toLowerCase()))
+                                            {
+                                                concat=concat+symbols.get(splirWords[2].toLowerCase());
+                                            }
+                                        }
+                                    }
+                                    else
+                                    {
+                                        concat=handleSimpleNumbers(first)+"-"+second;
+                                    }
+                                }
+                                else if(containsNumber.matcher(first).matches())
+                                {
+                                    if(first.contains("$"))
+                                    {
+                                        if(first.charAt(0)=='$')
+                                        {
+                                            first=first.substring(1);
+                                            if(pureNumberPattern.matcher(first).matches())
+                                            {
+                                                if(unitMap.containsKey(second.toLowerCase()))
+                                                {
+                                                    concat=handlePriceNumbersAndUnits(first,unitMap.get(second.toLowerCase()));
+                                                }
+                                                else
+                                                {
+                                                    concat=handlePriceNumbers(first);
+                                                }
+                                            }
+                                        }
+                                        else if(first.charAt(first.length()-1)=='$')
+                                        {
+                                            first=first.substring(0,first.length()-1);
+                                            if(pureNumberPattern.matcher(first).matches())
+                                            {
+                                                if(unitMap.containsKey(second.toLowerCase()))
+                                                {
+                                                    concat=handlePriceNumbersAndUnits(first,unitMap.get(second.toLowerCase()));
+                                                }
+                                                else
+                                                {
+                                                    concat=handlePriceNumbers(first);
+                                                }
+                                            }
+                                        }
+                                    }
+                                    else if(first.charAt(first.length()-1)=='m')
+                                    {
+                                        first=first.substring(0,first.length()-1);
+                                        if(pureNumberPattern.matcher(first).matches())
+                                        {
+                                            concat=handleSimpleNumbersAndUnits(first,"million");
+                                        }
+                                    }
+                                    else if(first.contains("bn"))
+                                    {
+                                        first=first.substring(0,first.length()-2);
+                                        if(pureNumberPattern.matcher(first).matches())
+                                        {
+                                            concat=handleSimpleNumbersAndUnits(first,"billion");
+                                        }
+                                    }
+                                }
+                                else if (monthMap.containsKey(first))
+                                {
+                                    if(pureNumberPattern.matcher(second).matches())
+                                    {
+                                        concat=monthHandler(second,monthMap.get(first));
+                                    }
                                 }
                             }
-                            concat=cleanWord(concat);
+                            else if(splirWords.length>-1)
+                            {
+                                String first=splirWords[0];
+                                if(first.charAt(0)=='$' && first.length()>1)
+                                {
+                                    first=first.substring(1);
+                                    if(pureNumberPattern.matcher(first).matches())
+                                    {
+                                        concat=handlePriceNumbers(first);
+                                    }
+                                }
+                            }
                         }
                         currIndex++;
                     }
@@ -434,7 +479,6 @@ public class Parse {
                             }
                             else
                             {
-                                // System.out.println(concat+" maybe we have a problem");
                                 insertToAllDocTerms(concat);
                                 currIndex++;
                                 continue;
@@ -893,8 +937,7 @@ public class Parse {
     }
 
 
-
-    public String cleanWord(String word)
+    private String cleanWord(String word)
     {
         if(word.isEmpty())
         {
@@ -934,10 +977,6 @@ public class Parse {
     }
 
 
-    public void createStopWords( HashSet sWords) // create stop words hash
-    {
-        stopWords=sWords;
-    }
 
 
 
@@ -961,12 +1000,87 @@ public class Parse {
         currDoc.setDocName(docName);
     }
 
-    public void setFinishDoc(boolean b) {
-        this.FinishDoc= b;
-        posting.setFinishDoc(b);
+
+    /**
+     * load all static data about symbols, units, month, stop words.
+     */
+    private void loadMonthMap()
+    {
+        // regular case
+        monthMap.put("January","01");
+        monthMap.put("Jan","01");
+        monthMap.put("February","02");
+        monthMap.put("Feb","02");
+        monthMap.put("March","03");
+        monthMap.put("Mar","03");
+        monthMap.put("April","04");
+        monthMap.put("Apr","04");
+        monthMap.put("May","05");
+        monthMap.put("June","06");
+        monthMap.put("Jun","06");
+        monthMap.put("July","07");
+        monthMap.put("Jul","07");
+        monthMap.put("August","08");
+        monthMap.put("Aug","08");
+        monthMap.put("Septmber","09");
+        monthMap.put("Sep","09");
+        monthMap.put("October","10");
+        monthMap.put("Oct","10");
+        monthMap.put("November","11");
+        monthMap.put("Nov","11");
+        monthMap.put("December","12");
+        monthMap.put("Dec","12");
+
+        //lowerCase
+        monthMap.put("january","01");
+        monthMap.put("jan","01");
+        monthMap.put("february","02");
+        monthMap.put("feb","02");
+        monthMap.put("march","03");
+        monthMap.put("mar","03");
+        monthMap.put("april","04");
+        monthMap.put("apr","04");
+        monthMap.put("may","05");
+        monthMap.put("june","06");
+        monthMap.put("jun","06");
+        monthMap.put("july","07");
+        monthMap.put("jul","07");
+        monthMap.put("august","08");
+        monthMap.put("aug","08");
+        monthMap.put("septmber","09");
+        monthMap.put("sep","09");
+        monthMap.put("october","10");
+        monthMap.put("oct","10");
+        monthMap.put("november","11");
+        monthMap.put("nov","11");
+        monthMap.put("december","12");
+        monthMap.put("dec","12");
     }
 
-    public void setIsStemming(boolean isStemming) {
-            this.isStemming=isStemming;
+    private void loadSymbols()
+    {
+        symbols.put("u.s","");
+        symbols.put("u.s.","");
+        symbols.put("us","");
+        symbols.put("US","");
+        symbols.put("dollars"," Dollars");
+        symbols.put("dollar"," Dollars");
+        symbols.put("%","%");
+        symbols.put("percent","%");
+        symbols.put("percentage","%");
+        symbols.put("$"," Dollars");
     }
+
+    private void loadUnits()
+    {
+        unitMap.put("million","M");
+        unitMap.put("billion","B");
+        unitMap.put("trillion","T");
+        unitMap.put("m","M");
+        unitMap.put("bn","B");
+        unitMap.put("thousand","K");
+        unitMap.put("thousands","K");
+    }
+
+
 }
