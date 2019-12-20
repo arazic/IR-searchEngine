@@ -1,22 +1,21 @@
 package View;//package PACKAGE_NAME;
 
-import Controller.Controller;
-import Model.Model;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.Insets;
+import javafx.scene.Group;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Alert;
-import javafx.scene.control.ListView;
+import javafx.scene.control.*;
+import javafx.scene.layout.VBox;
+import javafx.scene.text.Font;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Map;
 import java.util.Observable;
 import java.util.TreeMap;
@@ -28,6 +27,7 @@ public class View extends Observable {
     public javafx.scene.control.TextField txtfld_postingPath;
     public javafx.scene.control.CheckBox c_steeming;
     public javafx.scene.control.Button showDictionary;
+    public javafx.scene.control.Button reset;
     public javafx.scene.control.ListView indexerDictionary;
     public boolean isStemming;
     public String loadDic;
@@ -103,6 +103,7 @@ public class View extends Observable {
         if(c_steeming.isSelected())
             isStemming=true;
 
+        reset.setDisable(false);
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
         alert.setTitle("CONFIRMATION!");
         alert.setHeaderText("the engine start...\n");
@@ -113,14 +114,15 @@ public class View extends Observable {
     }
 
 
-    public void SetLoadDictionarySuccessfully(boolean ans) {
-        this.loadDictionarySuccessfully =ans;
-        if(ans){
+    public void SetLoadDictionarySuccessfully(TreeMap<String, String> tm) {
+        if(tm!=null){
+            this.loadDictionarySuccessfully =true;
             Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
             alert.setTitle("CONFIRMATION!");
             alert.setHeaderText("The dictionary was successfully loaded!\n");
             alert.showAndWait();
             showDictionary.setDisable(false);
+            termsDictionary= tm;
         }
         else {
             Alert alert = new Alert(Alert.AlertType.WARNING);
@@ -132,34 +134,44 @@ public class View extends Observable {
     }
 
     public void show_dictionary() {
-        try {
 
-            FXMLLoader fxmlLoader = new FXMLLoader();
-            Parent root = fxmlLoader.load(getClass().getResource("resources/indexerDictionary.fxml").openStream());
-            Scene scene = new Scene(root, 650, 600);
-            Stage showStage= new Stage();
-            showStage.setTitle("Dictionary");
-            scene.getStylesheets().add(getClass().getResource("resources/MenuStyle.css").toExternalForm());
-            showStage.setScene(scene);
-            indexerDictionary= (javafx.scene.control.ListView) scene.lookup("#indexerDictionary");
-            ObservableList<String> items= FXCollections.observableArrayList();
+        indexerDictionary= new ListView<>();
+        ObservableList<String> items= FXCollections.observableArrayList();
 
-            for(Map.Entry<String,String> entry : termsDictionary.entrySet()) {
-                String key = entry.getKey();
-                String value = entry.getValue();
-                items.add(key + value);
-            }
-
-            indexerDictionary.setItems(items);
-            showStage.show();
-
-        } catch (IOException e) {
-            e.printStackTrace();
+        for(Map.Entry<String,String> entry : termsDictionary.entrySet()) {
+            String key = entry.getKey();
+            String value = entry.getValue();
+            items.add(key + value);
         }
 
+        indexerDictionary.setItems(items);
+
+            final VBox vbox = new VBox();
+            vbox.setSpacing(5);
+            vbox.setPadding(new Insets(10, 0, 0, 10));
+            vbox.getChildren().addAll(indexerDictionary);
+
+            Scene scene= new Scene(vbox,700, 450);
+            Stage stage= new Stage();
+            stage.setTitle("Dictionary");
+
+            stage.setScene(scene);
+            stage.show();
     }
 
-    public void setDictionary(TreeMap<String,String> terms) {
-        this.termsDictionary=terms;
+    public void finishEngineMessage(int totalDocs, int terms, String totalTime) {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("CONFIRMATION!");
+        alert.setHeaderText("The engine finished!\nTotal documents:"+totalDocs+"\n"+
+        "Unique terms in corpus: "+ terms+"\n"+ "Total time: "+ totalTime);
+        alert.showAndWait();
+    }
+
+    public void SetResetSuccessfully() {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("CONFIRMATION!");
+        alert.setHeaderText("The engine reset succeeded!\n");
+        alert.showAndWait();
+        reset.setDisable(true);
     }
 }

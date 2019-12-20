@@ -63,6 +63,7 @@ public class ReadFile {
         File path= new File(this.corpusPath);
         getToFile(path);
         parse.setFinishDoc(true);
+
     }
 
     /**
@@ -95,5 +96,8 @@ public class ReadFile {
                 }
             }
         }
+    }
+    public static int getTotalDocNum() {
+        return totalDocNum;
     }
 }

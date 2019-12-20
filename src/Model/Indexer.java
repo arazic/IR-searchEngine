@@ -4,7 +4,8 @@ import java.io.*;
 import java.util.*;
 import java.util.regex.Pattern;
 
-public class Indexer {
+public class Indexer
+{
 
         private static TreeMap<String, String> termsDic; // margePostingTerm
         private static HashMap<String, String> docDic; // docName, <postingFileName><postingPlaceInFile>
@@ -38,26 +39,31 @@ public class Indexer {
 
          public static void printFrequency()
          {
-             try
-             {
-                 int rank=1;
-                 BufferedWriter writer = new BufferedWriter(new FileWriter("C:/Users/gal/Desktop/FB396018/documents/frequency.txt"));
-                 for (Term term:frequencyMap
-                      ) {
-                     writer.write(String.valueOf(rank)+"           "+ String.valueOf(term.getFreq()));
-                     writer.newLine();
-                 }
-             }
-             catch (IOException e){
+             int x=1;
+            for (int i=0; i<10;i++)
+            {
+                Term t=frequencyMap.remove();
+                System.out.println(x+". "+t.getStringTerm()+"  " +t.getFreq());
+                x++;
+            }
+            while (frequencyMap.size()>10)
+                frequencyMap.remove();
 
+             x=1;
+             for (int i=0; i<10;i++)
+             {
+                 Term t=frequencyMap.remove();
+                 System.out.println(x+". "+t.getStringTerm()+"  " +t.getFreq());
+                 x++;
              }
+
 
          }
          public static void addTerm(String stringTerm, String info)
          {
              if(!termsDic.containsKey(stringTerm))
                 {
-                    termsDic.put(stringTerm,info);
+                     termsDic.put(stringTerm,info);
                      termsNumber++;
                 }
              if(containsNumberPattern.matcher(stringTerm).matches())
@@ -94,7 +100,6 @@ public class Indexer {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
     }
 
 
@@ -107,7 +112,7 @@ public class Indexer {
         return termsNumber;
     }
 
-    public static boolean loadData() {
+    public static TreeMap<String, String> loadData() {
         try {
             FileReader fr;
             if(isStemming)
@@ -125,13 +130,14 @@ public class Indexer {
                 line= readerIndex.readLine();
             }
 
-        return true;
+        return Indexer.getTermsDic();
         } catch (FileNotFoundException e) {
             // e.printStackTrace();
         } catch (IOException e) {
            // e.printStackTrace();
         }
-        return false;
+        return null;
+
     }
 
     public static void setIsStemming(boolean isStemm) {

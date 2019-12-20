@@ -32,32 +32,42 @@
         </rowConstraints>
          <children>
             <Label prefHeight="27.0" prefWidth="114.0" text="search engine" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.valignment="CENTER" />
-            <Button mnemonicParsing="false" onAction="#browser_corsus" text="choose corpus" GridPane.columnIndex="4" GridPane.rowIndex="2" />
-            <CheckBox fx:id="c_steeming" mnemonicParsing="false" prefHeight="27.0" prefWidth="124.0" text="stemming" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.rowIndex="4" />
-            <Button mnemonicParsing="false" onAction="#browser_posting" text="choose posting" GridPane.columnIndex="4" GridPane.rowIndex="3" />
+            <Button mnemonicParsing="false" onAction="#browser_corsus" prefHeight="39.0" prefWidth="140.0" text="choose corpus" GridPane.columnIndex="4" GridPane.rowIndex="2" />
+            <Button mnemonicParsing="false" onAction="#browser_posting" prefHeight="39.0" prefWidth="140.0" text="choose posting" GridPane.columnIndex="4" GridPane.rowIndex="3" />
             <Label prefHeight="27.0" prefWidth="154.0" text="corpus path" GridPane.columnIndex="1" GridPane.rowIndex="2" />
             <Label prefHeight="27.0" prefWidth="154.0" text="posting path" GridPane.columnIndex="1" GridPane.rowIndex="3" />
-            <Button mnemonicParsing="false" onAction="#startEngine" prefHeight="39.0" prefWidth="216.0" text="start" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="4" />
-            <Button mnemonicParsing="false" onAction="#reset" prefHeight="39.0" prefWidth="222.0" text="reset" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="6" GridPane.valignment="CENTER">
+            <Button fx:id="reset" disable="true" mnemonicParsing="false" onAction="#reset" prefHeight="39.0" prefWidth="140.0" text="reset" GridPane.columnIndex="4" GridPane.halignment="LEFT" GridPane.rowIndex="6" GridPane.valignment="CENTER">
                <GridPane.margin>
                   <Insets />
                </GridPane.margin>
             </Button>
             <TextField fx:id="txtfld_corpusPath" GridPane.columnIndex="2" GridPane.rowIndex="2" />
             <TextField fx:id="txtfld_postingPath" GridPane.columnIndex="2" GridPane.rowIndex="3" />
-            <GridPane GridPane.columnIndex="2" GridPane.rowIndex="5">
+            <GridPane GridPane.columnIndex="1" GridPane.rowIndex="6">
               <columnConstraints>
-                <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
                 <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
               </columnConstraints>
               <rowConstraints>
                 <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
               </rowConstraints>
                <children>
-                  <Button fx:id="showDictionary" mnemonicParsing="false" onAction="#show_dictionary" disable="true" text="show dictionary" GridPane.columnIndex="1" GridPane.halignment="CENTER" />
                   <Button mnemonicParsing="false" onAction="#load_dictionary" text="load dictionary" GridPane.halignment="CENTER" />
                </children>
             </GridPane>
+            <GridPane GridPane.columnIndex="2" GridPane.rowIndex="4">
+              <columnConstraints>
+                <ColumnConstraints hgrow="SOMETIMES" maxWidth="253.0" minWidth="10.0" prefWidth="154.0" />
+                <ColumnConstraints hgrow="SOMETIMES" maxWidth="373.0" minWidth="10.0" prefWidth="365.0" />
+              </columnConstraints>
+              <rowConstraints>
+                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+              </rowConstraints>
+               <children>
+                  <Button mnemonicParsing="false" onAction="#startEngine" prefHeight="39.0" prefWidth="322.0" text="start" GridPane.columnIndex="1" GridPane.halignment="RIGHT" />
+                  <CheckBox fx:id="c_steeming" mnemonicParsing="false" prefHeight="27.0" prefWidth="158.0" text="stemming" GridPane.halignment="CENTER" />
+               </children>
+            </GridPane>
+            <Button fx:id="showDictionary" disable="true" mnemonicParsing="false" onAction="#show_dictionary" text="show dictionary" GridPane.columnIndex="2" GridPane.halignment="LEFT" GridPane.rowIndex="6" />
          </children>
       </GridPane>
    </children>
