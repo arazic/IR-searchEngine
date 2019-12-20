@@ -93,7 +93,7 @@ public class Indexer
                 index.append("\n");
             }
             index.flush();
-            System.out.println(termsDic.size());
+           // System.out.println(termsDic.size());
             index.close();
 
 

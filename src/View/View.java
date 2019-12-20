@@ -141,7 +141,8 @@ public class View extends Observable {
         for(Map.Entry<String,String> entry : termsDictionary.entrySet()) {
             String key = entry.getKey();
             String value = entry.getValue();
-            items.add(key + value);
+            String []s= value.split("!");
+            items.add(key + ", "+ s[1]);
         }
 
         indexerDictionary.setItems(items);
