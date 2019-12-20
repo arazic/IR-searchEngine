@@ -39,23 +39,31 @@ public class EngineManager {
         posting.margeToMainPostingFile();
     }
 
+
 /*
     public static void main(String[] args) {
         System.out.println("We are Google!");
         long millis=System.currentTimeMillis();
-        java.util.Date date=new java.util.Date(millis);
-        System.out.println("start "+ date);
-        // EngineManager engineManager= new EngineManager("C:/Users/user/engine/corpus", "C:/Users/user/engine/posting",false);
-        EngineManager engineManager= new EngineManager("C:/Users/gal/Desktop/FB396018/corpus", "C:/Users/gal/Desktop/FB396018/documents/terms",false);
+        Date date1=new java.util.Date(millis);
+        System.out.println("start "+ date1);
 
+        Instant start = java.time.Instant.now();
+
+         EngineManager engineManager= new EngineManager("C:/Users/user/engine/lXcorpus", "C:/Users/user/engine/posting",false);
+        //EngineManager engineManager= new EngineManager("C:/Users/gal/Desktop/FB396018/corpus", "C:/Users/gal/Desktop/FB396018/documents/terms",false);
         engineManager.startEngine();
         System.out.println("chen is my queen! time" );
 
-        long millis2=System.currentTimeMillis();
-        java.util.Date date2=new java.util.Date(millis2);
-        System.out.println("end "+ date2);
+        millis=System.currentTimeMillis();
+        Date date2=new java.util.Date(millis);
+        System.out.println(date2);
+        Instant end = java.time.Instant.now();
+        Duration between = java.time.Duration.between(start, end);
+              System.out.println("total time:\n" +between.toMinutes()+" minutes, "+
+                between.getSeconds()+" seconds and "+ between.toMillis()+" millis");
     }
 */
+
 
     public boolean existCorpusPath() {
         if(this.corpusPath==null)
@@ -67,7 +75,7 @@ public class EngineManager {
         this.corpusPath=corpusPath;
     }
 
-    public static boolean setIndexer() {
+    public static TreeMap<String, String> getIndexer() {
         return Indexer.loadData();
     }
 
@@ -84,6 +92,9 @@ public class EngineManager {
 
     public void reset() {
         posting.reset();
+    }
+    public int totalDocNum(){
+        return readFile.getTotalDocNum();
     }
 }
 

@@ -3,39 +3,59 @@ package Model;//package PACKAGE_NAME;
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.Date;
 import java.util.Observable;
 import java.util.TreeMap;
 
 public class Model extends Observable
 {
-    EngineManager engineManager;
-    TreeMap<String, String> terms;
-    public void startEngine(String corpusPath,String postingPath,boolean isSteeming){
-        System.out.println("We are Google!");
+    public EngineManager engineManager;
+    public TreeMap<String, String> terms;
+    public int totalDocNum;
+    public String totalTime;
+
+    public void startEngine(String corpusPath,String postingPath,boolean isStemming){
         long millis=System.currentTimeMillis();
         java.util.Date date=new java.util.Date(millis);
         System.out.println("start "+ date);
-        this.engineManager= new EngineManager(corpusPath, postingPath,isSteeming);
+        Instant start = java.time.Instant.now();
+
+        this.engineManager= new EngineManager(corpusPath, postingPath,isStemming);
         if(!engineManager.existCorpusPath()){
             engineManager.setCorpusPath(corpusPath);
         }
         engineManager.startEngine();
-        System.out.println("chen is my queen! time" );
 
-        long millis2=System.currentTimeMillis();
-        java.util.Date date2=new java.util.Date(millis2);
+
+         millis=System.currentTimeMillis();
+        java.util.Date date2=new java.util.Date(millis);
         System.out.println("end "+ date2);
+
+        Instant end = java.time.Instant.now();
+        Duration between = java.time.Duration.between(start, end);
+
+        totalTime=between.toMinutes()+" minutes, "+
+                between.getSeconds()+" seconds and "+ between.toMillis()+" millis";
+
+        totalDocNum= engineManager.totalDocNum();
+        terms=engineManager.getTermsDic();
+
+        setChanged();
+        notifyObservers("finishEngine");
+
     }
 
-    public boolean loadDictionary(String postingPath, boolean isStemming) {
+    public TreeMap<String,String> loadDictionary(String postingPath, boolean isStemming) {
 
         if(engineManager==null){
             this.engineManager= new EngineManager(postingPath,isStemming);
-            return engineManager.setIndexer();
+            return engineManager.getIndexer();
         }
         else {
             engineManager.setIsStemming(isStemming);
-            return engineManager.setIndexer();
+            return engineManager.getIndexer();
         }
     }
 
@@ -55,6 +75,8 @@ public class Model extends Observable
         if(engineManager!=null){
              engineManager.reset();
             this.engineManager= null;
+            setChanged();
+            notifyObservers("resetSucceed");
         }
 
     }

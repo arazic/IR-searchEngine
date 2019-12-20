@@ -20,10 +20,12 @@ public class Controller extends Observable implements Observer {
                     model.startEngine(view.txtfld_corpusPath.getText(),view.txtfld_postingPath.getText(),view.isStemming);
                     break;
                 case "loadDictionary":
-                    if(model.loadDictionary(view.loadDic,view.isStemming))
-                        view.SetLoadDictionarySuccessfully(true);
+                    TreeMap<String,String> tm=model.loadDictionary(view.loadDic,view.isStemming);
+                    if(tm!=null) {
+                        view.SetLoadDictionarySuccessfully(tm);
+                    }
                     else
-                        view.SetLoadDictionarySuccessfully(false);
+                        view.SetLoadDictionarySuccessfully(null);
                     break;
                 case "showDictionary":
                     model.showDictionary();
@@ -35,9 +37,12 @@ public class Controller extends Observable implements Observer {
         }
         else if( o == model){
             switch((String) arg) {
-                case "showDictionary":
-                    view.setDictionary(((Model)o).getTerms());
+
+                case "finishEngine":
+                    view.finishEngineMessage(((Model)o).totalDocNum,((Model)o).getTerms().size(),((Model)o).totalTime);
                     break;
+                case "resetSucceed":
+                    view.SetResetSuccessfully();
 
             }
 

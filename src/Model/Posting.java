@@ -21,6 +21,7 @@ public class Posting {
     private BufferedWriter writerToPostingDoc;
     private boolean finishDoc;
     private boolean isStemming;
+    private boolean empty;
 
     public Posting(String postingPath, boolean isStemming){
         this.isStemming= isStemming;
@@ -53,6 +54,7 @@ public class Posting {
 
     public void postingTerms(HashMap<String, Integer> docTerms, String docName) {
         if (!docTerms.isEmpty()) {
+
             if (docCounter <= chunkPostingSIZE) {
                     for (Map.Entry entry : docTerms.entrySet()) {
 
@@ -95,7 +97,7 @@ public class Posting {
                 docCounter++;
             }
 
-            if (docCounter > chunkPostingSIZE) {
+             if (docCounter > chunkPostingSIZE) {
                 try {
                     int counterWriter=0;
                     if(isStemming)
@@ -124,6 +126,7 @@ public class Posting {
                     e.printStackTrace();
                 }
             }
+
         }
     }
 
@@ -132,34 +135,38 @@ public class Posting {
         String m;
         String h;
         String k;
-        if(isStemming){
+        if (isStemming) {
             m = "S"; // First round of merge
-            h="";
-            k="!S";
-        }
-        else{
+            h = "";
+            k = "!S";
+        } else {
             m = "R"; // First round of merge
-            h="";
-            k="!R";
+            h = "";
+            k = "!R";
         }
-            int cur=chunksCount-1;
-            int totalNewMarge = 0;
-            int countMarge=1;
-            while(cur>2)
-            {
-                try {
+        int cur = chunksCount - 1;
+
+        if (cur == 0) {
+            handleLittleCorpus(k, h, m);
+        }
+        else
+        {
+        int totalNewMarge = 0;
+        int countMarge = 1;
+        while (cur > 2) {
+            try {
                 for (int i = 1; i < cur; i += 2) {
-                    if(cur%2==0)
+                    if (cur % 2 == 0)
                         totalNewMarge = cur / 2;
                     else
-                        totalNewMarge= (cur/2)+1;
+                        totalNewMarge = (cur / 2) + 1;
 
-                    FileReader f1 = new FileReader((postingPath + "/postingTerm" +k+ (i)+h + ".txt"));
-                    FileReader f2 = new FileReader((postingPath + "/postingTerm" +k+ (i + 1)+h + ".txt"));
+                    FileReader f1 = new FileReader((postingPath + "/postingTerm" + k + (i) + h + ".txt"));
+                    FileReader f2 = new FileReader((postingPath + "/postingTerm" + k + (i + 1) + h + ".txt"));
                     readFromTmpPostingTerm1 = new BufferedReader(f1);
                     readFromTmpPostingTerm2 = new BufferedReader(f2);
-                    writerToMargeTmpPosting = new BufferedWriter(new FileWriter((postingPath) + "/postingTerm" + k+countMarge + m + ".txt"));
-                    int counterWriter=0;
+                    writerToMargeTmpPosting = new BufferedWriter(new FileWriter((postingPath) + "/postingTerm" + k + countMarge + m + ".txt"));
+                    int counterWriter = 0;
 
                     String firstFileLine = readFromTmpPostingTerm1.readLine();
                     String secondFileLine = readFromTmpPostingTerm2.readLine();
@@ -171,20 +178,19 @@ public class Posting {
                         int option = split1[0].compareTo(split2[0]);
                         if (option == 0) {
                             int df = Integer.parseInt(split1[2]) + Integer.parseInt(split2[2]);
-                            int freq= Integer.parseInt(split1[3]) + Integer.parseInt(split2[3]);
-                            String toAdd= split1[0] + "!" + mergeDocs(split1[1], split2[1]) + "!"+df+"!"+freq;
-                            if(split1[4].equals(split2[4])) {// e,e  s,s  u,u  l,l
-                                if (split1[4].equals("s")||split1[4].equals("e"))
+                            int freq = Integer.parseInt(split1[3]) + Integer.parseInt(split2[3]);
+                            String toAdd = split1[0] + "!" + mergeDocs(split1[1], split2[1]) + "!" + df + "!" + freq;
+                            if (split1[4].equals(split2[4])) {// e,e  s,s  u,u  l,l
+                                if (split1[4].equals("s") || split1[4].equals("e"))
                                     toAdd = toAdd + "^e";
-                                else if(split1[4].equals("u"))
-                                    toAdd= toAdd+"^u";
-                                else if(split1[4].equals("l"))
-                                    toAdd= toAdd+"^l";
-                            }
-                            else if(split1[4].equals("e")||split2[4].equals("e"))
-                                toAdd= toAdd +"^e";
+                                else if (split1[4].equals("u"))
+                                    toAdd = toAdd + "^u";
+                                else if (split1[4].equals("l"))
+                                    toAdd = toAdd + "^l";
+                            } else if (split1[4].equals("e") || split2[4].equals("e"))
+                                toAdd = toAdd + "^e";
                             else
-                                toAdd= toAdd+"^l";
+                                toAdd = toAdd + "^l";
 
                             writerToMargeTmpPosting.append(toAdd);
                             writerToMargeTmpPosting.append('\n');
@@ -199,18 +205,16 @@ public class Posting {
                             counterWriter++;
                             firstFileLine = readFromTmpPostingTerm1.readLine();
 
-                        }
-                        else
-                            {
+                        } else {
                             writerToMargeTmpPosting.append(secondFileLine);
                             writerToMargeTmpPosting.append('\n');
                             counterWriter++;
                             secondFileLine = readFromTmpPostingTerm2.readLine();
                         }
 
-                        if(counterWriter>=writeToBuff){
+                        if (counterWriter >= writeToBuff) {
                             writerToMargeTmpPosting.flush();
-                            counterWriter=0;
+                            counterWriter = 0;
                         }
 
                     }
@@ -219,9 +223,9 @@ public class Posting {
                         writerToMargeTmpPosting.append(firstFileLine);
                         writerToMargeTmpPosting.append('\n');
                         counterWriter++;
-                        if(counterWriter>=writeToBuff){
+                        if (counterWriter >= writeToBuff) {
                             writerToMargeTmpPosting.flush();
-                            counterWriter=0;
+                            counterWriter = 0;
                         }
                         firstFileLine = readFromTmpPostingTerm1.readLine();
 
@@ -231,262 +235,14 @@ public class Posting {
                         writerToMargeTmpPosting.append(secondFileLine);
                         writerToMargeTmpPosting.append('\n');
                         counterWriter++;
-                        if(counterWriter>=writeToBuff){
+                        if (counterWriter >= writeToBuff) {
                             writerToMargeTmpPosting.flush();
-                            counterWriter=0;
+                            counterWriter = 0;
                         }
                         secondFileLine = readFromTmpPostingTerm2.readLine();
                     }
 
-                    if(counterWriter!=0){
-                        writerToMargeTmpPosting.flush();
-                    }
-
-                   // writerToMargeTmpPosting.flush();
-                    writerToMargeTmpPosting.close();
-                    readFromTmpPostingTerm1.close();
-                    readFromTmpPostingTerm2.close();
-                    f1.close();
-                    f2.close();
-
-                    Path path = Paths.get((postingPath + "/postingTerm"+k + (i)+h + ".txt"));
-                    File f = path.toFile();
-                    f.delete();
-                    Path path2 = Paths.get((postingPath + "/postingTerm" +k+ (i+1)+h + ".txt"));
-                    File ff = path2.toFile();
-                    ff.delete();
-
-                    countMarge++;
-
-                }
-                if (totalNewMarge-(countMarge-1) > 0) {
-
-                    FileReader f1 = new FileReader((postingPath + "/postingTerm" +k+ (cur)+h + ".txt"));
-                    FileWriter f2 = new FileWriter((postingPath) + "/postingTerm" + k+countMarge + m + ".txt");
-                    readFromTmpPostingTerm1 = new BufferedReader(f1);
-                    writerToMargeTmpPosting = new BufferedWriter(f2);
-                    String firstFileLine = readFromTmpPostingTerm1.readLine();
-                    int counterWriter=0;
-
-                    while (firstFileLine != null) {
-                        writerToMargeTmpPosting.append(firstFileLine);
-                        writerToMargeTmpPosting.append("\n");
-                        countMarge++;
-                        firstFileLine = readFromTmpPostingTerm1.readLine();
-                        if(counterWriter>=writeToBuff){
-                            writerToMargeTmpPosting.flush();
-                            counterWriter=0;
-                        }
-                    }
-
-                    if(counterWriter!=0){
-                        writerToMargeTmpPosting.flush();
-                    }
-
-                    writerToMargeTmpPosting.close();
-                    readFromTmpPostingTerm1.close();
-                    f1.close();
-                    f2.close();
-
-                    Path path = Paths.get((postingPath + "/postingTerm" + k+(cur)+h + ".txt"));
-                    File f = path.toFile();
-                    f.delete();
-
-                    countMarge++;
-                }
-
-                countMarge=1;
-                cur= totalNewMarge;
-                h=m;
-                if(isStemming)
-                     m = m + "S";
-                else
-                    m = m + "R";
-
-                } catch ( IOException e) {
-                e.printStackTrace();
-            }
-            }
-
-
-            if(cur==2){
-                int countPointer=0;
-                try {
-                    FileReader f1 = new FileReader((postingPath + "/postingTerm" + k+(1)+h + ".txt"));
-                    FileReader f2 = new FileReader((postingPath + "/postingTerm" + k+(2)+h + ".txt"));
-                    readFromTmpPostingTerm1 = new BufferedReader(f1);
-                    readFromTmpPostingTerm2 = new BufferedReader(f2);
-                    if (k=="!R")
-                         writerToMargeTmpPosting = new BufferedWriter(new FileWriter((postingPath) + "/finalPostingNoStemming" + ".txt"));
-                    else
-                        writerToMargeTmpPosting = new BufferedWriter(new FileWriter((postingPath) + "/finalPostingWithStemming" + ".txt"));
-                    int counterWriter=0;
-
-                    String firstFileLine = readFromTmpPostingTerm1.readLine();
-                    String secondFileLine = readFromTmpPostingTerm2.readLine();
-
-                    while (firstFileLine != null && secondFileLine != null) {
-                        String[] split1 = splitLine(firstFileLine);
-                        String[] split2 = splitLine(secondFileLine);
-
-                        int option = split1[0].compareTo(split2[0]);
-                        if (option == 0) {
-                            int df = Integer.parseInt(split1[2]) + Integer.parseInt(split2[2]);
-                            int freq= Integer.parseInt(split1[3]) + Integer.parseInt(split2[3]);
-                            String docs=mergeDocs(split1[1], split2[1]);
-                            String toAdd= split1[0] + "!" + docs + "!"+df+"!"+freq;
-                            if(split1[4].equals(split2[4])) {// e,e  s,s  u,u  l,l
-                                if (split1[4].equals("s")||split1[4].equals("e"))
-                                    toAdd = toAdd + "^e";
-                                else if(split1[4].equals("u"))
-                                    toAdd= toAdd+"^u";
-                                else if(split1[4].equals("l"))
-                                    toAdd= toAdd+"^l";
-                            }
-                            else if(split1[4].equals("e")||split2[4].equals("e"))
-                                toAdd= toAdd +"^e";
-                            else
-                                toAdd= toAdd+"^l";
-
-                            countPointer++;
-                            if(toAdd.contains("^u")){
-                                Indexer.addTerm(split1[0].toUpperCase(), df+"!"+ freq+"!" + countPointer);
-                                writerToMargeTmpPosting.append(split1[0].toUpperCase()+"!"+docs+"!"+df+"!"+freq);
-                                counterWriter++;
-
-                            }
-                            else if(toAdd.contains("^e")){
-                                Indexer.addTerm(split1[0].toUpperCase(), df+"!"+ freq+"!" + countPointer);
-                                writerToMargeTmpPosting.append(split1[0].toUpperCase()+"!"+docs+"!"+df+"!"+freq);
-                                counterWriter++;
-
-                            }
-                            else {
-                                Indexer.addTerm(split1[0], df + "!" + freq + "!" + countPointer);
-                                writerToMargeTmpPosting.append(split1[0]+"!"+docs+"!"+df+"!"+freq);
-                                counterWriter++;
-                            }
-
-                            writerToMargeTmpPosting.append('\n');
-
-                            firstFileLine = readFromTmpPostingTerm1.readLine();
-                            secondFileLine = readFromTmpPostingTerm2.readLine();
-
-                        } else if (option <= -1) {
-
-                            countPointer++;
-                            if(firstFileLine.contains("^u")){
-                                Indexer.addTerm(split1[0].toUpperCase(), split1[2]+"!"+ split1[3]+"!" + countPointer);
-                                writerToMargeTmpPosting.append(split1[0].toUpperCase()+"!"+split1[1]+"!"+split1[2]+"!"+ split1[3]);
-                                writerToMargeTmpPosting.append('\n');
-                                counterWriter++;
-
-                            }
-                            else if(firstFileLine.contains("^e")){
-                                Indexer.addTerm(split1[0].toUpperCase(), split1[2]+"!"+ split1[3]+"!" + countPointer);
-                                writerToMargeTmpPosting.append(split1[0].toUpperCase()+"!"+split1[1]+"!"+split1[2]+"!"+ split1[3]);
-                                writerToMargeTmpPosting.append('\n');
-                                counterWriter++;
-                            }
-                            else if(firstFileLine.contains("^l")){
-                                Indexer.addTerm(split1[0], split1[2]+"!"+ split1[3]+"!" + countPointer);
-                                writerToMargeTmpPosting.append(split1[0]+"!"+split1[1]+"!"+split1[2]+"!"+ split1[3]);
-                                writerToMargeTmpPosting.append('\n');
-                                counterWriter++;
-                            }
-                            firstFileLine = readFromTmpPostingTerm1.readLine();
-
-                        }
-                        else
-                        {
-                            countPointer++;
-                            if(secondFileLine.contains("^u")){
-                                Indexer.addTerm(split2[0].toUpperCase(), split2[2]+"!"+ split2[3]+"!" + countPointer);
-                                writerToMargeTmpPosting.append(split2[0].toUpperCase()+"!"+split2[1]+"!"+split2[2]+"!"+ split2[3]);
-                                writerToMargeTmpPosting.append('\n');
-                                counterWriter++;
-                            }
-                            else if(secondFileLine.contains("^e")){
-                                Indexer.addTerm(split2[0].toUpperCase(), split2[2]+"!"+ split2[3]+"!" + countPointer);
-                                writerToMargeTmpPosting.append(split2[0].toUpperCase()+"!"+split2[1]+"!"+split2[2]+"!"+ split2[3]);
-                                writerToMargeTmpPosting.append('\n');
-                                counterWriter++;
-                            }
-                            else if(secondFileLine.contains("^l")){
-                                Indexer.addTerm(split2[0], split2[2]+"!"+ split2[3]+"!" + countPointer);
-                                writerToMargeTmpPosting.append(split2[0]+"!"+split2[1]+"!"+split2[2]+"!"+ split2[3]);
-                                writerToMargeTmpPosting.append('\n');
-                                counterWriter++;
-                            }
-                            secondFileLine = readFromTmpPostingTerm2.readLine();
-                        }
-                        if(counterWriter>=writeToBuff){
-                            writerToMargeTmpPosting.flush();
-                            counterWriter=0;
-                        }
-                    }
-                    while (firstFileLine != null) {
-                        countPointer++;
-                        String[] split1 = splitLine(firstFileLine);
-                        if(firstFileLine.contains("^u")){
-                            Indexer.addTerm(split1[0].toUpperCase(), split1[2]+"!"+ split1[3]+"!" + countPointer);
-                            writerToMargeTmpPosting.append(split1[0].toUpperCase()+"!"+split1[1]+"!"+split1[2]+"!"+ split1[3]);
-                            writerToMargeTmpPosting.append('\n');
-                            counterWriter++;
-
-                        }
-                        else if(firstFileLine.contains("^e")){
-                            Indexer.addTerm(split1[0].toUpperCase(), split1[2]+"!"+ split1[3]+"!" + countPointer);
-                            writerToMargeTmpPosting.append(split1[0].toUpperCase()+"!"+split1[1]+"!"+split1[2]+"!"+ split1[3]);
-                            writerToMargeTmpPosting.append('\n');
-                            counterWriter++;
-
-                        }
-                        else if(firstFileLine.contains("^l")){
-                            Indexer.addTerm(split1[0], split1[2]+"!"+ split1[3]+"!" + countPointer);
-                            writerToMargeTmpPosting.append(split1[0]+"!"+split1[1]+"!"+split1[2]+"!"+ split1[3]);
-                            writerToMargeTmpPosting.append('\n');
-                            counterWriter++;
-
-                        }
-                        if(counterWriter>=writeToBuff){
-                            writerToMargeTmpPosting.flush();
-                            counterWriter=0;
-                        }
-                        firstFileLine = readFromTmpPostingTerm1.readLine();
-                    }
-
-                    while (secondFileLine != null) {
-                        countPointer++;
-                        String[] split2 = splitLine(secondFileLine);
-                        if(secondFileLine.contains("^u")){
-                            Indexer.addTerm(split2[0].toUpperCase(), split2[2]+"!"+ split2[3]+"!" + countPointer);
-                            writerToMargeTmpPosting.append(split2[0].toUpperCase()+"!"+split2[1]+"!"+split2[2]+"!"+ split2[3]);
-                            writerToMargeTmpPosting.append('\n');
-                            counterWriter++;
-
-                        }
-                        else if(secondFileLine.contains("^e")){
-                            Indexer.addTerm(split2[0].toUpperCase(), split2[2]+"!"+ split2[3]+"!" + countPointer);
-                            writerToMargeTmpPosting.append(split2[0].toUpperCase()+"!"+split2[1]+"!"+split2[2]+"!"+ split2[3]);
-                            writerToMargeTmpPosting.append('\n');
-                            counterWriter++;
-
-                        }
-                        else if(secondFileLine.contains("^l")){
-                            Indexer.addTerm(split2[0], split2[2]+"!"+ split2[3]+"!" + countPointer);
-                            writerToMargeTmpPosting.append(split2[0]+"!"+split2[1]+"!"+split2[2]+"!"+ split2[3]);
-                            writerToMargeTmpPosting.append('\n');
-                            counterWriter++;
-
-                        }
-                        if(counterWriter>=writeToBuff){
-                            writerToMargeTmpPosting.flush();
-                            counterWriter=0;
-                        }
-                        secondFileLine = readFromTmpPostingTerm2.readLine();
-                    }
-                    if( counterWriter!=0){
+                    if (counterWriter != 0) {
                         writerToMargeTmpPosting.flush();
                     }
 
@@ -497,21 +253,335 @@ public class Posting {
                     f1.close();
                     f2.close();
 
-                    Path path = Paths.get((postingPath + "/postingTerm" +k+ (1)+h + ".txt"));
+                    Path path = Paths.get((postingPath + "/postingTerm" + k + (i) + h + ".txt"));
                     File f = path.toFile();
                     f.delete();
-                    Path path2 = Paths.get((postingPath + "/postingTerm" +k+ (2)+h + ".txt"));
+                    Path path2 = Paths.get((postingPath + "/postingTerm" + k + (i + 1) + h + ".txt"));
                     File ff = path2.toFile();
                     ff.delete();
 
+                    countMarge++;
 
-                } catch ( IOException e) {
-                    e.printStackTrace();
                 }
-            }
+                if (totalNewMarge - (countMarge - 1) > 0) {
 
+                    FileReader f1 = new FileReader((postingPath + "/postingTerm" + k + (cur) + h + ".txt"));
+                    FileWriter f2 = new FileWriter((postingPath) + "/postingTerm" + k + countMarge + m + ".txt");
+                    readFromTmpPostingTerm1 = new BufferedReader(f1);
+                    writerToMargeTmpPosting = new BufferedWriter(f2);
+                    String firstFileLine = readFromTmpPostingTerm1.readLine();
+                    int counterWriter = 0;
+
+                    Path pathToRemove = Paths.get((postingPath + "/postingTerm" + k + (cur) + h + ".txt"));
+                    File fToRemove = pathToRemove.toFile();
+
+                    //if(fToRemove.renameTo(new File(postingPath + "/terms/postingTerm" + countMarge + m + ".txt"))){
+                    //   System.out.println("remane to"+ postingPath + "/terms/postingTerm" + countMarge + m + ".txt");
+                    //}
+
+                    while (firstFileLine != null) {
+                        writerToMargeTmpPosting.append(firstFileLine);
+                        writerToMargeTmpPosting.append("\n");
+                        countMarge++;
+                        firstFileLine = readFromTmpPostingTerm1.readLine();
+                        if (counterWriter >= writeToBuff) {
+                            writerToMargeTmpPosting.flush();
+                            counterWriter = 0;
+                        }
+                    }
+
+                    if (counterWriter != 0) {
+                        writerToMargeTmpPosting.flush();
+                    }
+
+                    //    writerToMargeTmpPosting.flush();
+                    writerToMargeTmpPosting.close();
+                    readFromTmpPostingTerm1.close();
+                    f1.close();
+                    f2.close();
+
+                    Path path = Paths.get((postingPath + "/postingTerm" + k + (cur) + h + ".txt"));
+                    File f = path.toFile();
+                    f.delete();
+
+                    countMarge++;
+                }
+
+                countMarge = 1;
+                cur = totalNewMarge;
+                h = m;
+                if (isStemming)
+                    m = m + "S";
+                else
+                    m = m + "R";
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+
+        if (cur == 2) {
+            int countPointer = 0;
+            try {
+                FileReader f1 = new FileReader((postingPath + "/postingTerm" + k + (1) + h + ".txt"));
+                FileReader f2 = new FileReader((postingPath + "/postingTerm" + k + (2) + h + ".txt"));
+                readFromTmpPostingTerm1 = new BufferedReader(f1);
+                readFromTmpPostingTerm2 = new BufferedReader(f2);
+                if (k == "!R")
+                    writerToMargeTmpPosting = new BufferedWriter(new FileWriter((postingPath) + "/finalPostingNoStemming.txt"));
+                else
+                    writerToMargeTmpPosting = new BufferedWriter(new FileWriter((postingPath) + "/finalPostingWithStemming.txt"));
+                int counterWriter = 0;
+
+                String firstFileLine = readFromTmpPostingTerm1.readLine();
+                String secondFileLine = readFromTmpPostingTerm2.readLine();
+
+                while (firstFileLine != null && secondFileLine != null) {
+                    String[] split1 = splitLine(firstFileLine);
+                    String[] split2 = splitLine(secondFileLine);
+
+                    int option = split1[0].compareTo(split2[0]);
+                    if (option == 0) {
+                        int df = Integer.parseInt(split1[2]) + Integer.parseInt(split2[2]);
+                        int freq = Integer.parseInt(split1[3]) + Integer.parseInt(split2[3]);
+                        String docs = mergeDocs(split1[1], split2[1]);
+                        String toAdd = split1[0] + "!" + docs + "!" + df + "!" + freq;
+                        if (split1[4].equals(split2[4])) {// e,e  s,s  u,u  l,l
+                            if (split1[4].equals("s") || split1[4].equals("e"))
+                                toAdd = toAdd + "^e";
+                            else if (split1[4].equals("u"))
+                                toAdd = toAdd + "^u";
+                            else if (split1[4].equals("l"))
+                                toAdd = toAdd + "^l";
+                        } else if (split1[4].equals("e") || split2[4].equals("e"))
+                            toAdd = toAdd + "^e";
+                        else
+                            toAdd = toAdd + "^l";
+
+                        countPointer++;
+                        if (toAdd.contains("^u")) {
+                            Indexer.addTerm(split1[0].toUpperCase(), df + "!" + freq + "!" + countPointer);
+                            writerToMargeTmpPosting.append(split1[0].toUpperCase() + "!" + docs + "!" + df + "!" + freq);
+                            counterWriter++;
+
+                        } else if (toAdd.contains("^e")) {
+                            Indexer.addTerm(split1[0].toUpperCase(), df + "!" + freq + "!" + countPointer);
+                            writerToMargeTmpPosting.append(split1[0].toUpperCase() + "!" + docs + "!" + df + "!" + freq);
+                            counterWriter++;
+
+                        } else {
+                            Indexer.addTerm(split1[0], df + "!" + freq + "!" + countPointer);
+                            writerToMargeTmpPosting.append(split1[0] + "!" + docs + "!" + df + "!" + freq);
+                            counterWriter++;
+                        }
+
+                        writerToMargeTmpPosting.append('\n');
+
+                        firstFileLine = readFromTmpPostingTerm1.readLine();
+                        secondFileLine = readFromTmpPostingTerm2.readLine();
+
+                    } else if (option <= -1) {
+
+                        countPointer++;
+                        if (firstFileLine.contains("^u")) {
+                            Indexer.addTerm(split1[0].toUpperCase(), split1[2] + "!" + split1[3] + "!" + countPointer);
+                            writerToMargeTmpPosting.append(split1[0].toUpperCase() + "!" + split1[1] + "!" + split1[2] + "!" + split1[3]);
+                            writerToMargeTmpPosting.append('\n');
+                            counterWriter++;
+
+                        } else if (firstFileLine.contains("^e")) {
+                            Indexer.addTerm(split1[0].toUpperCase(), split1[2] + "!" + split1[3] + "!" + countPointer);
+                            writerToMargeTmpPosting.append(split1[0].toUpperCase() + "!" + split1[1] + "!" + split1[2] + "!" + split1[3]);
+                            writerToMargeTmpPosting.append('\n');
+                            counterWriter++;
+                        } else if (firstFileLine.contains("^l")) {
+                            Indexer.addTerm(split1[0], split1[2] + "!" + split1[3] + "!" + countPointer);
+                            writerToMargeTmpPosting.append(split1[0] + "!" + split1[1] + "!" + split1[2] + "!" + split1[3]);
+                            writerToMargeTmpPosting.append('\n');
+                            counterWriter++;
+                        }
+                        firstFileLine = readFromTmpPostingTerm1.readLine();
+
+                    } else {
+                        countPointer++;
+                        if (secondFileLine.contains("^u")) {
+                            Indexer.addTerm(split2[0].toUpperCase(), split2[2] + "!" + split2[3] + "!" + countPointer);
+                            writerToMargeTmpPosting.append(split2[0].toUpperCase() + "!" + split2[1] + "!" + split2[2] + "!" + split2[3]);
+                            writerToMargeTmpPosting.append('\n');
+                            counterWriter++;
+                        } else if (secondFileLine.contains("^e")) {
+                            Indexer.addTerm(split2[0].toUpperCase(), split2[2] + "!" + split2[3] + "!" + countPointer);
+                            writerToMargeTmpPosting.append(split2[0].toUpperCase() + "!" + split2[1] + "!" + split2[2] + "!" + split2[3]);
+                            writerToMargeTmpPosting.append('\n');
+                            counterWriter++;
+                        } else if (secondFileLine.contains("^l")) {
+                            Indexer.addTerm(split2[0], split2[2] + "!" + split2[3] + "!" + countPointer);
+                            writerToMargeTmpPosting.append(split2[0] + "!" + split2[1] + "!" + split2[2] + "!" + split2[3]);
+                            writerToMargeTmpPosting.append('\n');
+                            counterWriter++;
+                        }
+                        secondFileLine = readFromTmpPostingTerm2.readLine();
+                    }
+                    if (counterWriter >= writeToBuff) {
+                        writerToMargeTmpPosting.flush();
+                        counterWriter = 0;
+                    }
+                }
+                while (firstFileLine != null) {
+                    countPointer++;
+                    String[] split1 = splitLine(firstFileLine);
+                    if (firstFileLine.contains("^u")) {
+                        Indexer.addTerm(split1[0].toUpperCase(), split1[2] + "!" + split1[3] + "!" + countPointer);
+                        writerToMargeTmpPosting.append(split1[0].toUpperCase() + "!" + split1[1] + "!" + split1[2] + "!" + split1[3]);
+                        writerToMargeTmpPosting.append('\n');
+                        counterWriter++;
+
+                    } else if (firstFileLine.contains("^e")) {
+                        Indexer.addTerm(split1[0].toUpperCase(), split1[2] + "!" + split1[3] + "!" + countPointer);
+                        writerToMargeTmpPosting.append(split1[0].toUpperCase() + "!" + split1[1] + "!" + split1[2] + "!" + split1[3]);
+                        writerToMargeTmpPosting.append('\n');
+                        counterWriter++;
+
+                    } else if (firstFileLine.contains("^l")) {
+                        Indexer.addTerm(split1[0], split1[2] + "!" + split1[3] + "!" + countPointer);
+                        writerToMargeTmpPosting.append(split1[0] + "!" + split1[1] + "!" + split1[2] + "!" + split1[3]);
+                        writerToMargeTmpPosting.append('\n');
+                        counterWriter++;
+
+                    }
+                    if (counterWriter >= writeToBuff) {
+                        writerToMargeTmpPosting.flush();
+                        counterWriter = 0;
+                    }
+                    firstFileLine = readFromTmpPostingTerm1.readLine();
+                }
+
+                while (secondFileLine != null) {
+                    countPointer++;
+                    String[] split2 = splitLine(secondFileLine);
+                    if (secondFileLine.contains("^u")) {
+                        Indexer.addTerm(split2[0].toUpperCase(), split2[2] + "!" + split2[3] + "!" + countPointer);
+                        writerToMargeTmpPosting.append(split2[0].toUpperCase() + "!" + split2[1] + "!" + split2[2] + "!" + split2[3]);
+                        writerToMargeTmpPosting.append('\n');
+                        counterWriter++;
+
+                    } else if (secondFileLine.contains("^e")) {
+                        Indexer.addTerm(split2[0].toUpperCase(), split2[2] + "!" + split2[3] + "!" + countPointer);
+                        writerToMargeTmpPosting.append(split2[0].toUpperCase() + "!" + split2[1] + "!" + split2[2] + "!" + split2[3]);
+                        writerToMargeTmpPosting.append('\n');
+                        counterWriter++;
+
+                    } else if (secondFileLine.contains("^l")) {
+                        Indexer.addTerm(split2[0], split2[2] + "!" + split2[3] + "!" + countPointer);
+                        writerToMargeTmpPosting.append(split2[0] + "!" + split2[1] + "!" + split2[2] + "!" + split2[3]);
+                        writerToMargeTmpPosting.append('\n');
+                        counterWriter++;
+
+                    }
+                    if (counterWriter >= writeToBuff) {
+                        writerToMargeTmpPosting.flush();
+                        counterWriter = 0;
+                    }
+                    secondFileLine = readFromTmpPostingTerm2.readLine();
+                }
+                if (counterWriter != 0) {
+                    writerToMargeTmpPosting.flush();
+                }
+
+                // writerToMargeTmpPosting.flush();
+                writerToMargeTmpPosting.close();
+                readFromTmpPostingTerm1.close();
+                readFromTmpPostingTerm2.close();
+                f1.close();
+                f2.close();
+
+                Path path = Paths.get((postingPath + "/postingTerm" + k + (1) + h + ".txt"));
+                File f = path.toFile();
+                f.delete();
+                Path path2 = Paths.get((postingPath + "/postingTerm" + k + (2) + h + ".txt"));
+                File ff = path2.toFile();
+                ff.delete();
+
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
             Indexer.print();
 
+    }
+
+    private void handleLittleCorpus(String k, String h, String m) {
+        if (docCounter !=0) {
+            try {
+                if (isStemming)
+                    writerToPostingTerm = new BufferedWriter(new FileWriter(postingPath + "/postingTerm!S" + chunksCount + ".txt"));
+                else
+                    writerToPostingTerm = new BufferedWriter(new FileWriter(postingPath + "/postingTerm!R" + chunksCount + ".txt"));
+
+                TreeMap<String, String> sortedTerms = new TreeMap<>(mergeTerms);
+                for (Map.Entry entry : sortedTerms.entrySet()) {
+                    writerToPostingTerm.write(entry.getKey().toString() + entry.getValue().toString());
+                    writerToPostingTerm.write('\n');
+
+                }
+
+                docCounter = 0;
+                mergeTerms.clear();
+                chunksCount++;
+                writerToPostingTerm.close();
+
+                FileReader f1 = new FileReader((postingPath + "/postingTerm" +k+ (1)+h + ".txt"));
+                readFromTmpPostingTerm1 = new BufferedReader(f1);
+
+                if (isStemming)
+                    writerToMargeTmpPosting = new BufferedWriter(new FileWriter((postingPath) + "/finalPostingWithStemming.txt"));
+                else
+                    writerToMargeTmpPosting = new BufferedWriter(new FileWriter((postingPath) + "/finalPostingNoStemming.txt"));
+
+
+                String firstFileLine = readFromTmpPostingTerm1.readLine();
+                int countPointer=0;
+
+                while (firstFileLine != null) {
+                    countPointer++;
+                    String[] split1 = splitLine(firstFileLine);
+                    if (firstFileLine.contains("^u")) {
+                        Indexer.addTerm(split1[0].toUpperCase(), split1[2] + "!" + split1[3] + "!" + countPointer);
+                        writerToMargeTmpPosting.write(split1[0].toUpperCase() + "!" + split1[1] + "!" + split1[2] + "!" + split1[3]);
+                        writerToMargeTmpPosting.write('\n');
+
+                    } else if (firstFileLine.contains("^e")) {
+                        Indexer.addTerm(split1[0].toUpperCase(), split1[2] + "!" + split1[3] + "!" + countPointer);
+                        writerToMargeTmpPosting.write(split1[0].toUpperCase() + "!" + split1[1] + "!" + split1[2] + "!" + split1[3]);
+                        writerToMargeTmpPosting.write('\n');
+
+                    } else if (firstFileLine.contains("^l")) {
+                        Indexer.addTerm(split1[0], split1[2] + "!" + split1[3] + "!" + countPointer);
+                        writerToMargeTmpPosting.write(split1[0] + "!" + split1[1] + "!" + split1[2] + "!" + split1[3]);
+                        writerToMargeTmpPosting.write('\n');
+
+                    }
+
+                    firstFileLine = readFromTmpPostingTerm1.readLine();
+                }
+
+
+                writerToMargeTmpPosting.close();
+                readFromTmpPostingTerm1.close();
+                f1.close();
+
+                Path path = Paths.get((postingPath + "/postingTerm"+k + (1)+h + ".txt"));
+                File f = path.toFile();
+                f.delete();
+
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     private String mergeDocs(String s1, String s2) {
@@ -608,6 +678,11 @@ public class Posting {
 
     public void setFinishDoc(boolean b) {
         this.finishDoc=b;
+        try {
+            writerToPostingDoc.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public void setIsStemming(boolean isStemming) {

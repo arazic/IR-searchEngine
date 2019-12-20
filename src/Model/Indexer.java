@@ -62,7 +62,7 @@ public class Indexer {
     }
 
 
-    public static boolean loadData() {
+    public static TreeMap<String, String> loadData() {
         try {
             FileReader fr;
             if(isStemming)
@@ -80,13 +80,14 @@ public class Indexer {
                 line= readerIndex.readLine();
             }
 
-        return true;
+        return Indexer.getTermsDic();
         } catch (FileNotFoundException e) {
             // e.printStackTrace();
         } catch (IOException e) {
            // e.printStackTrace();
         }
-        return false;
+        return null;
+
     }
 
     public static void setIsStemming(boolean isStemm) {

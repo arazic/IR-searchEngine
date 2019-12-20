@@ -234,6 +234,7 @@ public class Parse {
         posting.postingDoc(currDoc);
         posting.postingTerms(allDocTerms, currDoc.getDocName());
 
+
         maxFreqTermInDoc=0;
         allDocTerms.clear();
     }
