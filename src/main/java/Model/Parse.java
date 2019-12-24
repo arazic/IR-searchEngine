@@ -1,6 +1,8 @@
 package Model;
 
-import com.sun.deploy.util.StringUtils;
+//import com.sun.deploy.util.StringUtils;
+
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.*;
 import java.util.regex.Matcher;
@@ -191,7 +193,7 @@ public class Parse {
         text = text.replaceAll("\n"," ");
         getDocName();
         getText();
-        tokens= StringUtils.splitString(text," ():?[]!;*#+| "); // to add ""
+        tokens= StringUtils.split(text," ():?[]!;*#+| "); // to add ""
         if(tokens.length==0)
         {
             cleanParser();

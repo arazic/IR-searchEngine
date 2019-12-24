@@ -75,8 +75,11 @@ public class View extends Observable {
         else{
             loadDic = txtfld_postingPath.getText();
             System.out.println(loadDic);
-            if(c_steeming.isSelected())
-                isStemming=true;
+            if(c_steeming.isSelected()){
+                isStemming=true;}
+            else{
+                isStemming=false;
+            }
             setChanged();
             notifyObservers("loadDictionary");
         }
@@ -107,8 +110,11 @@ public class View extends Observable {
         }
 
         if(start) {
-            if (c_steeming.isSelected())
-                isStemming = true;
+            if (c_steeming.isSelected()){
+                isStemming = true;}
+            else {
+                isStemming=false;
+            }
 
             reset.setDisable(false);
             Alert alert = new Alert(Alert.AlertType.CONFIRMATION);

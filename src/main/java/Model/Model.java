@@ -30,6 +30,7 @@ public class Model extends Observable
         if(!engineManager.existCorpusPath()){
             engineManager.setCorpusPath(corpusPath);
         }
+        engineManager.setIsStemming(isStemming);
         engineManager.startEngine();
 
 
