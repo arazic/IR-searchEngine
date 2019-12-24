@@ -13,11 +13,6 @@ public class Indexer
         private static boolean isStemming;
 
         private static int termsNumber=0;
-        public static int containsNumber=0;
-        public static int pureNumbera=0;
-        private static PriorityQueue<Term> frequencyMap= new PriorityQueue<Term>(new TermComparator());
-        private static Pattern containsNumberPattern= Pattern.compile(".*[0-9].*");
-        private static Pattern pureNumberPattern= Pattern.compile("((([0-9]*)"+"[.,])*)"+"([0-9]*)");
 
         public static void initIndexer(String post, boolean isStemm){
             termsDic= new TreeMap<>();
@@ -27,38 +22,16 @@ public class Indexer
         }
 
 
+    /**
+     * add doc to the final DocsDictionary
+     */
         public static void addDoc(String docName, String pointer){
             docDic.put(docName,pointer);
         }
 
-         public static void termsFrequency(String term,int frequency)
-         {
-             Term t= new Term(term,frequency);
-             frequencyMap.add(t);
-         }
-
-         public static void printFrequency()
-         {
-             int x=1;
-            for (int i=0; i<10;i++)
-            {
-                Term t=frequencyMap.remove();
-                System.out.println(x+". "+t.getStringTerm()+"  " +t.getFreq());
-                x++;
-            }
-            while (frequencyMap.size()>10)
-                frequencyMap.remove();
-
-             x=1;
-             for (int i=0; i<10;i++)
-             {
-                 Term t=frequencyMap.remove();
-                 System.out.println(x+". "+t.getStringTerm()+"  " +t.getFreq());
-                 x++;
-             }
-
-
-         }
+    /**
+     * add term to the final dictionary
+     */
          public static void addTerm(String stringTerm, String info)
          {
              if(!termsDic.containsKey(stringTerm))
@@ -66,16 +39,11 @@ public class Indexer
                      termsDic.put(stringTerm,info);
                      termsNumber++;
                 }
-             if(containsNumberPattern.matcher(stringTerm).matches())
-             {
-                containsNumber++;
-                if(pureNumberPattern.matcher(stringTerm).matches())
-                {
-                    pureNumbera++;
-                }
-             }
          }
 
+    /**
+     * create indexer file with all the terms in the dictionary
+     */
     public static void print() {
         try {
 
@@ -90,7 +58,7 @@ public class Indexer
             {
                 Map.Entry cur = (Map.Entry)it.next();
                 index.append(cur.getKey()+","+ cur.getValue());
-                index.append("\n");
+                index.newLine();
             }
             index.flush();
            // System.out.println(termsDic.size());
@@ -112,6 +80,11 @@ public class Indexer
         return termsNumber;
     }
 
+    /**
+     * get file with final indexer details and load it to exist indexer
+     * for testing the engine
+     * @return
+     */
     public static TreeMap<String, String> loadData() {
         try {
             FileReader fr;

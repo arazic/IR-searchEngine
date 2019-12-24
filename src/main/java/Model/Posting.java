@@ -45,7 +45,7 @@ public class Posting {
             }
                         String toAdd = document.getDocName() + "!" + document.getMaxTerm() + "!" + document.getUniqeTermsNum()+ "!"+ document.getTotalTerms();
                         writerToPostingDoc.write(toAdd);
-                        writerToPostingDoc.write('\n');
+                        writerToPostingDoc.newLine();
                         Indexer.addDoc(document.getDocName(), String.valueOf(docFileCounter+1));
                         docFileCounter++;
         } catch (IOException e) {
@@ -402,7 +402,6 @@ public class Posting {
                             if (toAdd.contains("^u") || toAdd.contains("^e")) {
                                 capitalPointer++;
                                 counterCapitalWriter++;
-                                Indexer.termsFrequency(split1[0].toUpperCase(), freq);
                                 Indexer.addTerm(split1[0].toUpperCase(), df + "!" + freq + "!" + capitalPointer);
                                 capitalWriter.append(split1[0].toUpperCase() + "!" + docs + "!" + df + "!" + freq);
                                 capitalWriter.newLine();
@@ -415,7 +414,6 @@ public class Posting {
                                     if (split1[0].charAt(0) <= 'd') {
                                         lowerPointer1++;
                                         counterLowerWriter1++;
-                                        Indexer.termsFrequency(split1[0].toLowerCase(), freq);
                                         Indexer.addTerm(split1[0].toLowerCase(), df + "!" + freq + "!" + lowerPointer1);
                                         lowerWriter1.append(split1[0].toLowerCase() + "!" + docs + "!" + df + "!" + freq);
                                         lowerWriter1.newLine();
@@ -426,7 +424,6 @@ public class Posting {
                                     } else if (split1[0].charAt(0) <= 'p') {
                                         lowerPointer2++;
                                         counterLowerWriter2++;
-                                        Indexer.termsFrequency(split1[0].toLowerCase(), freq);
                                         Indexer.addTerm(split1[0].toLowerCase(), df + "!" + freq + "!" + lowerPointer2);
                                         lowerWriter2.append(split1[0].toLowerCase() + "!" + docs + "!" + df + "!" + freq);
                                         lowerWriter2.newLine();
@@ -437,7 +434,6 @@ public class Posting {
                                     } else {
                                         lowerPointer3++;
                                         counterLowerWriter3++;
-                                        Indexer.termsFrequency(split1[0].toLowerCase(), freq);
                                         Indexer.addTerm(split1[0].toLowerCase(), df + "!" + freq + "!" + lowerPointer3);
                                         lowerWriter3.append(split1[0].toLowerCase() + "!" + docs + "!" + df + "!" + freq);
                                         lowerWriter3.newLine();
@@ -450,7 +446,6 @@ public class Posting {
                                 } else {
                                     numberPointer++;
                                     counterNumberWriter++;
-                                    Indexer.termsFrequency(split1[0], freq);
                                     Indexer.addTerm(split1[0], df + "!" + freq + "!" + numberPointer);
                                     numberWriter.append(split1[0] + "!" + docs + "!" + df + "!" + freq);
                                     numberWriter.newLine();
@@ -466,7 +461,6 @@ public class Posting {
                             if (firstFileLine.contains("^u") || firstFileLine.contains("^e")) {
                                 capitalPointer++;
                                 counterCapitalWriter++;
-                                Indexer.termsFrequency(split1[0].toUpperCase(), Integer.parseInt(split1[3]));
                                 Indexer.addTerm(split1[0].toUpperCase(), split1[2] + "!" + split1[3] + "!" + capitalPointer);
                                 capitalWriter.append(split1[0].toUpperCase() + "!" + split1[1] + "!" + split1[2] + "!" + split1[3]);
                                 capitalWriter.newLine();
@@ -479,7 +473,6 @@ public class Posting {
                                     if (split1[0].charAt(0) <= 'd') {
                                         lowerPointer1++;
                                         counterLowerWriter1++;
-                                        Indexer.termsFrequency(split1[0].toLowerCase(), Integer.parseInt(split1[3]));
                                         Indexer.addTerm(split1[0].toLowerCase(), split1[2] + "!" + split1[3] + "!" + lowerPointer1);
                                         lowerWriter1.append(split1[0].toLowerCase() + "!" + split1[1] + "!" + split1[2] + "!" + split1[3]);
                                         lowerWriter1.newLine();
@@ -490,7 +483,6 @@ public class Posting {
                                     } else if (split1[0].charAt(0) <= 'p') {
                                         lowerPointer2++;
                                         counterLowerWriter2++;
-                                        Indexer.termsFrequency(split1[0].toLowerCase(), Integer.parseInt(split1[3]));
                                         Indexer.addTerm(split1[0].toLowerCase(), split1[2] + "!" + split1[3] + "!" + lowerPointer2);
                                         lowerWriter2.append(split1[0].toLowerCase() + "!" + split1[1] + "!" + split1[2] + "!" + split1[3]);
                                         lowerWriter2.newLine();
@@ -501,7 +493,6 @@ public class Posting {
                                     } else {
                                         lowerPointer3++;
                                         counterLowerWriter3++;
-                                        Indexer.termsFrequency(split1[0].toLowerCase(), Integer.parseInt(split1[3]));
                                         Indexer.addTerm(split1[0].toLowerCase(), split1[2] + "!" + split1[3] + "!" + lowerPointer3);
                                         lowerWriter3.append(split1[0].toLowerCase() + "!" + split1[1] + "!" + split1[2] + "!" + split1[3]);
                                         lowerWriter3.newLine();
@@ -514,7 +505,6 @@ public class Posting {
                                 } else {
                                     numberPointer++;
                                     counterNumberWriter++;
-                                    Indexer.termsFrequency(split1[0], Integer.parseInt(split1[3]));
                                     Indexer.addTerm(split1[0], split1[2] + "!" + split1[3] + "!" + numberPointer);
                                     numberWriter.append(split1[0] + "!" + split1[1] + "!" + split1[2] + "!" + split1[3]);
                                     numberWriter.newLine();
@@ -529,7 +519,6 @@ public class Posting {
                             if (secondFileLine.contains("^u") || secondFileLine.contains("^e")) {
                                 capitalPointer++;
                                 counterCapitalWriter++;
-                                Indexer.termsFrequency(split2[0].toUpperCase(), Integer.parseInt(split1[3]));
                                 Indexer.addTerm(split2[0].toUpperCase(), split2[2] + "!" + split2[3] + "!" + capitalPointer);
                                 capitalWriter.append(split2[0].toUpperCase() + "!" + split2[1] + "!" + split2[2] + "!" + split2[3]);
                                 capitalWriter.newLine();
@@ -542,7 +531,6 @@ public class Posting {
                                     if (split2[0].charAt(0) <= 'd') {
                                         lowerPointer1++;
                                         counterLowerWriter1++;
-                                        Indexer.termsFrequency(split2[0].toLowerCase(), Integer.parseInt(split1[3]));
                                         Indexer.addTerm(split2[0].toLowerCase(), split2[2] + "!" + split2[3] + "!" + lowerPointer1);
                                         lowerWriter1.append(split2[0].toLowerCase() + "!" + split2[1] + "!" + split2[2] + "!" + split2[3]);
                                         lowerWriter1.newLine();
@@ -553,7 +541,6 @@ public class Posting {
                                     } else if (split2[0].charAt(0) <= 'p') {
                                         lowerPointer2++;
                                         counterLowerWriter2++;
-                                        Indexer.termsFrequency(split2[0].toLowerCase(), Integer.parseInt(split1[3]));
                                         Indexer.addTerm(split2[0].toLowerCase(), split2[2] + "!" + split2[3] + "!" + lowerPointer2);
                                         lowerWriter2.append(split2[0].toLowerCase() + "!" + split2[1] + "!" + split2[2] + "!" + split2[3]);
                                         lowerWriter2.newLine();
@@ -564,7 +551,6 @@ public class Posting {
                                     } else {
                                         lowerPointer3++;
                                         counterLowerWriter3++;
-                                        Indexer.termsFrequency(split2[0].toLowerCase(), Integer.parseInt(split1[3]));
                                         Indexer.addTerm(split2[0].toLowerCase(), split2[2] + "!" + split2[3] + "!" + lowerPointer3);
                                         lowerWriter3.append(split2[0].toLowerCase() + "!" + split2[1] + "!" + split2[2] + "!" + split2[3]);
                                         lowerWriter3.newLine();
@@ -577,7 +563,6 @@ public class Posting {
                                 } else {
                                     numberPointer++;
                                     counterNumberWriter++;
-                                    Indexer.termsFrequency(split2[0], Integer.parseInt(split1[3]));
                                     Indexer.addTerm(split2[0], split2[2] + "!" + split2[3] + "!" + numberPointer);
                                     numberWriter.append(split2[0] + "!" + split2[1] + "!" + split2[2] + "!" + split2[3]);
                                     numberWriter.newLine();
@@ -596,7 +581,6 @@ public class Posting {
                         if (firstFileLine.contains("^u") || firstFileLine.contains("^e")) {
                             capitalPointer++;
                             counterCapitalWriter++;
-                            Indexer.termsFrequency(split1[0].toUpperCase(), Integer.parseInt(split1[3]));
                             Indexer.addTerm(split1[0].toUpperCase(), split1[2] + "!" + split1[3] + "!" + capitalPointer);
                             capitalWriter.append(split1[0].toUpperCase() + "!" + split1[1] + "!" + split1[2] + "!" + split1[3]);
                             capitalWriter.newLine();
@@ -609,7 +593,6 @@ public class Posting {
                                 if (split1[0].charAt(0) <= 'd') {
                                     lowerPointer1++;
                                     counterLowerWriter1++;
-                                    Indexer.termsFrequency(split1[0], Integer.parseInt(split1[3]));
                                     Indexer.addTerm(split1[0].toLowerCase(), split1[2] + "!" + split1[3] + "!" + lowerPointer1);
                                     lowerWriter1.append(split1[0].toLowerCase() + "!" + split1[1] + "!" + split1[2] + "!" + split1[3]);
                                     lowerWriter1.newLine();
@@ -620,7 +603,6 @@ public class Posting {
                                 } else if (split1[0].charAt(0) <= 'p') {
                                     lowerPointer2++;
                                     counterLowerWriter2++;
-                                    Indexer.termsFrequency(split1[0], Integer.parseInt(split1[3]));
                                     Indexer.addTerm(split1[0].toLowerCase(), split1[2] + "!" + split1[3] + "!" + lowerPointer2);
                                     lowerWriter2.append(split1[0].toLowerCase() + "!" + split1[1] + "!" + split1[2] + "!" + split1[3]);
                                     lowerWriter2.newLine();
@@ -631,7 +613,6 @@ public class Posting {
                                 } else {
                                     lowerPointer3++;
                                     counterLowerWriter3++;
-                                    Indexer.termsFrequency(split1[0], Integer.parseInt(split1[3]));
                                     Indexer.addTerm(split1[0].toLowerCase(), split1[2] + "!" + split1[3] + "!" + lowerPointer3);
                                     lowerWriter3.append(split1[0].toLowerCase() + "!" + split1[1] + "!" + split1[2] + "!" + split1[3]);
                                     lowerWriter3.newLine();
@@ -643,7 +624,6 @@ public class Posting {
                             } else {
                                 numberPointer++;
                                 counterNumberWriter++;
-                                Indexer.termsFrequency(split1[0], Integer.parseInt(split1[3]));
                                 Indexer.addTerm(split1[0], split1[2] + "!" + split1[3] + "!" + numberPointer);
                                 numberWriter.append(split1[0] + "!" + split1[1] + "!" + split1[2] + "!" + split1[3]);
                                 numberWriter.newLine();
@@ -660,7 +640,6 @@ public class Posting {
                         if (secondFileLine.contains("^u") || secondFileLine.contains("^e")) {
                             capitalPointer++;
                             counterCapitalWriter++;
-                            Indexer.termsFrequency(split2[0].toUpperCase(), Integer.parseInt(split2[3]));
                             Indexer.addTerm(split2[0].toUpperCase(), split2[2] + "!" + split2[3] + "!" + capitalPointer);
                             capitalWriter.append(split2[0].toUpperCase() + "!" + split2[1] + "!" + split2[2] + "!" + split2[3]);
                             capitalWriter.newLine();
@@ -673,7 +652,6 @@ public class Posting {
                                 if (split2[0].charAt(0) <= 'd') {
                                     lowerPointer1++;
                                     counterLowerWriter1++;
-                                    Indexer.termsFrequency(split2[0], Integer.parseInt(split2[3]));
                                     Indexer.addTerm(split2[0].toLowerCase(), split2[2] + "!" + split2[3] + "!" + lowerPointer1);
                                     lowerWriter1.append(split2[0].toLowerCase() + "!" + split2[1] + "!" + split2[2] + "!" + split2[3]);
                                     lowerWriter1.newLine();
@@ -684,7 +662,6 @@ public class Posting {
                                 } else if (split2[0].charAt(0) <= 'p') {
                                     lowerPointer2++;
                                     counterLowerWriter2++;
-                                    Indexer.termsFrequency(split2[0], Integer.parseInt(split2[3]));
                                     Indexer.addTerm(split2[0].toLowerCase(), split2[2] + "!" + split2[3] + "!" + lowerPointer2);
                                     lowerWriter2.append(split2[0].toLowerCase() + "!" + split2[1] + "!" + split2[2] + "!" + split2[3]);
                                     lowerWriter2.newLine();
@@ -695,7 +672,6 @@ public class Posting {
                                 } else {
                                     lowerPointer2++;
                                     counterLowerWriter2++;
-                                    Indexer.termsFrequency(split2[0], Integer.parseInt(split2[3]));
                                     Indexer.addTerm(split2[0].toLowerCase(), split2[2] + "!" + split2[3] + "!" + lowerPointer2);
                                     lowerWriter2.append(split2[0].toLowerCase() + "!" + split2[1] + "!" + split2[2] + "!" + split2[3]);
                                     lowerWriter2.newLine();
@@ -708,7 +684,6 @@ public class Posting {
                             } else {
                                 numberPointer++;
                                 counterNumberWriter++;
-                                Indexer.termsFrequency(split2[0], Integer.parseInt(split2[3]));
                                 Indexer.addTerm(split2[0], split2[2] + "!" + split2[3] + "!" + numberPointer);
                                 numberWriter.append(split2[0] + "!" + split2[1] + "!" + split2[2] + "!" + split2[3]);
                                 numberWriter.newLine();
@@ -759,7 +734,6 @@ public class Posting {
                     e.printStackTrace();
                 }
             }
-            Indexer.printFrequency();
             Indexer.print();
         }
     }

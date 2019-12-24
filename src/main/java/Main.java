@@ -18,9 +18,9 @@ public class Main extends Application {
 
         primaryStage.setTitle("Engine Machine");
         FXMLLoader fxmlLoader = new FXMLLoader();
-        Parent root = fxmlLoader.load(getClass().getResource("resources/view.fxml").openStream());
+        Parent root = fxmlLoader.load(getClass().getClassLoader().getResource("view.fxml").openStream());
         Scene scene = new Scene(root, 1000, 400);
-        scene.getStylesheets().add(getClass().getResource("resources/MenuStyle.css").toExternalForm());
+        scene.getStylesheets().add(getClass().getResource("MenuStyle.css").toExternalForm());
         view = fxmlLoader.getController() ;
         primaryStage.setScene(scene);
 

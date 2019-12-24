@@ -20,7 +20,9 @@ import java.util.Map;
 import java.util.Observable;
 import java.util.TreeMap;
 
-
+/**
+ * View class is part of mvs design pattern- this charge on the gui part
+ */
 public class View extends Observable {
     @FXML
     public javafx.scene.control.TextField txtfld_corpusPath;
@@ -44,7 +46,7 @@ public class View extends Observable {
             txtfld_corpusPath.clear();
             File corpusFile=  selectedDirectory.getAbsoluteFile();
             txtfld_corpusPath.appendText(corpusFile.getAbsolutePath());
-            System.out.println(corpusFile.getAbsolutePath());
+           // System.out.println(corpusFile.getAbsolutePath());
         }
 
 
@@ -58,7 +60,7 @@ public class View extends Observable {
             txtfld_postingPath.clear();
             File corpusFile=  selectedDirectory.getAbsoluteFile();
             txtfld_postingPath.appendText(corpusFile.getAbsolutePath());
-            System.out.println(corpusFile.getAbsolutePath());
+           // System.out.println(corpusFile.getAbsolutePath());
         }
     }
 
@@ -87,30 +89,36 @@ public class View extends Observable {
 
 
     public void startEngine(){
+        Boolean start= true;
         if(txtfld_corpusPath.getText().isEmpty()){
             Alert alert = new Alert(Alert.AlertType.WARNING);
             alert.setTitle("Be Attention");
             alert.setHeaderText("the corpus path is empty!\n");
             alert.showAndWait();
+            start= false;
          }
+
         if(txtfld_postingPath.getText().isEmpty()){
             Alert alert = new Alert(Alert.AlertType.WARNING);
             alert.setTitle("Be Attention");
             alert.setHeaderText("the posting path is empty!\n");
             alert.showAndWait();
+            start= false;
         }
 
-        if(c_steeming.isSelected())
-            isStemming=true;
+        if(start) {
+            if (c_steeming.isSelected())
+                isStemming = true;
 
-        reset.setDisable(false);
-        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-        alert.setTitle("CONFIRMATION!");
-        alert.setHeaderText("the engine start...\n");
-        alert.showAndWait();
+            reset.setDisable(false);
+            Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+            alert.setTitle("CONFIRMATION!");
+            alert.setHeaderText("the engine start...\n");
+            alert.showAndWait();
 
-        setChanged();
-        notifyObservers("startEngine");
+            setChanged();
+            notifyObservers("startEngine");
+        }
     }
 
 

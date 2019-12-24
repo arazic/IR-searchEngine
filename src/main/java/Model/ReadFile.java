@@ -34,7 +34,7 @@ public class ReadFile {
 
     private void readStopWords()
     {
-        String sPath = this.corpusPath+"/stopWords.txt";
+        String sPath = this.corpusPath+"/stop_words.txt";
         File path= new File(sPath);
         String line;
         HashSet<String> sWords = new HashSet<>();

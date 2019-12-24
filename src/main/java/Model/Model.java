@@ -9,6 +9,10 @@ import java.util.Date;
 import java.util.Observable;
 import java.util.TreeMap;
 
+
+/**
+ * Model class is part of mvs design pattern- this charge on the logic part of the engine
+ */
 public class Model extends Observable
 {
     public EngineManager engineManager;
@@ -19,7 +23,7 @@ public class Model extends Observable
     public void startEngine(String corpusPath,String postingPath,boolean isStemming){
         long millis=System.currentTimeMillis();
         java.util.Date date=new java.util.Date(millis);
-        System.out.println("start "+ date);
+       // System.out.println("start "+ date);
         Instant start = java.time.Instant.now();
 
         this.engineManager= new EngineManager(corpusPath, postingPath,isStemming);
@@ -31,13 +35,14 @@ public class Model extends Observable
 
          millis=System.currentTimeMillis();
         java.util.Date date2=new java.util.Date(millis);
-        System.out.println("end "+ date2);
+       // System.out.println("end "+ date2);
 
         Instant end = java.time.Instant.now();
         Duration between = java.time.Duration.between(start, end);
+        long mili= between.toMillis()/10;
 
         totalTime=between.toMinutes()+" minutes, "+
-                between.getSeconds()+" seconds and "+ between.toMillis()+" millis";
+                between.getSeconds()+" seconds and "+ mili +" millis";
 
         totalDocNum= engineManager.totalDocNum();
         terms=engineManager.getTermsDic();

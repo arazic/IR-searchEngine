@@ -7,6 +7,10 @@ import java.util.TreeMap;
 import Model.Model;
 import View.View;
 
+
+/**
+ * Controller class is part of mvs design pattern- this charge on the connection between the view and the controller
+ */
 public class Controller extends Observable implements Observer {
     private Model model;
     private View view;
