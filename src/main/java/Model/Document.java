@@ -1,6 +1,8 @@
 package Model;
 
 
+import java.util.List;
+
 /**
  * document class represent document in the corpus
  * the document save max frequency, length, number of unique terms
@@ -11,6 +13,7 @@ public class Document {
     private int maxTerm;
     private int uniqeTermsNum;
     private int totalTerms;
+    private List<String> topEntities;
 
     public Document()
     {
@@ -59,5 +62,9 @@ public class Document {
 
     public void setUniqeTermsNum(int uniqeTermsNum){
         this.uniqeTermsNum= uniqeTermsNum;
+    }
+
+    public void setEntities() {
+       // topEntities
     }
 }

@@ -232,6 +232,7 @@ public class Parse {
         currDoc.setTotalTerms(totalTermsInDoc);
         currDoc.setMaxTerm(maxFreqTermInDoc);
         currDoc.setUniqeTermsNum(allDocTerms.size());
+        currDoc.setEntities();
         posting.postingDoc(currDoc);
         posting.postingTerms(allDocTerms, currDoc.getDocName());
 
@@ -1041,9 +1042,6 @@ public class Parse {
     }
 
 
-
-
-
     private void getText()
     {
         Pattern p = Pattern.compile("<TEXT>(.*)</TEXT>");
@@ -1071,5 +1069,18 @@ public class Parse {
 
     public void setIsStemming(boolean isStemming) {
             this.isStemming=isStemming;
+    }
+
+    public TreeMap<String,Integer> parseQuery(String query, boolean isStemming) {
+        TreeMap<String,Integer> terms= new TreeMap<>();
+        String[] arrayTerms= StringUtils.split(query," ");
+        for (String s: arrayTerms){
+            if(!terms.containsKey(s))
+                terms.put(s,1);
+            else
+                terms.put(s, terms.get(s)+1);
+        }
+
+        return terms;
     }
 }

@@ -86,4 +86,15 @@ public class Model extends Observable
         }
 
     }
+
+    public void runQuery(String currentQuery, boolean isStemming, boolean isSenactic) {
+        if(engineManager==null){
+            setChanged();
+            notifyObservers("notPreparedToSearch");
+        }
+        else{
+            engineManager.search(currentQuery, isStemming, isSenactic);
+
+        }
+    }
 }

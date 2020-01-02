@@ -11,6 +11,7 @@ public class EngineManager {
     private Parse parse;
     private Posting posting;
     private ReadFile readFile;
+    private Searcher searcher;
 
     public EngineManager(String corpusPath, String postingPath, boolean isStemming){
         this.corpusPath=corpusPath;
@@ -19,6 +20,7 @@ public class EngineManager {
         this.posting= new Posting(postingPath, isStemming);
         this.parse= new Parse(posting, isStemming);
         this.readFile= new ReadFile(corpusPath, parse);
+        this.searcher= new Searcher(parse);
         Indexer.initIndexer(postingPath,isStemming);
 
     }
@@ -30,6 +32,7 @@ public class EngineManager {
         this.posting= new Posting(postingPath, isStemming);
         this.parse= new Parse(posting, isStemming);
         this.readFile= new ReadFile(corpusPath, parse);
+        this.searcher= new Searcher(parse);
         Indexer.initIndexer(postingPath,isStemming);
 
     }
@@ -95,6 +98,11 @@ public class EngineManager {
     }
     public int totalDocNum(){
         return readFile.getTotalDocNum();
+    }
+
+    public void search(String currentQuery, boolean isStemming, boolean isSemantic) {
+        searcher.search(postingPath, currentQuery,isStemming, isSemantic);
+
     }
 }
 

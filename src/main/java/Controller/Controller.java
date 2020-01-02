@@ -37,6 +37,9 @@ public class Controller extends Observable implements Observer {
                 case "reset":
                     model.reset();
                     break;
+                case "runQuery":
+                    model.runQuery(view.getCurrentQuery(), view.isStemming, view.isSenactic);
+                    break;
             }
         }
         else if( o == model){
@@ -47,7 +50,9 @@ public class Controller extends Observable implements Observer {
                     break;
                 case "resetSucceed":
                     view.SetResetSuccessfully();
-
+                    break;
+                case "notPreparedToSearch":
+                    view.notPreparedToSearch();
             }
 
         }

@@ -1,74 +1,151 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Accordion?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.CheckBox?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Tab?>
+<?import javafx.scene.control.TabPane?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.ColumnConstraints?>
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.RowConstraints?>
 
-<AnchorPane prefHeight="391.0" prefWidth="995.0" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="View.View">
-   <children>
-      <GridPane layoutX="6.0" layoutY="7.0" prefHeight="432.0" prefWidth="983.0">
-        <columnConstraints>
-            <ColumnConstraints hgrow="SOMETIMES" maxWidth="144.0" minWidth="10.0" prefWidth="29.0" />
-          <ColumnConstraints hgrow="SOMETIMES" maxWidth="177.0" minWidth="10.0" prefWidth="165.0" />
-            <ColumnConstraints hgrow="SOMETIMES" maxWidth="519.0" minWidth="10.0" prefWidth="511.0" />
-            <ColumnConstraints hgrow="SOMETIMES" maxWidth="190.0" minWidth="10.0" prefWidth="22.0" />
-          <ColumnConstraints hgrow="SOMETIMES" maxWidth="190.0" minWidth="10.0" prefWidth="130.0" />
-        </columnConstraints>
-        <rowConstraints>
-            <RowConstraints maxHeight="73.0" minHeight="10.0" prefHeight="62.0" vgrow="SOMETIMES" />
-            <RowConstraints maxHeight="44.0" minHeight="10.0" prefHeight="10.0" vgrow="SOMETIMES" />
-            <RowConstraints maxHeight="61.0" minHeight="10.0" prefHeight="44.0" vgrow="SOMETIMES" />
-            <RowConstraints maxHeight="56.0" minHeight="10.0" prefHeight="48.0" vgrow="SOMETIMES" />
-          <RowConstraints maxHeight="65.0" minHeight="10.0" prefHeight="49.0" vgrow="SOMETIMES" />
-            <RowConstraints maxHeight="147.0" minHeight="10.0" prefHeight="60.0" vgrow="SOMETIMES" />
-            <RowConstraints maxHeight="208.0" minHeight="10.0" prefHeight="55.0" vgrow="SOMETIMES" />
-            <RowConstraints maxHeight="208.0" minHeight="9.0" prefHeight="49.0" vgrow="SOMETIMES" />
-        </rowConstraints>
-         <children>
-            <Label prefHeight="27.0" prefWidth="114.0" text="search engine" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.valignment="CENTER" />
-            <Button mnemonicParsing="false" onAction="#browser_corsus" prefHeight="39.0" prefWidth="140.0" text="choose corpus" GridPane.columnIndex="4" GridPane.rowIndex="2" />
-            <Button mnemonicParsing="false" onAction="#browser_posting" prefHeight="39.0" prefWidth="140.0" text="choose posting" GridPane.columnIndex="4" GridPane.rowIndex="3" />
-            <Label prefHeight="27.0" prefWidth="154.0" text="corpus path" GridPane.columnIndex="1" GridPane.rowIndex="2" />
-            <Label prefHeight="27.0" prefWidth="154.0" text="posting path" GridPane.columnIndex="1" GridPane.rowIndex="3" />
-            <Button fx:id="reset" disable="true" mnemonicParsing="false" onAction="#reset" prefHeight="39.0" prefWidth="140.0" text="reset" GridPane.columnIndex="4" GridPane.halignment="LEFT" GridPane.rowIndex="6" GridPane.valignment="CENTER">
-               <GridPane.margin>
-                  <Insets />
-               </GridPane.margin>
-            </Button>
-            <TextField fx:id="txtfld_corpusPath" GridPane.columnIndex="2" GridPane.rowIndex="2" />
-            <TextField fx:id="txtfld_postingPath" GridPane.columnIndex="2" GridPane.rowIndex="3" />
-            <GridPane GridPane.columnIndex="1" GridPane.rowIndex="6">
-              <columnConstraints>
-                <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
-              </columnConstraints>
-              <rowConstraints>
-                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-              </rowConstraints>
-               <children>
-                  <Button mnemonicParsing="false" onAction="#load_dictionary" text="load dictionary" GridPane.halignment="CENTER" />
-               </children>
-            </GridPane>
-            <GridPane GridPane.columnIndex="2" GridPane.rowIndex="4">
-              <columnConstraints>
-                <ColumnConstraints hgrow="SOMETIMES" maxWidth="253.0" minWidth="10.0" prefWidth="154.0" />
-                <ColumnConstraints hgrow="SOMETIMES" maxWidth="373.0" minWidth="10.0" prefWidth="365.0" />
-              </columnConstraints>
-              <rowConstraints>
-                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-              </rowConstraints>
-               <children>
-                  <Button mnemonicParsing="false" onAction="#startEngine" prefHeight="39.0" prefWidth="322.0" text="start" GridPane.columnIndex="1" GridPane.halignment="RIGHT" />
-                  <CheckBox fx:id="c_steeming" mnemonicParsing="false" prefHeight="27.0" prefWidth="158.0" text="stemming" GridPane.halignment="CENTER" />
-               </children>
-            </GridPane>
-            <Button fx:id="showDictionary" disable="true" mnemonicParsing="false" onAction="#show_dictionary" text="show dictionary" GridPane.columnIndex="2" GridPane.halignment="LEFT" GridPane.rowIndex="6" />
-         </children>
-      </GridPane>
-   </children>
+<AnchorPane prefHeight="494.0" prefWidth="996.0" xmlns="http://javafx.com/javafx/8.0.172-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="View.View">
+    <children>
+        <TabPane layoutX="5.0" layoutY="6.0" prefHeight="487.0" prefWidth="988.0" tabClosingPolicy="UNAVAILABLE">
+            <tabs>
+                <Tab text="Preparing the engine">
+                    <content>
+                        <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="420.0" prefWidth="959.0">
+                            <children>
+                                <GridPane prefHeight="443.0" prefWidth="988.0">
+                                    <columnConstraints>
+                                        <ColumnConstraints hgrow="SOMETIMES" maxWidth="144.0" minWidth="10.0" prefWidth="29.0" />
+                                        <ColumnConstraints hgrow="SOMETIMES" maxWidth="177.0" minWidth="10.0" prefWidth="165.0" />
+                                        <ColumnConstraints hgrow="SOMETIMES" maxWidth="519.0" minWidth="10.0" prefWidth="511.0" />
+                                        <ColumnConstraints hgrow="SOMETIMES" maxWidth="190.0" minWidth="10.0" prefWidth="22.0" />
+                                        <ColumnConstraints hgrow="SOMETIMES" maxWidth="190.0" minWidth="10.0" prefWidth="130.0" />
+                                    </columnConstraints>
+                                    <rowConstraints>
+                                        <RowConstraints maxHeight="73.0" minHeight="10.0" prefHeight="62.0" vgrow="SOMETIMES" />
+                                        <RowConstraints maxHeight="44.0" minHeight="10.0" prefHeight="10.0" vgrow="SOMETIMES" />
+                                        <RowConstraints maxHeight="61.0" minHeight="10.0" prefHeight="44.0" vgrow="SOMETIMES" />
+                                        <RowConstraints maxHeight="56.0" minHeight="10.0" prefHeight="48.0" vgrow="SOMETIMES" />
+                                        <RowConstraints maxHeight="65.0" minHeight="10.0" prefHeight="49.0" vgrow="SOMETIMES" />
+                                        <RowConstraints maxHeight="147.0" minHeight="10.0" prefHeight="60.0" vgrow="SOMETIMES" />
+                                        <RowConstraints maxHeight="208.0" minHeight="10.0" prefHeight="55.0" vgrow="SOMETIMES" />
+                                        <RowConstraints maxHeight="208.0" minHeight="9.0" prefHeight="49.0" vgrow="SOMETIMES" />
+                                    </rowConstraints>
+                                    <children>
+                                        <Label prefHeight="27.0" prefWidth="114.0" text="search engine" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.valignment="CENTER" />
+                                        <Button mnemonicParsing="false" onAction="#browser_corsus" prefHeight="39.0" prefWidth="140.0" text="choose corpus" GridPane.columnIndex="4" GridPane.rowIndex="2" />
+                                        <Button mnemonicParsing="false" onAction="#browser_posting" prefHeight="39.0" prefWidth="140.0" text="choose posting" GridPane.columnIndex="4" GridPane.rowIndex="3" />
+                                        <Label prefHeight="27.0" prefWidth="154.0" text="corpus path" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                                        <Label prefHeight="27.0" prefWidth="154.0" text="posting path" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+                                        <Button fx:id="reset" disable="true" mnemonicParsing="false" onAction="#reset" prefHeight="39.0" prefWidth="140.0" text="reset" GridPane.columnIndex="4" GridPane.halignment="LEFT" GridPane.rowIndex="6" GridPane.valignment="CENTER">
+                                            <GridPane.margin>
+                                                <Insets />
+                                            </GridPane.margin>
+                                        </Button>
+                                        <TextField fx:id="txtfld_corpusPath" GridPane.columnIndex="2" GridPane.rowIndex="2" />
+                                        <TextField fx:id="txtfld_postingPath" GridPane.columnIndex="2" GridPane.rowIndex="3" />
+                                        <GridPane GridPane.columnIndex="1" GridPane.rowIndex="6">
+                                            <columnConstraints>
+                                                <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                                            </columnConstraints>
+                                            <rowConstraints>
+                                                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                            </rowConstraints>
+                                            <children>
+                                                <Button mnemonicParsing="false" onAction="#load_dictionary" text="load dictionary" GridPane.halignment="CENTER" />
+                                            </children>
+                                        </GridPane>
+                                        <GridPane GridPane.columnIndex="2" GridPane.rowIndex="4">
+                                            <columnConstraints>
+                                                <ColumnConstraints hgrow="SOMETIMES" maxWidth="253.0" minWidth="10.0" prefWidth="154.0" />
+                                                <ColumnConstraints hgrow="SOMETIMES" maxWidth="373.0" minWidth="10.0" prefWidth="365.0" />
+                                            </columnConstraints>
+                                            <rowConstraints>
+                                                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                            </rowConstraints>
+                                            <children>
+                                                <Button mnemonicParsing="false" onAction="#startEngine" prefHeight="39.0" prefWidth="322.0" text="start" GridPane.columnIndex="1" GridPane.halignment="RIGHT" />
+                                                <CheckBox fx:id="c_steeming" mnemonicParsing="false" prefHeight="27.0" prefWidth="158.0" text="stemming" GridPane.halignment="CENTER" />
+                                            </children>
+                                        </GridPane>
+                                        <Button fx:id="showDictionary" disable="true" mnemonicParsing="false" onAction="#show_dictionary" text="show dictionary" GridPane.columnIndex="2" GridPane.halignment="LEFT" GridPane.rowIndex="6" />
+                                    </children>
+                                </GridPane>
+                            </children>
+                        </AnchorPane>
+                    </content>
+                </Tab>
+                <Tab text="Search Query">
+                    <content>
+                        <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="419.0" prefWidth="982.0">
+                            <children>
+                                <GridPane layoutX="-14.0" prefHeight="439.0" prefWidth="1004.0">
+                                    <columnConstraints>
+                                        <ColumnConstraints hgrow="SOMETIMES" maxWidth="144.0" minWidth="10.0" prefWidth="21.0" />
+                                        <ColumnConstraints hgrow="SOMETIMES" maxWidth="226.0" minWidth="10.0" prefWidth="226.0" />
+                                        <ColumnConstraints hgrow="SOMETIMES" maxWidth="543.0" minWidth="10.0" prefWidth="543.0" />
+                                        <ColumnConstraints hgrow="SOMETIMES" maxWidth="190.0" minWidth="10.0" prefWidth="11.0" />
+                                        <ColumnConstraints hgrow="SOMETIMES" maxWidth="217.0" minWidth="10.0" prefWidth="193.0" />
+                                    </columnConstraints>
+                                    <rowConstraints>
+                                        <RowConstraints maxHeight="73.0" minHeight="10.0" prefHeight="62.0" vgrow="SOMETIMES" />
+                                        <RowConstraints maxHeight="44.0" minHeight="10.0" prefHeight="10.0" vgrow="SOMETIMES" />
+                                        <RowConstraints maxHeight="61.0" minHeight="10.0" prefHeight="44.0" vgrow="SOMETIMES" />
+                                        <RowConstraints maxHeight="56.0" minHeight="10.0" prefHeight="53.0" vgrow="SOMETIMES" />
+                                        <RowConstraints maxHeight="65.0" minHeight="10.0" prefHeight="34.0" vgrow="SOMETIMES" />
+                                        <RowConstraints maxHeight="147.0" minHeight="7.0" prefHeight="7.0" vgrow="SOMETIMES" />
+                                        <RowConstraints maxHeight="208.0" minHeight="10.0" prefHeight="154.0" vgrow="SOMETIMES" />
+                                        <RowConstraints maxHeight="208.0" minHeight="9.0" prefHeight="17.0" vgrow="SOMETIMES" />
+                                    </rowConstraints>
+                                    <children>
+                                        <Label prefHeight="27.0" prefWidth="114.0" text="search engine" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.valignment="CENTER" />
+                                        <Button mnemonicParsing="false" onAction="#run_query" prefHeight="39.0" prefWidth="184.0" text="search" GridPane.columnIndex="4" GridPane.rowIndex="2" />
+                                        <Label prefHeight="27.0" prefWidth="219.0" text="What you want to look for?" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                                        <Label prefHeight="27.0" prefWidth="242.0" text="The ready queries path" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+                                        <TextField fx:id="txtfld_query" GridPane.columnIndex="2" GridPane.rowIndex="2" />
+                                        <TextField fx:id="txtfld_txtQueries" GridPane.columnIndex="2" GridPane.rowIndex="3" />
+                                        <GridPane GridPane.columnIndex="2" GridPane.rowIndex="4">
+                                            <columnConstraints>
+                                                <ColumnConstraints hgrow="SOMETIMES" maxWidth="253.0" minWidth="10.0" prefWidth="154.0" />
+                                                <ColumnConstraints hgrow="SOMETIMES" maxWidth="373.0" minWidth="10.0" prefWidth="365.0" />
+                                            </columnConstraints>
+                                            <rowConstraints>
+                                                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                            </rowConstraints>
+                                            <children>
+                                                <CheckBox fx:id="c_steeming_q" mnemonicParsing="false" prefHeight="27.0" prefWidth="114.0" text="stemming" GridPane.halignment="LEFT" />
+                                                <CheckBox fx:id="c_semantic" mnemonicParsing="false" prefHeight="27.0" prefWidth="156.0" text="semantic" GridPane.columnIndex="1" GridPane.halignment="LEFT" />
+                                            </children>
+                                        </GridPane>
+                                        <Accordion GridPane.columnIndex="2" GridPane.rowIndex="6" />
+                                        <GridPane GridPane.columnIndex="4" GridPane.rowIndex="3">
+                                            <columnConstraints>
+                                                <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                                                <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                                            </columnConstraints>
+                                            <rowConstraints>
+                                                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                                            </rowConstraints>
+                                            <children>
+                                                <Button  fx:id="browserQueries"  mnemonicParsing="false" onAction="#browser_queries" prefHeight="39.0" prefWidth="94.0" text="browse" />
+                                                <Button   fx:id="runTxtQueries" mnemonicParsing="false" onAction="#run_txtQueries" prefHeight="39.0" prefWidth="86.0" text="run" GridPane.columnIndex="1" />
+                                            </children>
+                                        </GridPane>
+                                    </children>
+                                </GridPane>
+                            </children>
+                        </AnchorPane>
+                    </content>
+                </Tab>
+            </tabs>
+        </TabPane>
+    </children>
 </AnchorPane>

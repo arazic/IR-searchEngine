@@ -910,12 +910,8 @@ public class Posting {
         try {
             writerToPostingDoc.close();
 
-            Path path = Paths.get((postingPath + "/finalPostingWithStemming.txt"));
-            File f = path.toFile();
-            if(f.exists())
-                f.delete();
-            path = Paths.get((postingPath + "/indexerWithStemming.txt"));
-            f = path.toFile();
+            Path path = Paths.get((postingPath + "/indexerWithStemming.txt"));
+            File  f = path.toFile();
             if(f.exists())
                 f.delete();
             path = Paths.get((postingPath + "/postingDocumentsWithStemming.txt"));
@@ -923,10 +919,6 @@ public class Posting {
             if(f.exists())
                 f.delete();
 
-            path = Paths.get((postingPath + "/finalPostingNoStemming.txt"));
-            f = path.toFile();
-            if(f.exists())
-                f.delete();
             path = Paths.get((postingPath + "/indexerNoStemming.txt"));
             f = path.toFile();
             if(f.exists())
@@ -936,6 +928,52 @@ public class Posting {
             if(f.exists())
                 f.delete();
 
+            path = Paths.get((postingPath + "/finalPostingCapitalNoStemming.txt"));
+            f = path.toFile();
+            if(f.exists())
+                f.delete();
+
+            path = Paths.get((postingPath + "/finalPostingLowertNoStemmingD.txt"));
+            f = path.toFile();
+            if(f.exists())
+                f.delete();
+
+           path = Paths.get((postingPath + "/finalPostingLowertNoStemmingP.txt"));
+            f = path.toFile();
+            if(f.exists())
+                f.delete();
+            path = Paths.get((postingPath + "/finalPostingLowertNoStemmingZ.txt"));
+            f = path.toFile();
+            if(f.exists())
+                f.delete();
+            path = Paths.get((postingPath + "/finalPostingNumbersNoStemming.txt"));
+            f = path.toFile();
+            if(f.exists())
+                f.delete();
+
+
+            path = Paths.get((postingPath + "/finalPostingCapitalWithStemming.txt"));
+            f = path.toFile();
+            if(f.exists())
+                f.delete();
+
+            path = Paths.get((postingPath + "/finalPostingLowertWithStemmingD.txt"));
+            f = path.toFile();
+            if(f.exists())
+                f.delete();
+
+            path = Paths.get((postingPath + "/finalPostingLowertWithStemmingP.txt"));
+            f = path.toFile();
+            if(f.exists())
+                f.delete();
+            path = Paths.get((postingPath + "/finalPostingLowertWithStemmingZ.txt"));
+            f = path.toFile();
+            if(f.exists())
+                f.delete();
+            path = Paths.get((postingPath + "/finalPostingNumbersWithStemming.txt"));
+            f = path.toFile();
+            if(f.exists())
+                f.delete();
         } catch (IOException e) {
             e.printStackTrace();
         }
