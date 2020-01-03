@@ -201,12 +201,6 @@ public class Searcher {
 
     private void rePostingTerms(String term) {
 
-
-        tremsInDoc= new TreeMap<>();
-        termsDf= new TreeMap<>();// Term, df-how manyDocs
-        allRelevantDocs = new TreeMap<>(); // docNam
-
-
         String[] miniParse= StringUtils.split(term,"!");
         String termName= miniParse[0];
 
