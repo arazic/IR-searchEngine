@@ -14,11 +14,11 @@ public class Searcher {
     Parse parser;
     boolean stemming;
     boolean semantic;
-    TreeMap<String, TreeMap<String, String>> tremsInDoc ; // docName, <Term-"tf">
-    TreeMap<String, String> termsDf ; // Term, df-how manyDocs
-    TreeMap<String, String> allRelevantDocs ; // docName, size - |d|
-    int totalCurposDoc ;
-    double averageDocLength ;
+    TreeMap<String, TreeMap<String, String>> tremsInDoc; // docName, <Term-"tf">
+    TreeMap<String, String> termsDf; // Term, df-how manyDocs
+    TreeMap<String, String> allRelevantDocs; // docName, size - |d|
+    int totalCurposDoc;
+    double averageDocLength;
 
     public Searcher(Parse parser) {
         ranker = new Ranker();
@@ -43,13 +43,10 @@ public class Searcher {
 
 
     private TreeMap<String, Integer> getWords(TreeMap<String, Integer> termsQuery) {
-
         for (String terms : termsQuery.keySet()) {
-
         }
         return null;
     }
-
 
     public void infoFromPosting(String postingPath, TreeMap<String, Integer> termsQuery) {
         try {
@@ -170,7 +167,6 @@ public class Searcher {
         String line= bufferedDocs.readLine();
 
         while (line!=null) {
-
         Set set = allRelevantDocs.entrySet();
         Iterator iterator = set.iterator();
         Map.Entry entry = (Map.Entry) iterator.next();
@@ -190,10 +186,9 @@ public class Searcher {
                 line=bufferedDocs.readLine();
                 averageDocLength= Integer.parseInt(line.substring(1));
                 line=bufferedDocs.readLine();
-
                 break;
             }
-         }
+          }
         }
 
         } catch (FileNotFoundException e) {
@@ -218,13 +213,21 @@ public class Searcher {
         termsDf.put(termName,miniParse[2]); //insert df of term
 
         String[] splitDocs= StringUtils.split(miniParse[1],",");
-        TreeMap<String, String> docs_tfInDoc= new TreeMap<>();
         for (int i=0; i<splitDocs.length; i++){
             String docName= StringUtils.substring(splitDocs[i],0,splitDocs[i].indexOf(":"));
             String tfInDoc=StringUtils.substring(splitDocs[i],splitDocs[i].indexOf(":")+1);
             allRelevantDocs.put(docName, "toUpdate");
-            docs_tfInDoc.put(docName,tfInDoc);
+            if(tremsInDoc.containsKey(docName)){
+                TreeMap<String,String> temp= tremsInDoc.get(docName);
+                temp.put(termName,tfInDoc);
+                tremsInDoc.put(docName,temp);
+            }
+            else{
+                TreeMap<String,String> temp= new TreeMap<>();
+                temp.put(termName,tfInDoc);
+                tremsInDoc.put(docName,temp);
+            }
+
         }
-        tremsInDoc.put(termName,docs_tfInDoc);
     }
 }

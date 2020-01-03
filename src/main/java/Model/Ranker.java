@@ -15,7 +15,7 @@ public class Ranker {
             TreeMap<String, String> termsDf, // Term, df-how manyDocs
             TreeMap<String, String> allRelevantDocs,int totalCurposDoc, double averageDocLength) // docName, size - |d|
     {
-
+        System.out.println("jump");
     }
 }
 
