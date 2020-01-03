@@ -50,15 +50,43 @@ public class Searcher {
     {
         String text =stringBuilder.toString();
         String [] tokens=text.split(" ");
-        StringBuilder query = new StringBuilder();
+        String query ="";
         int index=0;
         int queryId=0;
         while(index<tokens.length)
         {
             if(tokens[index].equals("<num>"))
             {
-                
+                if(index+2<tokens.length)
+                {
+                    queryId=Integer.parseInt(tokens[index+2]);
+                    index=index+3;
+                    break;
+                }
             }
+            index++;
+        }
+        while(index<tokens.length)
+        {
+            if(tokens[index].equals("<title>"))
+            {
+                index++;
+                while(index<tokens.length)
+                {
+                    if(tokens[index].equals("<desc>"))
+                    {
+                        index++;
+                        break;
+                    }
+                    else
+                    {
+                        query=query+tokens[index]+" ";
+                    }
+                    index++;
+                }
+                break;
+            }
+            index++;
         }
     }
 
