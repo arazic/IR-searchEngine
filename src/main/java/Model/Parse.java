@@ -15,6 +15,7 @@ public class Parse {
     private static HashMap<String,String> unitMap = new HashMap<>();
     private static HashMap<String, String> symbols=new HashMap<>();
     private HashMap<String,Integer> allDocTerms;
+    private HashMap<String,Integer> entities;
     private boolean isStemming;
     private Stemmer stemmer;
     private int maxFreqTermInDoc;
@@ -41,6 +42,7 @@ public class Parse {
         stemmer= new Stemmer();
         this.isStemming =isStemming;
         allDocTerms = new HashMap<>();
+        entities= new HashMap<>();
         maxFreqTermInDoc=1;
         loadMonthMap();
         loadUnits();
@@ -183,8 +185,6 @@ public class Parse {
     }
 
 
-
-
     public void createDocument(StringBuilder content)
     {
         currIndex=0;
@@ -224,20 +224,64 @@ public class Parse {
             }
             allDocTerms=termsAfterStemming;
         }
+        setTopEntities();
         updateDoc();
     }
+
+
+
 
 
     private void updateDoc() {
         currDoc.setTotalTerms(totalTermsInDoc);
         currDoc.setMaxTerm(maxFreqTermInDoc);
         currDoc.setUniqeTermsNum(allDocTerms.size());
-        currDoc.setEntities();
+        currDoc.setEntities(setTopEntities());
         posting.postingDoc(currDoc);
         posting.postingTerms(allDocTerms, currDoc.getDocName());
-
         maxFreqTermInDoc=0;
         allDocTerms.clear();
+    }
+
+
+    private String[]  setTopEntities()
+    {
+       String[] topEntities = new String[5];
+       int counter=0;
+       while (counter<5 || entities.isEmpty())
+       {
+           int maxFrequency=0;
+           String entity="";
+           for (Map.Entry entry:entities.entrySet()
+                ) {
+               if((int)entry.getValue()>maxFrequency)
+               {
+                   entity=(String)entry.getKey();
+                   maxFrequency=(int)entry.getValue();
+               }
+           }
+           topEntities[counter]=entity;
+           counter++;
+           entities.remove(entity);
+       }
+       return topEntities;
+    }
+
+    private void rankEntitis()
+    {
+        for (String entity:entities.keySet()
+             ) {
+            String[] splitName=entity.split(" ");
+            int addFrequency=0;
+            for (int i=0; i<splitName.length;i++)
+            {
+                if(allDocTerms.containsKey(splitName[i]))
+                {
+                    addFrequency+=allDocTerms.get(splitName[i]);
+                }
+            }
+            entities.replace(entity,entities.get(entity)+addFrequency);
+        }
     }
 
 
@@ -946,6 +990,7 @@ public class Parse {
             if(token.charAt(token.length()-1)=='.' || token.charAt(token.length()-1)==',')
             {
                 concat+=clean;
+                insertToAllDocTerms(clean);
                 currIndex++;
                 break;
             }
@@ -957,6 +1002,14 @@ public class Parse {
         }
         concat=cleanWord(concat);
         insertToAllDocTerms(concat);
+        if(entities.containsKey(concat))
+        {
+            entities.replace(concat,entities.get(concat)+1);
+        }
+        else
+        {
+            entities.put(concat,1);
+        }
     }
 
     private String monthHandler(String number, String month)
@@ -1072,15 +1125,34 @@ public class Parse {
     }
 
     public TreeMap<String,Integer> parseQuery(String query, boolean isStemming) {
-        TreeMap<String,Integer> terms= new TreeMap<>();
-        String[] arrayTerms= StringUtils.split(query," ");
-        for (String s: arrayTerms){
-            if(!terms.containsKey(s))
-                terms.put(s,1);
-            else
-                terms.put(s, terms.get(s)+1);
+        currIndex=0;
+        tokens= query.split(" ");
+        parseText();
+        if(isStemming)
+        {
+            HashMap<String,Integer> termsAfterStemming= new HashMap<>();
+            for (String beforeStem:allDocTerms.keySet()
+            ) {
+                if(containsNumber.matcher(beforeStem).matches()|| beforeStem.contains(" "))
+                {
+                    termsAfterStemming.put(beforeStem,allDocTerms.get(beforeStem));
+                }
+                else
+                {
+                    String afterStem=stemmer.stem(beforeStem);
+                    if(termsAfterStemming.containsKey(afterStem))
+                    {
+                        termsAfterStemming.replace(afterStem,termsAfterStemming.get(afterStem)+allDocTerms.get(beforeStem));
+                    }
+                    else
+                    {
+                        termsAfterStemming.put(afterStem,allDocTerms.get(beforeStem));
+                    }
+                }
+            }
+            allDocTerms=termsAfterStemming;
         }
-
+        TreeMap<String,Integer> terms= new TreeMap<>(allDocTerms);
         return terms;
     }
 }

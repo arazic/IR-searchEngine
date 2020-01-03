@@ -13,7 +13,7 @@ public class Document {
     private int maxTerm;
     private int uniqeTermsNum;
     private int totalTerms;
-    private List<String> topEntities;
+    private String[] topEntities;
 
     public Document()
     {
@@ -64,7 +64,8 @@ public class Document {
         this.uniqeTermsNum= uniqeTermsNum;
     }
 
-    public void setEntities() {
-       // topEntities
+    public void setEntities(String[] entities)
+    {
+       topEntities=entities;
     }
 }

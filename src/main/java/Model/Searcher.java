@@ -4,25 +4,62 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.awt.*;
 import java.io.*;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
+import java.util.*;
 
 public class Searcher {
     Ranker ranker;
     Parse parser;
     boolean stemming;
     boolean semantic;
-    TreeMap<String, TreeMap<String, String>> tremsInDoc ; // docName, <Term-"tf">
-    TreeMap<String, String> termsDf ; // Term, df-how manyDocs
-    TreeMap<String, String> allRelevantDocs ; // docName, size - |d|
+    TreeMap<String, TreeMap<String, Integer>> tremsInDoc ; // docName, <Term-"tf">
+    TreeMap<String, Integer> termsDf ; // Term, df-how manyDocs
+    TreeMap<String, Integer> allRelevantDocs ; // docName, size - |d|
     int totalCurposDoc ;
     double averageDocLength ;
 
     public Searcher(Parse parser) {
         ranker = new Ranker();
         this.parser = parser;
+    }
+
+    public void readQueriesFromData(String pathToQueries)
+    {
+        File path= new File(pathToQueries);
+        String line;
+        StringBuilder sb = new StringBuilder();
+        try(BufferedReader br = new BufferedReader(new FileReader(path)))
+        {
+            while ((line = br.readLine()) != null)
+            {
+                if(line.equals("</DOC>")){
+                    sb.append(line).append("\n");
+                    sb.setLength(0);
+                }
+                else
+                    sb.append(line).append("\n");
+            }
+        }
+        catch (IOException i)
+        {
+            i.printStackTrace();
+        }
+    }
+
+
+    private void parseQueryFromData(StringBuilder stringBuilder)
+    {
+        String text =stringBuilder.toString();
+        String [] tokens=text.split(" ");
+        StringBuilder query = new StringBuilder();
+        int index=0;
+        int queryId=0;
+        while(index<tokens.length)
+        {
+            if(tokens[index].equals("<num>"))
+            {
+                
+            }
+        }
     }
 
     public void search(String postingPath, String query, boolean stemming, boolean semantic) {
@@ -34,8 +71,11 @@ public class Searcher {
             termsQuery.putAll(semanticTerms);
         }
         infoFromPosting(postingPath, termsQuery);
-        List top50Docs = ranker.rank();
+        LinkedList<String> rankedDicuments=ranker.rankDocuments();
     }
+
+
+
 
     public String getEntities(String docName) {
         return null;
@@ -166,9 +206,7 @@ public class Searcher {
 
         FileReader Documents = new FileReader((postingPath) + "/postingDocuments"+s+"Stemming.txt");
         BufferedReader bufferedDocs= new BufferedReader(Documents);
-
         String line= bufferedDocs.readLine();
-
         while (line!=null) {
 
         Set set = allRelevantDocs.entrySet();
@@ -218,13 +256,21 @@ public class Searcher {
         termsDf.put(termName,miniParse[2]); //insert df of term
 
         String[] splitDocs= StringUtils.split(miniParse[1],",");
-        TreeMap<String, String> docs_tfInDoc= new TreeMap<>();
         for (int i=0; i<splitDocs.length; i++){
             String docName= StringUtils.substring(splitDocs[i],0,splitDocs[i].indexOf(":"));
             String tfInDoc=StringUtils.substring(splitDocs[i],splitDocs[i].indexOf(":")+1);
             allRelevantDocs.put(docName, "toUpdate");
-            docs_tfInDoc.put(docName,tfInDoc);
+            if(tremsInDoc.containsKey(docName)){
+                TreeMap<String,String> temp= tremsInDoc.get(docName);
+                temp.put(termName,tfInDoc);
+                tremsInDoc.put(docName,temp);
+            }
+            else{
+                TreeMap<String,String> temp= new TreeMap<>();
+                temp.put(termName,tfInDoc);
+                tremsInDoc.put(docName,temp);
+            }
+
         }
-        tremsInDoc.put(termName,docs_tfInDoc);
     }
 }
