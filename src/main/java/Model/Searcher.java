@@ -122,6 +122,7 @@ public class Searcher {
         }
         infoFromPosting(postingPath, termsQuery);
         LinkedList<String> rankedDocuments=ranker.rankDocuments();
+        System.out.println(rankedDocuments);
     }
 
 
@@ -304,6 +305,8 @@ public class Searcher {
             if(docName.charAt(docName.length()-1)==' ')
                 docName= StringUtils.substring(docName,0,docName.length()-1);
             String tfInDoc=StringUtils.substring(splitDocs[i],splitDocs[i].indexOf(":")+1);
+            if(tfInDoc.charAt(tfInDoc.length()-1)==']')
+                tfInDoc= StringUtils.substring(tfInDoc,0,tfInDoc.length()-1);
             allRelevantDocs.put(docName, 0);
             if(tremsInDoc.containsKey(docName)){
                 TreeMap<String,Integer> temp= tremsInDoc.get(docName);
@@ -312,6 +315,7 @@ public class Searcher {
             }
             else{
                 TreeMap<String,Integer> temp= new TreeMap<>();
+                //System.out.println(docName);
                 temp.put(termName, Integer.valueOf(tfInDoc));
                 tremsInDoc.put(docName,temp);
             }
