@@ -52,6 +52,26 @@ public class ReadFile {
         parse.createStopWords(sWords);
     }
 
+    public void readStopWordsNoRunning()
+    {
+        String sPath = "src/main/resources/stop_words.txt";
+        File path= new File(sPath);
+        String line;
+        HashSet<String> sWords = new HashSet<>();
+        try(BufferedReader br = new BufferedReader(new FileReader(path)))
+        {
+            while ((line = br.readLine()) != null)
+            {
+                sWords.add(line);
+            }
+        }
+        catch (IOException i)
+        {
+            i.printStackTrace();
+        }
+        parse.createStopWords(sWords);
+    }
+
     /**
      * the main functionality
      * create stop words collection'

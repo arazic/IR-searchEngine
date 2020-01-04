@@ -34,6 +34,7 @@ public class EngineManager {
         this.readFile= new ReadFile(corpusPath, parse);
         this.searcher= new Searcher(parse);
         Indexer.initIndexer(postingPath,isStemming);
+        readFile.readStopWordsNoRunning();
 
     }
 

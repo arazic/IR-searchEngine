@@ -32,7 +32,7 @@ public class Searcher {
             termsQuery.putAll(semanticTerms);
         }
         infoFromPosting(postingPath, termsQuery);
-        LinkedList<String> rankedDicuments=ranker.rankDocuments();
+        LinkedList<String> rankedDocuments=ranker.rankDocuments();
 
     }
 
@@ -61,7 +61,6 @@ public class Searcher {
             i.printStackTrace();
         }
     }
-
 
     private String[] parseQueryFromData(StringBuilder stringBuilder)
     {
@@ -112,17 +111,17 @@ public class Searcher {
     public void search(String postingPath, String query, boolean stemming, boolean semantic) {
         this.stemming=stemming;
         this.semantic=semantic;
-        //TreeMap<String, Integer> termsQuery = parser.parseQuery(query, stemming); //tremName, tf in query
-        TreeMap<String,Integer> termsQuery = new TreeMap<>();
+        TreeMap<String, Integer> termsQuery = parser.parseQuery(query, stemming); //tremName, tf in query
+ /*       TreeMap<String,Integer> termsQuery = new TreeMap<>();
         termsQuery.put("mutual",1);
         termsQuery.put("fund",1);
-        termsQuery.put("predictors",1);
+        termsQuery.put("predictors",1);*/
         if (semantic) {
             TreeMap<String, Integer> semanticTerms = getWords(termsQuery);
             termsQuery.putAll(semanticTerms);
         }
         infoFromPosting(postingPath, termsQuery);
-        LinkedList<String> rankedDicuments=ranker.rankDocuments();
+        LinkedList<String> rankedDocuments=ranker.rankDocuments();
     }
 
 
@@ -297,9 +296,13 @@ public class Searcher {
 
         termsDf.put(termName, Integer.valueOf(miniParse[2])); //insert df of term
 
-        String[] splitDocs= StringUtils.split(miniParse[1].substring(1,miniParse[1].length()-1),",");
+        String[] splitDocs= StringUtils.split(miniParse[1].substring(1,miniParse[1].length()),",");
         for (int i=0; i<splitDocs.length; i++){
             String docName= StringUtils.substring(splitDocs[i],0,splitDocs[i].indexOf(":"));
+            if(docName.charAt(0)==' ')
+                docName= StringUtils.substring(docName,1);
+            if(docName.charAt(docName.length()-1)==' ')
+                docName= StringUtils.substring(docName,0,docName.length()-1);
             String tfInDoc=StringUtils.substring(splitDocs[i],splitDocs[i].indexOf(":")+1);
             allRelevantDocs.put(docName, 0);
             if(tremsInDoc.containsKey(docName)){
@@ -312,7 +315,6 @@ public class Searcher {
                 temp.put(termName, Integer.valueOf(tfInDoc));
                 tremsInDoc.put(docName,temp);
             }
-
         }
     }
 }
