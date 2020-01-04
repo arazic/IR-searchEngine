@@ -19,6 +19,7 @@ public class Posting {
     private int docCounter; // how many docs are merging in the memory;
     private int docFileCounter; // how many doc in a posting file;
     private int sumLengthAllDoc;
+    private TreeSet<String> documents;
 
 
     private BufferedReader readFromTmpPostingTerm1;
@@ -36,6 +37,7 @@ public class Posting {
         this.postingPath=postingPath;
         chunksCount=1;
         sumLengthAllDoc=0;
+        documents = new TreeSet<>();
     }
 
     public void postingDoc(Document document) {
@@ -47,9 +49,9 @@ public class Posting {
                     writerToPostingDoc = new BufferedWriter(new FileWriter(postingPath + "/postingDocumentsNoStemming.txt"));
             }
                         String toAdd = document.getDocName() + "!" + document.getMaxTerm() + "!" + document.getUniqeTermsNum()+ "!"+ document.getTotalTerms();
-                        writerToPostingDoc.write(toAdd);
-                        writerToPostingDoc.newLine();
-                        Indexer.addDoc(document.getDocName(), String.valueOf(docFileCounter+1));
+                       // writerToPostingDoc.write(toAdd);
+                        //writerToPostingDoc.newLine();
+                        documents.add(toAdd);
                         sumLengthAllDoc= sumLengthAllDoc+ document.getTotalTerms();
                         docFileCounter++;
         } catch (IOException e) {
@@ -900,6 +902,13 @@ public class Posting {
     public void setFinishDoc(boolean b) {
         this.finishDoc=b;
         try {
+            for (String document:documents
+                 ) {
+
+                writerToPostingDoc.append(document);
+                writerToPostingDoc.newLine();
+            }
+            writerToPostingDoc.flush();
             writerToPostingDoc.write("~"+docFileCounter);
             writerToPostingDoc.newLine();
             writerToPostingDoc.write("~"+(sumLengthAllDoc/docFileCounter));

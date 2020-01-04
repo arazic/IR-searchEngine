@@ -112,10 +112,6 @@ public class Searcher {
         this.stemming=stemming;
         this.semantic=semantic;
         TreeMap<String, Integer> termsQuery = parser.parseQuery(query, stemming); //tremName, tf in query
- /*       TreeMap<String,Integer> termsQuery = new TreeMap<>();
-        termsQuery.put("mutual",1);
-        termsQuery.put("fund",1);
-        termsQuery.put("predictors",1);*/
         if (semantic) {
             TreeMap<String, Integer> semanticTerms = getWords(termsQuery);
             termsQuery.putAll(semanticTerms);
@@ -259,9 +255,19 @@ public class Searcher {
                 Set set = allRelevantDocs.entrySet();
                 Iterator iterator = set.iterator();
                 Map.Entry entry = (Map.Entry) iterator.next();
-                while (entry!=null) {
+                while (entry!=null)
+                {
                     String docInPosting= line.substring(0,line.indexOf("!"));
-                    if (entry.getKey().equals(docInPosting)){
+                    String entryDoc=(String)entry.getKey();
+                    if(docInPosting.charAt(0)==' ')
+                    {
+                        docInPosting=docInPosting.substring(1);
+                    }
+                    if(docInPosting.charAt(docInPosting.length()-1)==' ')
+                    {
+                        docInPosting=docInPosting.substring(0,docInPosting.length()-1);
+                    }
+                    if (entryDoc.equals(docInPosting)){
                         String [] parseDoc=  StringUtils.split(line,"!");
                         allRelevantDocs.put(docInPosting, Integer.valueOf(parseDoc[parseDoc.length-1]));
                         if(iterator.hasNext())

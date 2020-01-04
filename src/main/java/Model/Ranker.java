@@ -17,8 +17,8 @@ public class Ranker {
 
     public Ranker ()
     {
-        k=1.5;
-        b=0.2;
+        k=45;
+        b=0.25;
     }
 
     private double rank(int docLength,TreeMap<String,Integer> termsTF)
@@ -37,7 +37,7 @@ public class Ranker {
     public LinkedList<String> rankDocuments()
     {
         TreeMap<String,Double> rankDocuments = new TreeMap<>();
-        LinkedList<String> documentsByRank= new LinkedList<>();
+        TreeMap<String,Double> documentsByRank= new TreeMap<>();
         for (Map.Entry entry:documentsSize.entrySet())
         {
             String docName=(String)entry.getKey();
@@ -57,12 +57,13 @@ public class Ranker {
                     maxRank=(double) entry.getValue();
                 }
             }
-            documentsByRank.addLast(maxdoc);
+            documentsByRank.put(maxdoc,maxRank);
             rankDocuments.remove(maxdoc);
             maxdoc="";
             maxRank=0;
         }
-        return documentsByRank;
+        LinkedList<String> ans = new LinkedList<>(documentsByRank.keySet());
+        return ans;
     }
 
 

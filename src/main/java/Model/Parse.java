@@ -245,7 +245,7 @@ public class Parse {
     {
        String[] topEntities = new String[5];
        int counter=0;
-       while (counter<5 && entities.isEmpty())
+       while (counter<5 && !entities.isEmpty())
        {
            int maxFrequency=0;
            String entity="";
@@ -1108,6 +1108,14 @@ public class Parse {
         String docName="";
         while (m.find()) {
             docName =m.group(1);
+        }
+        if(docName.charAt(0)==' ')
+        {
+            docName=docName.substring(1);
+        }
+        if(docName.charAt(docName.length()-1)==' ')
+        {
+            docName=docName.substring(0,docName.length()-1);
         }
         currDoc.setDocName(docName);
     }
