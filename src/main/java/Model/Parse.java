@@ -25,8 +25,6 @@ public class Parse {
     private Document currDoc;
     private Posting posting;
     private int currIndex;
-    private boolean debug1;
-    private boolean debug2;
     private boolean FinishDoc;
 
 
@@ -37,8 +35,6 @@ public class Parse {
 
     public Parse(Posting posting, boolean isStemming)
     {
-        debug1=false;
-        debug2=false;
         stemmer= new Stemmer();
         this.isStemming =isStemming;
         allDocTerms = new HashMap<>();
@@ -103,7 +99,10 @@ public class Parse {
     private void cleanParser()
     {
         allDocTerms.clear();
+        entities.clear();
         currIndex=0;
+        totalTermsInDoc=0;
+        maxFreqTermInDoc=0;
     }
 
     private void loadMonthMap()
@@ -224,7 +223,6 @@ public class Parse {
             }
             allDocTerms=termsAfterStemming;
         }
-        setTopEntities();
         updateDoc();
     }
 
@@ -239,8 +237,7 @@ public class Parse {
         currDoc.setEntities(setTopEntities());
         posting.postingDoc(currDoc);
         posting.postingTerms(allDocTerms, currDoc.getDocName());
-        maxFreqTermInDoc=0;
-        allDocTerms.clear();
+        cleanParser();
     }
 
 
@@ -248,7 +245,7 @@ public class Parse {
     {
        String[] topEntities = new String[5];
        int counter=0;
-       while (counter<5 || entities.isEmpty())
+       while (counter<5 && entities.isEmpty())
        {
            int maxFrequency=0;
            String entity="";
@@ -1125,6 +1122,7 @@ public class Parse {
     }
 
     public TreeMap<String,Integer> parseQuery(String query, boolean isStemming) {
+
         currIndex=0;
         tokens= query.split(" ");
         parseText();

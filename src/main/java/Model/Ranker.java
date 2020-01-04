@@ -15,6 +15,12 @@ public class Ranker {
     private int k;
     private double b;
 
+    public Ranker ()
+    {
+        k=50;
+        b=0.9;
+    }
+
     private double rank(int docLength,TreeMap<String,Integer> termsTF)
     {
         double rank=0;
@@ -30,37 +36,30 @@ public class Ranker {
 
     public LinkedList<String> rankDocuments()
     {
-        TreeMap<Double,LinkedList<String>> rankDocuments = new TreeMap<>();
+        TreeMap<String,Double> rankDocuments = new TreeMap<>();
         LinkedList<String> documentsByRank= new LinkedList<>();
         for (Map.Entry entry:documentsSize.entrySet())
         {
             String docName=(String)entry.getKey();
             int docSize=(int)entry.getValue();
             double rank =rank(docSize,documentTermsFrequency.get(docName));
-            if(rankDocuments.containsKey(rank))
-            {
-                LinkedList<String> documents=rankDocuments.get(rank);
-                documents.add(docName);
-                rankDocuments.replace(rank,documents);
-            }
-            else
-            {
-                LinkedList<String> documents = new LinkedList<>();
-                rankDocuments.put(rank,documents);
-            }
+            rankDocuments.put(docName,rank);
         }
-        int totalDocuments=0;
-        for (double rank:rankDocuments.keySet())
+        double maxRank=0;
+        String maxdoc="";
+        for(int i=0;i<50;i++)
         {
-            LinkedList<String> rankList=rankDocuments.get(rank);
-            for (String document:rankList)
+            for (Map.Entry entry:rankDocuments.entrySet())
             {
-                if(totalDocuments<50)
+                if((double)entry.getValue()>maxRank)
                 {
-                    documentsByRank.addLast(document);
-                    totalDocuments++;
+                    maxdoc=(String)entry.getKey();
                 }
             }
+            documentsByRank.addLast(maxdoc);
+            rankDocuments.remove(maxdoc);
+            maxdoc="";
+            maxRank=0;
         }
         return documentsByRank;
     }
@@ -77,13 +76,17 @@ public class Ranker {
         this.termsQueryFrequency=termsQueryFrequency;
     }
 
-    public void setCorpusSize(int corpusSize) {
-        this.corpusSize = corpusSize;
+    public void setCorpusSize(int size)
+    {
+        corpusSize=size;
     }
 
-    public void setAvergeDocSize(double avergeDocSize) {
-        this.avergeDocSize = avergeDocSize;
+    public void setAvergeDocSize(double avergeDocSize)
+    {
+        this.avergeDocSize=avergeDocSize;
+
     }
+
 }
 
 

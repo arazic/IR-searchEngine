@@ -22,8 +22,24 @@ public class Searcher {
         this.parser = parser;
     }
 
-    public void readQueriesFromData(String pathToQueries)
+    private void handleQueryFromData(StringBuilder query,String postingPath)
     {
+        String[] queryData =parseQueryFromData(query);
+        int queryID=Integer.parseInt(queryData[0]);
+        TreeMap<String,Integer> termsQuery = parser.parseQuery(queryData[1],stemming);
+        if (semantic) {
+            TreeMap<String, Integer> semanticTerms = getWords(termsQuery);
+            termsQuery.putAll(semanticTerms);
+        }
+        infoFromPosting(postingPath, termsQuery);
+        LinkedList<String> rankedDicuments=ranker.rankDocuments();
+
+    }
+
+    public void readQueriesFromData(String pathToQueries,boolean isStem, boolean isSemantic ,String postingPath)
+    {
+        semantic=isSemantic;
+        stemming=isStem;
         File path= new File(pathToQueries);
         String line;
         StringBuilder sb = new StringBuilder();
@@ -31,8 +47,9 @@ public class Searcher {
         {
             while ((line = br.readLine()) != null)
             {
-                if(line.equals("</DOC>")){
+                if(line.equals("</top>")){
                     sb.append(line).append("\n");
+                    handleQueryFromData(sb,postingPath);
                     sb.setLength(0);
                 }
                 else
@@ -46,32 +63,66 @@ public class Searcher {
     }
 
 
-    private void parseQueryFromData(StringBuilder stringBuilder)
+    private String[] parseQueryFromData(StringBuilder stringBuilder)
     {
         String text =stringBuilder.toString();
         String [] tokens=text.split(" ");
-        StringBuilder query = new StringBuilder();
+        String[] queryData= new String[2];
+        String query ="";
         int index=0;
-        int queryId=0;
         while(index<tokens.length)
         {
             if(tokens[index].equals("<num>"))
             {
-
+                if(index+2<tokens.length)
+                {
+                    queryData[0]=tokens[index+2];
+                    index=index+3;
+                    break;
+                }
             }
+            index++;
         }
+        while(index<tokens.length)
+        {
+            if(tokens[index].equals("<title>"))
+            {
+                index++;
+                while(index<tokens.length)
+                {
+                    if(tokens[index].equals("<desc>"))
+                    {
+                        index++;
+                        queryData[1]=query;
+                        break;
+                    }
+                    else
+                    {
+                        query=query+tokens[index]+" ";
+                    }
+                    index++;
+                }
+                break;
+            }
+            index++;
+        }
+        return queryData;
     }
 
     public void search(String postingPath, String query, boolean stemming, boolean semantic) {
         this.stemming=stemming;
         this.semantic=semantic;
-        TreeMap<String, Integer> termsQuery = parser.parseQuery(query, stemming); //tremName, tf in query
+        //TreeMap<String, Integer> termsQuery = parser.parseQuery(query, stemming); //tremName, tf in query
+        TreeMap<String,Integer> termsQuery = new TreeMap<>();
+        termsQuery.put("mutual",1);
+        termsQuery.put("fund",1);
+        termsQuery.put("predictors",1);
         if (semantic) {
             TreeMap<String, Integer> semanticTerms = getWords(termsQuery);
             termsQuery.putAll(semanticTerms);
         }
         infoFromPosting(postingPath, termsQuery);
-        LinkedList<String> rankedDocuments=ranker.rankDocuments();
+        LinkedList<String> rankedDicuments=ranker.rankDocuments();
     }
 
 
@@ -81,7 +132,9 @@ public class Searcher {
 
 
     private TreeMap<String, Integer> getWords(TreeMap<String, Integer> termsQuery) {
+
         for (String terms : termsQuery.keySet()) {
+
         }
         return null;
     }
@@ -96,7 +149,7 @@ public class Searcher {
 
             String  s="";
             if(stemming)
-               s="With";
+                s="With";
             else
                 s="No";
 
@@ -191,43 +244,43 @@ public class Searcher {
     private void rePostingDocs(String postingPath) {
         try {
 
-        String  s="";
-        if(stemming) {
-            s="With";
-        }
-        else {
-            s="No";
-        }
+            String  s="";
+            if(stemming) {
+                s="With";
+            }
+            else {
+                s="No";
+            }
 
-        FileReader Documents = new FileReader((postingPath) + "/postingDocuments"+s+"Stemming.txt");
-        BufferedReader bufferedDocs= new BufferedReader(Documents);
-        String line= bufferedDocs.readLine();
-        while (line!=null) {
-        Set set = allRelevantDocs.entrySet();
-        Iterator iterator = set.iterator();
-        Map.Entry entry = (Map.Entry) iterator.next();
-        while (entry!=null) {
-            String docInPosting= line.substring(0,line.indexOf("!"));
-            if (entry.getKey().equals(docInPosting)){
-                String [] parseDoc=  StringUtils.split(line,"!");
-                allRelevantDocs.put(docInPosting, Integer.valueOf(parseDoc[parseDoc.length-1]));
-                if(iterator.hasNext())
-                    entry = (Map.Entry) iterator.next();
-                else
-                    entry=null;
+            FileReader Documents = new FileReader((postingPath) + "/postingDocuments"+s+"Stemming.txt");
+            BufferedReader bufferedDocs= new BufferedReader(Documents);
+            String line= bufferedDocs.readLine();
+            while (line!=null) {
+                Set set = allRelevantDocs.entrySet();
+                Iterator iterator = set.iterator();
+                Map.Entry entry = (Map.Entry) iterator.next();
+                while (entry!=null) {
+                    String docInPosting= line.substring(0,line.indexOf("!"));
+                    if (entry.getKey().equals(docInPosting)){
+                        String [] parseDoc=  StringUtils.split(line,"!");
+                        allRelevantDocs.put(docInPosting, Integer.valueOf(parseDoc[parseDoc.length-1]));
+                        if(iterator.hasNext())
+                            entry = (Map.Entry) iterator.next();
+                        else
+                            entry=null;
+                    }
+                    line=bufferedDocs.readLine();
+                    if(line.charAt(0)=='~'){
+                        totalCurposDoc= Integer.parseInt(line.substring(1));
+                        line=bufferedDocs.readLine();
+                        averageDocLength= Integer.parseInt(line.substring(1));
+                        line=bufferedDocs.readLine();
+                        ranker.setCorpusSize(totalCurposDoc);
+                        ranker.setAvergeDocSize(averageDocLength);
+                        break;
+                    }
+                }
             }
-            line=bufferedDocs.readLine();
-            if(line.charAt(0)=='~'){
-                totalCurposDoc= Integer.parseInt(line.substring(1));
-                line=bufferedDocs.readLine();
-                averageDocLength= Integer.parseInt(line.substring(1));
-                line=bufferedDocs.readLine();
-                ranker.setCorpusSize(totalCurposDoc);
-                ranker.setAvergeDocSize(averageDocLength);
-                break;
-            }
-          }
-        }
 
         } catch (FileNotFoundException e) {
             e.printStackTrace();
@@ -244,7 +297,7 @@ public class Searcher {
 
         termsDf.put(termName, Integer.valueOf(miniParse[2])); //insert df of term
 
-        String[] splitDocs= StringUtils.split(miniParse[1],",");
+        String[] splitDocs= StringUtils.split(miniParse[1].substring(1,miniParse[1].length()-1),",");
         for (int i=0; i<splitDocs.length; i++){
             String docName= StringUtils.substring(splitDocs[i],0,splitDocs[i].indexOf(":"));
             String tfInDoc=StringUtils.substring(splitDocs[i],splitDocs[i].indexOf(":")+1);
