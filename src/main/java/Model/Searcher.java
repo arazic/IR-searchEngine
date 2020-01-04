@@ -71,10 +71,8 @@ public class Searcher {
             termsQuery.putAll(semanticTerms);
         }
         infoFromPosting(postingPath, termsQuery);
-        LinkedList<String> rankedDicuments=ranker.rankDocuments();
+        LinkedList<String> rankedDocuments=ranker.rankDocuments();
     }
-
-
 
 
     public String getEntities(String docName) {
@@ -180,7 +178,7 @@ public class Searcher {
             }
 
             rePostingDocs(postingPath);
-            ranker.setData(tremsInDoc, termsDf, allRelevantDocs, totalCurposDoc, averageDocLength);
+            ranker.setData(tremsInDoc, termsDf, allRelevantDocs , termsQuery);
 
         } catch (FileNotFoundException e) {
             e.printStackTrace();
@@ -212,7 +210,7 @@ public class Searcher {
             String docInPosting= line.substring(0,line.indexOf("!"));
             if (entry.getKey().equals(docInPosting)){
                 String [] parseDoc=  StringUtils.split(line,"!");
-                allRelevantDocs.put(docInPosting, parseDoc[parseDoc.length-1]);
+                allRelevantDocs.put(docInPosting, Integer.valueOf(parseDoc[parseDoc.length-1]));
                 if(iterator.hasNext())
                     entry = (Map.Entry) iterator.next();
                 else
@@ -224,6 +222,8 @@ public class Searcher {
                 line=bufferedDocs.readLine();
                 averageDocLength= Integer.parseInt(line.substring(1));
                 line=bufferedDocs.readLine();
+                ranker.setCorpusSize(totalCurposDoc);
+                ranker.setAvergeDocSize(averageDocLength);
                 break;
             }
           }
@@ -242,21 +242,21 @@ public class Searcher {
         String[] miniParse= StringUtils.split(term,"!");
         String termName= miniParse[0];
 
-        termsDf.put(termName,miniParse[2]); //insert df of term
+        termsDf.put(termName, Integer.valueOf(miniParse[2])); //insert df of term
 
         String[] splitDocs= StringUtils.split(miniParse[1],",");
         for (int i=0; i<splitDocs.length; i++){
             String docName= StringUtils.substring(splitDocs[i],0,splitDocs[i].indexOf(":"));
             String tfInDoc=StringUtils.substring(splitDocs[i],splitDocs[i].indexOf(":")+1);
-            allRelevantDocs.put(docName, "toUpdate");
+            allRelevantDocs.put(docName, 0);
             if(tremsInDoc.containsKey(docName)){
-                TreeMap<String,String> temp= tremsInDoc.get(docName);
-                temp.put(termName,tfInDoc);
+                TreeMap<String,Integer> temp= tremsInDoc.get(docName);
+                temp.put(termName, Integer.valueOf(tfInDoc));
                 tremsInDoc.put(docName,temp);
             }
             else{
-                TreeMap<String,String> temp= new TreeMap<>();
-                temp.put(termName,tfInDoc);
+                TreeMap<String,Integer> temp= new TreeMap<>();
+                temp.put(termName, Integer.valueOf(tfInDoc));
                 tremsInDoc.put(docName,temp);
             }
 

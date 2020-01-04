@@ -77,6 +77,13 @@ public class Ranker {
         this.termsQueryFrequency=termsQueryFrequency;
     }
 
+    public void setCorpusSize(int corpusSize) {
+        this.corpusSize = corpusSize;
+    }
+
+    public void setAvergeDocSize(double avergeDocSize) {
+        this.avergeDocSize = avergeDocSize;
+    }
 }
 
 
