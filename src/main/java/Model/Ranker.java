@@ -12,13 +12,13 @@ public class Ranker {
     private TreeMap<String,Integer> termsQueryFrequency;
     private TreeMap<String,TreeMap<String,Integer>> documentTermsFrequency;
     private TreeMap<String,Integer> documentsSize;
-    private int k;
+    private double k;
     private double b;
 
     public Ranker ()
     {
-        k=50;
-        b=0.9;
+        k=1.5;
+        b=0.2;
     }
 
     private double rank(int docLength,TreeMap<String,Integer> termsTF)
@@ -54,6 +54,7 @@ public class Ranker {
                 if((double)entry.getValue()>maxRank)
                 {
                     maxdoc=(String)entry.getKey();
+                    maxRank=(double) entry.getValue();
                 }
             }
             documentsByRank.addLast(maxdoc);
