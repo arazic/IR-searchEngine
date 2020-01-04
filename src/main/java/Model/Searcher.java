@@ -114,9 +114,8 @@ public class Searcher {
         this.semantic=semantic;
         //TreeMap<String, Integer> termsQuery = parser.parseQuery(query, stemming); //tremName, tf in query
         TreeMap<String,Integer> termsQuery = new TreeMap<>();
-        termsQuery.put("mutual",1);
-        termsQuery.put("fund",1);
-        termsQuery.put("predictors",1);
+        termsQuery.put("orphan",1);
+        termsQuery.put("drugs",1);
         if (semantic) {
             TreeMap<String, Integer> semanticTerms = getWords(termsQuery);
             termsQuery.putAll(semanticTerms);
