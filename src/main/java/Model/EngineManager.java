@@ -1,6 +1,9 @@
 package Model;
 
 
+import javafx.util.Pair;
+
+import java.util.LinkedList;
 import java.util.TreeMap;
 
 public class EngineManager {
@@ -20,7 +23,7 @@ public class EngineManager {
         this.posting= new Posting(postingPath, isStemming);
         this.parse= new Parse(posting, isStemming);
         this.readFile= new ReadFile(corpusPath, parse);
-        this.searcher= new Searcher(parse);
+        this.searcher= new Searcher(parse,isStemming,postingPath);
         Indexer.initIndexer(postingPath,isStemming);
 
     }
@@ -32,7 +35,7 @@ public class EngineManager {
         this.posting= new Posting(postingPath, isStemming);
         this.parse= new Parse(posting, isStemming);
         this.readFile= new ReadFile(corpusPath, parse);
-        this.searcher= new Searcher(parse);
+        this.searcher= new Searcher(parse,isStemming,postingPath);
         Indexer.initIndexer(postingPath,isStemming);
         readFile.readStopWordsNoRunning();
 
@@ -93,17 +96,17 @@ public class EngineManager {
     public static TreeMap<String, String> getTermsDic(){
         return Indexer.getTermsDic();
     }
-
     public void reset() {
         posting.reset();
     }
     public int totalDocNum(){
         return readFile.getTotalDocNum();
     }
-
-    public void search(String currentQuery, boolean isStemming, boolean isSemantic) {
-        searcher.search(postingPath, currentQuery,isStemming, isSemantic);
-
+    public LinkedList<Pair<String,String>> search(String currentQuery, boolean isStemming, boolean isSemantic) {
+        return searcher.search(currentQuery,isStemming, isSemantic);
+    }
+    public void searchQueriesFile(String path, boolean isStemming, boolean isSemantic) {
+        searcher.readQueriesFromData(path,isStemming,isSemantic,postingPath);
     }
 }
 

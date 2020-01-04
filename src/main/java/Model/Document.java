@@ -13,6 +13,8 @@ public class Document {
     private int maxTerm;
     private int uniqeTermsNum;
     private int totalTerms;
+
+
     private String[] topEntities;
 
     public Document()
@@ -33,7 +35,6 @@ public class Document {
     public int getUniqeTermsNum() {
         return uniqeTermsNum;
     }
-
 
 
     public int getTotalTerms()
@@ -67,5 +68,16 @@ public class Document {
     public void setEntities(String[] entities)
     {
        topEntities=entities;
+    }
+
+    public String getTopEntitiesToPosting() {
+        String ans="";
+        for (int i=0; i<this.topEntities.length; i++){
+            if(topEntities[i]!=null){
+                ans= ans+ topEntities[i] +"|";
+            }
+        }
+        return ans;
+
     }
 }

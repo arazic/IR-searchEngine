@@ -226,10 +226,6 @@ public class Parse {
         updateDoc();
     }
 
-
-
-
-
     private void updateDoc() {
         currDoc.setTotalTerms(totalTermsInDoc);
         currDoc.setMaxTerm(maxFreqTermInDoc);
@@ -245,7 +241,7 @@ public class Parse {
     {
        String[] topEntities = new String[5];
        int counter=0;
-       while (counter<5 && entities.isEmpty())
+       while (counter<5 && !entities.isEmpty())
        {
            int maxFrequency=0;
            String entity="";

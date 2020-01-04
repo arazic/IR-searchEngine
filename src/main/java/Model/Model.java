@@ -1,11 +1,10 @@
 package Model;//package PACKAGE_NAME;
 
-import java.io.File;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import javafx.util.Pair;
+
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Date;
+import java.util.LinkedList;
 import java.util.Observable;
 import java.util.TreeMap;
 
@@ -19,6 +18,7 @@ public class Model extends Observable
     public TreeMap<String, String> terms;
     public int totalDocNum;
     public String totalTime;
+    public LinkedList<Pair<String,String>> currTop50;
 
     public void startEngine(String corpusPath,String postingPath,boolean isStemming){
         long millis=System.currentTimeMillis();
@@ -87,14 +87,25 @@ public class Model extends Observable
 
     }
 
-    public void runQuery(String currentQuery, boolean isStemming, boolean isSenactic) {
+    public void runQuery(String currentQuery, boolean isStemming, boolean isSemantic) {
         if(engineManager==null){
             setChanged();
             notifyObservers("notPreparedToSearch");
         }
         else{
-            engineManager.search(currentQuery, isStemming, isSenactic);
+            currTop50 = engineManager.search(currentQuery, isStemming, isSemantic);
+            setChanged();
+            notifyObservers("answerSearch");
+        }
+    }
 
+    public void runQueriesFile(String pathQuery, boolean isStemming, boolean isSemantic) {
+        if(engineManager==null){
+            setChanged();
+            notifyObservers("notPreparedToSearch");
+        }
+        else{
+            engineManager.searchQueriesFile(pathQuery,isStemming,isSemantic);
         }
     }
 }

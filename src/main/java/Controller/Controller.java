@@ -38,8 +38,12 @@ public class Controller extends Observable implements Observer {
                     model.reset();
                     break;
                 case "runQuery":
-                    model.runQuery(view.getCurrentQuery(), view.isStemming, view.isSenactic);
+                    model.runQuery(view.getCurrentQuery(), view.isStemming, view.isSemantic);
                     break;
+                case "runQueries":
+                    model.runQueriesFile(view.queriesPath, view.isStemming, view.isSemantic);
+                    break;
+
             }
         }
         else if( o == model){
@@ -53,6 +57,11 @@ public class Controller extends Observable implements Observer {
                     break;
                 case "notPreparedToSearch":
                     view.notPreparedToSearch();
+                    break;
+                case "answerSearch":
+                    view.showEngineAnswers(model.currTop50);
+                    break;
+
             }
 
         }

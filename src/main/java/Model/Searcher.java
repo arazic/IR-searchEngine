@@ -1,8 +1,8 @@
 package Model;
 
+import javafx.util.Pair;
 import org.apache.commons.lang3.StringUtils;
 
-import java.awt.*;
 import java.io.*;
 import java.util.*;
 
@@ -13,16 +13,49 @@ public class Searcher {
     boolean semantic;
     TreeMap<String, TreeMap<String, Integer>> tremsInDoc ; // docName, <Term-"tf">
     TreeMap<String, Integer> termsDf ; // Term, df-how manyDocs
-    TreeMap<String, Integer> allRelevantDocs ; // docName, size - |d|
+    TreeMap<String, Integer> allRelevantDocsSize; // docName, size - |d|
+    HashMap<String, String> allRelevantDocsEntyies; // docName,Entities
+    HashSet<String> legalEntities;
     int totalCurposDoc ;
     double averageDocLength ;
+    String postingPath;
 
-    public Searcher(Parse parser) {
+    public Searcher(Parse parser, boolean isStemming,  String postingPath ) {
         ranker = new Ranker();
         this.parser = parser;
+        this.stemming=isStemming;
+        this.postingPath=postingPath;
+        this.legalEntities= new HashSet<>();
+        loadEntities();
     }
 
-    private void handleQueryFromData(StringBuilder query,String postingPath)
+    private void loadEntities() {
+        try {
+
+        String  s="";
+        if(stemming)
+            s="With";
+        else
+            s="No";
+
+        FileReader capitalFile = new FileReader((postingPath) + "/finalPostingCapital"+s+"Stemming.txt");
+        BufferedReader capitalReader = new BufferedReader(capitalFile);
+        String line= capitalReader.readLine();
+
+
+        while (line!=null){
+            String termName= line.substring(0,line.indexOf("!"));
+            if(termName.contains(" "))
+                legalEntities.add(termName);
+                line=capitalReader.readLine();
+        }
+
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    private void handleQueryFromData(StringBuilder query)
     {
         String[] queryData =parseQueryFromData(query);
         int queryID=Integer.parseInt(queryData[0]);
@@ -31,15 +64,15 @@ public class Searcher {
             TreeMap<String, Integer> semanticTerms = getWords(termsQuery);
             termsQuery.putAll(semanticTerms);
         }
-        infoFromPosting(postingPath, termsQuery);
+        infoFromPosting(termsQuery);
         LinkedList<String> rankedDocuments=ranker.rankDocuments();
 
     }
 
     public void readQueriesFromData(String pathToQueries,boolean isStem, boolean isSemantic ,String postingPath)
     {
-        semantic=isSemantic;
-        stemming=isStem;
+        this.semantic=isSemantic;
+        this.stemming=isStem;
         File path= new File(pathToQueries);
         String line;
         StringBuilder sb = new StringBuilder();
@@ -49,7 +82,7 @@ public class Searcher {
             {
                 if(line.equals("</top>")){
                     sb.append(line).append("\n");
-                    handleQueryFromData(sb,postingPath);
+                    handleQueryFromData(sb);
                     sb.setLength(0);
                 }
                 else
@@ -65,7 +98,7 @@ public class Searcher {
     private String[] parseQueryFromData(StringBuilder stringBuilder)
     {
         String text =stringBuilder.toString();
-        String [] tokens=text.split(" ");
+        String [] tokens=StringUtils.split(text," \n");
         String[] queryData= new String[2];
         String query ="";
         int index=0;
@@ -108,26 +141,28 @@ public class Searcher {
         return queryData;
     }
 
-    public void search(String postingPath, String query, boolean stemming, boolean semantic) {
+    public LinkedList<Pair<String,String>> search( String query, boolean stemming, boolean semantic) {
         this.stemming=stemming;
         this.semantic=semantic;
         TreeMap<String, Integer> termsQuery = parser.parseQuery(query, stemming); //tremName, tf in query
- /*       TreeMap<String,Integer> termsQuery = new TreeMap<>();
-        termsQuery.put("mutual",1);
-        termsQuery.put("fund",1);
-        termsQuery.put("predictors",1);*/
         if (semantic) {
             TreeMap<String, Integer> semanticTerms = getWords(termsQuery);
             termsQuery.putAll(semanticTerms);
         }
-        infoFromPosting(postingPath, termsQuery);
+        infoFromPosting(termsQuery);
         LinkedList<String> rankedDocuments=ranker.rankDocuments();
-        System.out.println(rankedDocuments);
+        LinkedList<Pair<String,String>> rankedDocumentsAndEntity= fillEntities(rankedDocuments);
+        return rankedDocumentsAndEntity;
+//        System.out.println(rankedDocuments);
     }
 
-
-    public String getEntities(String docName) {
-        return null;
+    private LinkedList<Pair<String,String>> fillEntities(LinkedList<String> rankedDocuments) {
+        LinkedList<Pair<String,String>> ans=new LinkedList<>();
+        for (int i=0; i<rankedDocuments.size();i++){
+            String entities= allRelevantDocsEntyies.get(rankedDocuments.get(i));
+            ans.add(i,new Pair<>(rankedDocuments.get(i),entities));
+        }
+        return ans;
     }
 
 
@@ -139,11 +174,12 @@ public class Searcher {
         return null;
     }
 
-    public void infoFromPosting(String postingPath, TreeMap<String, Integer> termsQuery) {
+    public void infoFromPosting( TreeMap<String, Integer> termsQuery) {
         try {
             tremsInDoc= new TreeMap<>();
             termsDf= new TreeMap<>();// Term, df-how manyDocs
-            allRelevantDocs = new TreeMap<>(); // docNam
+            allRelevantDocsSize = new TreeMap<>(); // docNam
+            allRelevantDocsEntyies = new HashMap<>(); // docNam
             totalCurposDoc=0;
             averageDocLength=0;
 
@@ -231,7 +267,7 @@ public class Searcher {
             }
 
             rePostingDocs(postingPath);
-            ranker.setData(tremsInDoc, termsDf, allRelevantDocs , termsQuery);
+            ranker.setData(tremsInDoc, termsDf, allRelevantDocsSize, termsQuery);
 
         } catch (FileNotFoundException e) {
             e.printStackTrace();
@@ -256,14 +292,22 @@ public class Searcher {
             BufferedReader bufferedDocs= new BufferedReader(Documents);
             String line= bufferedDocs.readLine();
             while (line!=null) {
-                Set set = allRelevantDocs.entrySet();
+                Set set = allRelevantDocsSize.entrySet();
                 Iterator iterator = set.iterator();
                 Map.Entry entry = (Map.Entry) iterator.next();
                 while (entry!=null) {
                     String docInPosting= line.substring(0,line.indexOf("!"));
+                    if(docInPosting.charAt(0)==' ')
+                        docInPosting= docInPosting.substring(1);
+                    if(docInPosting.charAt(docInPosting.length()-1)==' ')
+                        docInPosting= docInPosting.substring(0, docInPosting.length()-1);
+
                     if (entry.getKey().equals(docInPosting)){
                         String [] parseDoc=  StringUtils.split(line,"!");
-                        allRelevantDocs.put(docInPosting, Integer.valueOf(parseDoc[parseDoc.length-1]));
+                        allRelevantDocsSize.put(docInPosting, Integer.valueOf(parseDoc[3]));
+                        String realEntities= getRealEntities(parseDoc[parseDoc.length-1]);
+                        allRelevantDocsEntyies.put(docInPosting, realEntities);
+                        //allRelevantDocsEntyies.put(docInPosting, parseDoc[parseDoc.length-1]);
                         if(iterator.hasNext())
                             entry = (Map.Entry) iterator.next();
                         else
@@ -290,6 +334,16 @@ public class Searcher {
 
     }
 
+    private String getRealEntities(String s) {
+        String[] entities= StringUtils.split(s, "|");
+        String ans="";
+        for (String suspect: entities){
+            if(legalEntities.contains(suspect))
+                ans= ans+"|"+ suspect;
+        }
+    return ans;
+    }
+
     private void rePostingTerms(String term) {
 
         String[] miniParse= StringUtils.split(term,"!");
@@ -307,7 +361,7 @@ public class Searcher {
             String tfInDoc=StringUtils.substring(splitDocs[i],splitDocs[i].indexOf(":")+1);
             if(tfInDoc.charAt(tfInDoc.length()-1)==']')
                 tfInDoc= StringUtils.substring(tfInDoc,0,tfInDoc.length()-1);
-            allRelevantDocs.put(docName, 0);
+            allRelevantDocsSize.put(docName, 0);
             if(tremsInDoc.containsKey(docName)){
                 TreeMap<String,Integer> temp= tremsInDoc.get(docName);
                 temp.put(termName, Integer.valueOf(tfInDoc));

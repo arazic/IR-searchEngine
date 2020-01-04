@@ -46,7 +46,7 @@ public class Posting {
                 else
                     writerToPostingDoc = new BufferedWriter(new FileWriter(postingPath + "/postingDocumentsNoStemming.txt"));
             }
-                        String toAdd = document.getDocName() + "!" + document.getMaxTerm() + "!" + document.getUniqeTermsNum()+ "!"+ document.getTotalTerms();
+                        String toAdd = document.getDocName() + "!" + document.getMaxTerm() + "!" + document.getUniqeTermsNum()+ "!"+ document.getTotalTerms()+ "!"+document.getTopEntitiesToPosting();
                         writerToPostingDoc.write(toAdd);
                         writerToPostingDoc.newLine();
                         Indexer.addDoc(document.getDocName(), String.valueOf(docFileCounter+1));
