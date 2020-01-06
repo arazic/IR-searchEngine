@@ -61,8 +61,8 @@ public class Posting {
     }
 
     public void postingTerms(HashMap<String, Integer> docTerms, String docName) {
-        if (!docTerms.isEmpty()) {
-
+        if (!docTerms.isEmpty())
+        {
             if (docCounter <= chunkPostingSIZE) {
                 for (Map.Entry entry : docTerms.entrySet()) {
 
@@ -123,6 +123,7 @@ public class Posting {
                         writerToPostingTerm = new BufferedWriter(new FileWriter(postingPath + "/postingTerm!S" + chunksCount + ".txt"));
                     else
                         writerToPostingTerm = new BufferedWriter(new FileWriter(postingPath + "/postingTerm!R" + chunksCount + ".txt"));
+
                     TreeMap<String,String> sortedTerms= new TreeMap<>(mergeTerms);
                     for (Map.Entry entry : sortedTerms.entrySet()) {
                         writerToPostingTerm.append(entry.getKey().toString()+ entry.getValue().toString());
@@ -132,10 +133,12 @@ public class Posting {
                             writerToPostingTerm.flush();
                             counterWriter=0;
                         }
+
                     }
                     if(counterWriter< writeToBuff) {
                         writerToPostingTerm.flush();
                     }
+
                     docCounter = 0;
                     mergeTerms.clear();
                     chunksCount++;
