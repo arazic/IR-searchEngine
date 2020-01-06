@@ -8,7 +8,6 @@ public class Indexer
 {
 
         private static TreeMap<String, String> termsDic; // margePostingTerm
-        private static HashMap<String, String> docDic; // docName, <postingFileName><postingPlaceInFile>
         private static String postingPath;
         private static boolean isStemming;
 
@@ -16,18 +15,10 @@ public class Indexer
 
         public static void initIndexer(String post, boolean isStemm){
             termsDic= new TreeMap<>();
-            docDic= new HashMap<>();
             postingPath=post;
             isStemming=isStemm;
         }
 
-
-    /**
-     * add doc to the final DocsDictionary
-     */
-        public static void addDoc(String docName, String pointer){
-            docDic.put(docName,pointer);
-        }
 
     /**
      * add term to the final dictionary

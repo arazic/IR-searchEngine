@@ -295,7 +295,8 @@ public class Searcher {
                 Set set = allRelevantDocsSize.entrySet();
                 Iterator iterator = set.iterator();
                 Map.Entry entry = (Map.Entry) iterator.next();
-                while (entry!=null) {
+                while (entry!=null)
+                {
                     String docInPosting= line.substring(0,line.indexOf("!"));
                     if(docInPosting.charAt(0)==' ')
                         docInPosting= docInPosting.substring(1);

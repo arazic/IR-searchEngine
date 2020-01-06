@@ -1105,6 +1105,14 @@ public class Parse {
         while (m.find()) {
             docName =m.group(1);
         }
+        if(docName.charAt(0)==' ')
+        {
+            docName=docName.substring(1);
+        }
+        if(docName.charAt(docName.length()-1)==' ')
+        {
+            docName=docName.substring(0,docName.length()-1);
+        }
         currDoc.setDocName(docName);
     }
 
