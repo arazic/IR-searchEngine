@@ -50,7 +50,7 @@ public class Parse {
 
     private void insertToAllDocTerms(String term)
     {
-        if (term.isEmpty() || term.contains(">")||term.contains("<")) {
+        if (term.isEmpty() || term.contains(">")||term.contains("<") || stopWords.contains(term)) {
             return;
         }
         if (term.charAt(0) > 'Z' || term.charAt(0) < 'A') // is lowerCase
@@ -99,6 +99,14 @@ public class Parse {
     {
         allDocTerms.clear();
         entities.clear();
+        currIndex=0;
+        totalTermsInDoc=0;
+        maxFreqTermInDoc=0;
+    }
+
+    private void cleanQuery()
+    {
+        allDocTerms.clear();
         currIndex=0;
         totalTermsInDoc=0;
         maxFreqTermInDoc=0;
@@ -222,12 +230,9 @@ public class Parse {
             }
             allDocTerms=termsAfterStemming;
         }
+        rankEntitis();
         updateDoc();
     }
-
-
-
-
 
     private void updateDoc() {
         currDoc.setTotalTerms(totalTermsInDoc);
@@ -242,14 +247,26 @@ public class Parse {
 
     private String[]  setTopEntities()
     {
-       String[] topEntities = new String[5];
+
+       if(entities.size()<9)
+       {
+           String[] topEntities = new String[entities.size()];
+           int i=0;
+           for (String entity:entities.keySet())
+           {
+               topEntities[i]=entity;
+               i++;
+           }
+           return topEntities;
+       }
+       String[] topEntities = new String[8];
        int counter=0;
-       while (counter<5 && !entities.isEmpty())
+       while (counter<8 && !entities.isEmpty())
        {
            int maxFrequency=0;
            String entity="";
-           for (Map.Entry entry:entities.entrySet()
-                ) {
+           for (Map.Entry entry:entities.entrySet())
+           {
                if((int)entry.getValue()>maxFrequency)
                {
                    entity=(String)entry.getKey();
@@ -265,10 +282,14 @@ public class Parse {
 
     private void rankEntitis()
     {
-        for (String entity:entities.keySet()
-             ) {
+        for (String entity:entities.keySet())
+        {
             String[] splitName=entity.split(" ");
             int addFrequency=0;
+            if(splitName.length<4)
+            {
+                addFrequency=addFrequency+3;
+            }
             for (int i=0; i<splitName.length;i++)
             {
                 if(allDocTerms.containsKey(splitName[i]))
@@ -976,6 +997,11 @@ public class Parse {
     private void entityHandler(String cleanToken)
     {
         String concat=cleanToken+" ";
+        if(!stopWords.contains(cleanToken.toLowerCase()))
+        {
+            insertToAllDocTerms(cleanToken);
+        }
+        int counter=1;
         while((currIndex<tokens.length)&& (tokens[currIndex].charAt(0)>='A' && tokens[currIndex].charAt(0)<='Z' && (!monthMap.containsKey(tokens[currIndex]))))
         {
             String token=tokens[currIndex];
@@ -987,25 +1013,29 @@ public class Parse {
             if(token.charAt(token.length()-1)=='.' || token.charAt(token.length()-1)==',')
             {
                 concat+=clean;
-                insertToAllDocTerms(clean);
                 currIndex++;
+                counter++;
                 break;
             }
             else
             {
                 concat+=cleanWord(tokens[currIndex])+" ";
                 currIndex++;
+                counter++;
             }
         }
         concat=cleanWord(concat);
         insertToAllDocTerms(concat);
-        if(entities.containsKey(concat))
+        if(counter<5)
         {
-            entities.replace(concat,entities.get(concat)+1);
-        }
-        else
-        {
-            entities.put(concat,1);
+            if(entities.containsKey(concat))
+            {
+                entities.replace(concat,entities.get(concat)+1);
+            }
+            else
+            {
+                entities.put(concat,1);
+            }
         }
     }
 
@@ -1159,6 +1189,7 @@ public class Parse {
             allDocTerms=termsAfterStemming;
         }
         TreeMap<String,Integer> terms= new TreeMap<>(allDocTerms);
+        cleanQuery();
         return terms;
     }
 }

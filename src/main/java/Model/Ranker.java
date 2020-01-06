@@ -17,8 +17,16 @@ public class Ranker {
 
     public Ranker ()
     {
-        k=10;
-        b=0.25;
+        k=1.5;
+        b=0.75;
+    }
+
+    public void cleanRanker()
+    {
+        termsDocumentFrequency.clear();
+        termsQueryFrequency.clear();
+        documentTermsFrequency.clear();
+        documentsSize.clear();
     }
 
     private double rank(int docLength,TreeMap<String,Integer> termsTF)
@@ -63,6 +71,7 @@ public class Ranker {
             maxRank=0;
         }
         LinkedList<String> ans = new LinkedList<>(documentsByRank.keySet());
+        cleanRanker();
         return ans;
     }
 

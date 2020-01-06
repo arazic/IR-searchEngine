@@ -5,6 +5,7 @@
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.CheckBox?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.Tab?>
 <?import javafx.scene.control.TabPane?>
 <?import javafx.scene.control.TextField?>
@@ -91,8 +92,8 @@
                                     <columnConstraints>
                                         <ColumnConstraints hgrow="SOMETIMES" maxWidth="144.0" minWidth="10.0" prefWidth="21.0" />
                                         <ColumnConstraints hgrow="SOMETIMES" maxWidth="226.0" minWidth="10.0" prefWidth="226.0" />
-                                        <ColumnConstraints hgrow="SOMETIMES" maxWidth="543.0" minWidth="10.0" prefWidth="543.0" />
-                                        <ColumnConstraints hgrow="SOMETIMES" maxWidth="190.0" minWidth="10.0" prefWidth="11.0" />
+                                        <ColumnConstraints hgrow="SOMETIMES" maxWidth="545.0" minWidth="10.0" prefWidth="545.0" />
+                                        <ColumnConstraints hgrow="SOMETIMES" maxWidth="190.0" minWidth="10.0" prefWidth="12.0" />
                                         <ColumnConstraints hgrow="SOMETIMES" maxWidth="217.0" minWidth="10.0" prefWidth="193.0" />
                                     </columnConstraints>
                                     <rowConstraints>
@@ -107,7 +108,7 @@
                                     </rowConstraints>
                                     <children>
                                         <Label prefHeight="27.0" prefWidth="114.0" text="search engine" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.valignment="CENTER" />
-                                        <Button mnemonicParsing="false" onAction="#run_query" prefHeight="39.0" prefWidth="184.0" text="search" GridPane.columnIndex="4" GridPane.rowIndex="2" />
+                                        <Button fx:id="search" mnemonicParsing="false" onAction="#run_query" prefHeight="39.0" prefWidth="184.0" text="search" GridPane.columnIndex="4" GridPane.rowIndex="2" />
                                         <Label prefHeight="27.0" prefWidth="219.0" text="What you want to look for?" GridPane.columnIndex="1" GridPane.rowIndex="2" />
                                         <Label prefHeight="27.0" prefWidth="242.0" text="The ready queries path" GridPane.columnIndex="1" GridPane.rowIndex="3" />
                                         <TextField fx:id="txtfld_query" GridPane.columnIndex="2" GridPane.rowIndex="2" />
@@ -125,7 +126,6 @@
                                                 <CheckBox fx:id="c_semantic" mnemonicParsing="false" prefHeight="27.0" prefWidth="156.0" text="semantic" GridPane.columnIndex="1" GridPane.halignment="LEFT" />
                                             </children>
                                         </GridPane>
-                                        <Accordion GridPane.columnIndex="2" GridPane.rowIndex="6" />
                                         <GridPane GridPane.columnIndex="4" GridPane.rowIndex="3">
                                             <columnConstraints>
                                                 <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
@@ -135,9 +135,37 @@
                                                 <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                                             </rowConstraints>
                                             <children>
-                                                <Button  fx:id="browserQueries"  mnemonicParsing="false" onAction="#browser_queries" prefHeight="39.0" prefWidth="94.0" text="browse" />
-                                                <Button   fx:id="runTxtQueries" mnemonicParsing="false" onAction="#run_txtQueries" prefHeight="39.0" prefWidth="86.0" text="run" GridPane.columnIndex="1" />
+                                                <Button fx:id="browserQueries" mnemonicParsing="false" onAction="#browser_queries" prefHeight="39.0" prefWidth="94.0" text="browse" />
+                                                <Button fx:id="runTxtQueries" mnemonicParsing="false" onAction="#run_txtQueries" prefHeight="39.0" prefWidth="86.0" text="run" GridPane.columnIndex="1" />
                                             </children>
+                                        </GridPane>
+                                        <GridPane prefHeight="180.0" prefWidth="555.0" GridPane.columnIndex="2" GridPane.rowIndex="6">
+                                            <columnConstraints>
+                                                <ColumnConstraints hgrow="SOMETIMES" maxWidth="132.0" minWidth="10.0" prefWidth="74.0" />
+                                                <ColumnConstraints maxWidth="508.0" minWidth="301.0" prefWidth="394.0" />
+                                                <ColumnConstraints maxWidth="116.0" minWidth="10.0" prefWidth="77.0" />
+                                            </columnConstraints>
+                                            <children>
+                                                <ScrollPane prefHeight="139.0" prefWidth="345.0" GridPane.columnIndex="1" GridPane.rowIndex="6">
+                                                    <content>
+                                                        <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="3238.0" prefWidth="425.0">
+                                                            <children>
+                                                                <Accordion fx:id="docAns" />
+                                                            </children>
+                                                        </AnchorPane>
+                                                    </content>
+                                                </ScrollPane>
+                                    <Label text="your answers:" GridPane.columnIndex="1" GridPane.rowIndex="5" />
+                                            </children>
+                                 <rowConstraints>
+                                    <RowConstraints />
+                                    <RowConstraints />
+                                    <RowConstraints />
+                                    <RowConstraints />
+                                    <RowConstraints />
+                                    <RowConstraints maxHeight="23.0" minHeight="10.0" prefHeight="23.0" />
+                                    <RowConstraints maxHeight="144.0" minHeight="139.0" prefHeight="139.0" />
+                                 </rowConstraints>
                                         </GridPane>
                                     </children>
                                 </GridPane>

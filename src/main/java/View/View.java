@@ -3,25 +3,24 @@ package View;//package PACKAGE_NAME;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
-import javafx.scene.Group;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
-import javafx.scene.text.Font;
 import javafx.stage.DirectoryChooser;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import javafx.util.Pair;
+import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Map;
-import java.util.Observable;
-import java.util.Optional;
-import java.util.TreeMap;
+import java.util.*;
 
 /**
  * View class is part of mvs design pattern- this charge on the gui part
@@ -35,15 +34,19 @@ public class View extends Observable {
     public javafx.scene.control.CheckBox c_semantic;
     public javafx.scene.control.Button showDictionary;
     public javafx.scene.control.Button reset;
+    public javafx.scene.control.Button search;
     public javafx.scene.control.Button browserQueries;
     public javafx.scene.control.Button runTxtQueries;
     public javafx.scene.control.TextField txtfld_query;
     public javafx.scene.control.TextField txtfld_txtQueries;
     public javafx.scene.control.ListView indexerDictionary;
+
+    public Accordion docs_ans;
     public boolean isStemming;
-    public boolean isSenactic;
+    public boolean isSemantic;
     public String loadDic;
     public String currentQuery;
+    public String queriesPath;
     public boolean loadDictionarySuccessfully;
     public TreeMap<String,String> termsDictionary;
 
@@ -57,7 +60,6 @@ public class View extends Observable {
             txtfld_corpusPath.clear();
             File corpusFile=  selectedDirectory.getAbsoluteFile();
             txtfld_corpusPath.appendText(corpusFile.getAbsolutePath());
-           // System.out.println(corpusFile.getAbsolutePath());
         }
     }
 
@@ -70,7 +72,6 @@ public class View extends Observable {
             txtfld_postingPath.clear();
             File corpusFile=  selectedDirectory.getAbsoluteFile();
             txtfld_postingPath.appendText(corpusFile.getAbsolutePath());
-           // System.out.println(corpusFile.getAbsolutePath());
         }
     }
 
@@ -201,17 +202,15 @@ public class View extends Observable {
     }
 
     public void browser_queries(ActionEvent actionEvent) {
-        DirectoryChooser chooser = new DirectoryChooser();
+        FileChooser chooser= new FileChooser();
         chooser.setInitialDirectory(new File(System.getProperty("user.home")));
-        File selectedDirectory = chooser.showDialog(null);
+        File selectedDirectory = chooser.showOpenDialog(null);
 
         if(selectedDirectory!=null){
             txtfld_txtQueries.clear();
             File corpusFile=  selectedDirectory.getAbsoluteFile();
             txtfld_txtQueries.appendText(corpusFile.getAbsolutePath());
         }
-
-
     }
 
     public void run_query(ActionEvent actionEvent) {
@@ -231,9 +230,9 @@ public class View extends Observable {
                 isStemming=false;
 
             if(c_semantic.isSelected())
-                isSenactic=true;
+                isSemantic =true;
             else
-                isSenactic=false;
+                isSemantic =false;
 
             setChanged();
             notifyObservers("runQuery");
@@ -241,6 +240,29 @@ public class View extends Observable {
     }
 
     public void run_txtQueries(ActionEvent actionEvent) {
+        if(txtfld_txtQueries.getText().isEmpty()){
+            Alert alert = new Alert(Alert.AlertType.WARNING);
+            alert.setTitle("Be Attention");
+            alert.setHeaderText("please insert query!\n");
+            alert.showAndWait();
+        }
+        else
+        {
+            queriesPath= txtfld_txtQueries.getText();
+            if(c_steeming.isSelected())
+                isStemming=true;
+            else
+                isStemming=false;
+
+            if(c_semantic.isSelected())
+                isSemantic =true;
+            else
+                isSemantic =false;
+
+            setChanged();
+            notifyObservers("runQueries");
+        }
+
     }
 
     public String getCurrentQuery() {
@@ -255,78 +277,57 @@ public class View extends Observable {
     }
 
 
-    //++++++++++++++++++++++++++++++++
 
-   /* public void goToMyVacation(ActionEvent actionEvent) throws IOException {
-        if (controller.getVacation4UManager().getRegisteredUser() == null || (!controller.getVacation4UManager().getRegisteredUser().isLogIn())) {
-            try {
-                Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-                alert.setTitle("Be Attention");
-                alert.setHeaderText("You need to be logged in to see your vacations\n");
-                alert.setContentText("Do you want to log in?");
-                Optional<ButtonType> result = alert.showAndWait();
-                if (result.get() == ButtonType.OK) {
-                    // ... user chose OK
-                    FXMLLoader fxmlLoader = new FXMLLoader();
-                    Parent root = fxmlLoader.load(getClass().getClassLoader().getResource("logIn.fxml").openStream());
-                    controller.getVacation4UManager().getPagesApp().add("logIn");
-                    Scene scene = new Scene(root, 700, 500);
-                    Stage stage = (Stage) btn_SellVacation.getScene().getWindow();
-                    scene.getStylesheets().add(getClass().getClassLoader().getResource("MenuStyle.css").toExternalForm());
-                    stage.setTitle("Log in");
-                    stage.setScene(scene);
-                    stage.show();
-                } else {
-                    FXMLLoader fxmlLoader = new FXMLLoader();
-                    Parent root = fxmlLoader.load(getClass().getClassLoader().getResource("homeMenu.fxml").openStream());
-                    controller.getVacation4UManager().getPagesApp().add("homeMenu");
-                    Scene scene = new Scene(root, 700, 500);
-                    Stage stage = (Stage) btn_SellVacation.getScene().getWindow();
-                    scene.getStylesheets().add(getClass().getClassLoader().getResource("MenuStyle.css").toExternalForm());
-                    stage.setTitle("Vacation 4U");
-                    stage.setScene(scene);
-                    stage.show();
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        } else {
-            FXMLLoader fxmlLoader = new FXMLLoader();
-            Parent root = fxmlLoader.load(getClass().getClassLoader().getResource("myVacations.fxml").openStream());
-            controller.getVacation4UManager().getPagesApp().add("myVacations");
-            Scene scene = new Scene(root, 700, 500);
-            scene.getStylesheets().add(getClass().getClassLoader().getResource("MenuStyle.css").toExternalForm());
-            Stage stage = (Stage) btn_SellVacation.getScene().getWindow();
-            String title = controller.getVacation4UManager().getRegisteredUser().getFirstName() + " " + controller.getVacation4UManager().getRegisteredUser().getLastName() + " Vacations";
-            stage.setTitle(title);
-            stage.setScene(scene);
-            stage.show();
-            //personalHome(scene);
-            controller.setUserVacations(controller.getVacation4UManager().getRegisteredUser());
-            TitledPane[] tps = new TitledPane[controller.getVacation4UManager().getRegisteredUser().getMyVacations().size()];
-            for (int i = 0; i < controller.getVacation4UManager().getRegisteredUser().getMyVacations().size(); i++) {
-                my_Vacations = (Accordion) scene.lookup("#user_Vacations");
-                TextArea TA = new TextArea(controller.getVacation4UManager().getRegisteredUser().getMyVacations().get(i).toString());
-                Button Bt = new Button(controller.getVacation4UManager().getRegisteredUser().getMyVacations().get(i).getFlightNum());
-                GridPane GP = new GridPane();
-                GP.add(TA, 0, 0);
-                GP.add(Bt, 1, 0);
-                tps[i] = new TitledPane(controller.getVacation4UManager().getRegisteredUser().getMyVacations().get(i).getFlightNum(), GP);
-            }
-            if (tps.length > 0) {
-                my_Vacations.getPanes().addAll(tps);
-                my_Vacations.setExpandedPane(tps[0]);
-            }
-            root = scene.getRoot();
-            stage.setScene(scene);
-            stage.show();
+    public void showEngineAnswers(LinkedList<Pair<String,String>> currTop50) {
+        docs_ans=null;
+        TitledPane[] tps;
+        Scene scene = search.getScene();
+        Stage stage = (Stage) search.getScene().getWindow();
+        if(currTop50==null)
+        {
+            Alert alert = new Alert(Alert.AlertType.WARNING);
+            alert.setTitle("Be Attention");
+            alert.setHeaderText("There are no document related to the query, check if the spelling is correct or try different query !\n\n\n");
+            alert.showAndWait();
+            return;
         }
-    }*/
-        //+++++++++++++++++++++++++++++++
+        tps = new TitledPane[currTop50.size()];
+        for (int i = 0; i < currTop50.size(); i++) {
+            docs_ans = (Accordion) scene.lookup("#docAns");
+            Button Bt = new Button("show entities from doc num "+(i+1)+" " + currTop50.get(i).getKey());
+            Bt.setOnAction(new EventHandler<ActionEvent>() {
+                    @Override
+                    public void handle(ActionEvent e) {
+                        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                        alert.setTitle("Top Entities");
+                        String [] title= StringUtils.split(Bt.getText()," ");
+                        String entities= currTop50.get(Integer.parseInt(title[5])-1).getValue();
+                        if(entities!=null) {
+                            entities = StringUtils.replace(entities, "|", " ,");
+                            if(entities!="" && entities.charAt(0)==' '&& entities.charAt(1)==',')
+                                entities= StringUtils.substring(entities,2);
+                            entities = StringUtils.substring(entities, 0, entities.length() - 1);
+                            alert.setHeaderText("Top Entities in " + title[6] + " :" + entities);
+                            alert.showAndWait();
+                        }
+                    }
+                });
 
-
-
-
+            GridPane GP = new GridPane();
+            GP.add(Bt, 1, 0);
+            tps[i] = new TitledPane(currTop50.get(i).getKey(), GP);
+        }
+        if (tps.length > 0) {
+            for (int i=0; i<50;i++){
+                if(docs_ans.getPanes().size()!=0)
+                  docs_ans.getPanes().remove(49-i);
+            }
+            docs_ans.getPanes().addAll(tps);
+            docs_ans.setExpandedPane(tps[0]);
+        }
+        stage.setScene(scene);
+        stage.show();
+    }
 
 
 }

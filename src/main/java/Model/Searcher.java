@@ -1,11 +1,10 @@
 package Model;
 
+import javafx.util.Pair;
 import org.apache.commons.lang3.StringUtils;
 
-import java.awt.*;
 import java.io.*;
 import java.util.*;
-import java.util.List;
 
 public class Searcher {
     Ranker ranker;
@@ -14,16 +13,56 @@ public class Searcher {
     boolean semantic;
     TreeMap<String, TreeMap<String, Integer>> tremsInDoc ; // docName, <Term-"tf">
     TreeMap<String, Integer> termsDf ; // Term, df-how manyDocs
-    TreeMap<String, Integer> allRelevantDocs ; // docName, size - |d|
+    TreeMap<String, Integer> allRelevantDocsSize; // docName, size - |d|
+    HashMap<String, String> allRelevantDocsEntyies; // docName,Entities
+    HashSet<String> legalEntities;
     int totalCurposDoc ;
     double averageDocLength ;
+    String postingPath;
+    boolean loadEntities;
+    private BufferedWriter queriesWriter;
 
-    public Searcher(Parse parser) {
+    public Searcher(Parse parser, boolean isStemming,  String postingPath ) {
         ranker = new Ranker();
         this.parser = parser;
+        this.stemming=isStemming;
+        this.postingPath=postingPath;
+        this.legalEntities= new HashSet<>();
+        loadEntities= false;
+        try {
+            queriesWriter=new  BufferedWriter(new FileWriter((postingPath+"/queriesAnswers.txt")));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
-    private void handleQueryFromData(StringBuilder query,String postingPath)
+    private void loadEntities() {
+        try {
+
+        String  s="";
+        if(stemming)
+            s="With";
+        else
+            s="No";
+
+        FileReader capitalFile = new FileReader((postingPath) + "/finalPostingCapital"+s+"Stemming.txt");
+        BufferedReader capitalReader = new BufferedReader(capitalFile);
+        String line= capitalReader.readLine();
+
+
+        while (line!=null){
+            String termName= line.substring(0,line.indexOf("!"));
+            if(termName.contains(" "))
+                legalEntities.add(termName);
+                line=capitalReader.readLine();
+        }
+
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    private void handleQueryFromData(StringBuilder query)
     {
         String[] queryData =parseQueryFromData(query);
         int queryID=Integer.parseInt(queryData[0]);
@@ -32,15 +71,21 @@ public class Searcher {
             TreeMap<String, Integer> semanticTerms = getWords(termsQuery);
             termsQuery.putAll(semanticTerms);
         }
-        infoFromPosting(postingPath, termsQuery);
+        infoFromPosting(termsQuery);
         LinkedList<String> rankedDocuments=ranker.rankDocuments();
+        writeQueryAnswerToFile(queryID,rankedDocuments);
 
     }
 
     public void readQueriesFromData(String pathToQueries,boolean isStem, boolean isSemantic ,String postingPath)
     {
-        semantic=isSemantic;
-        stemming=isStem;
+        if(!loadEntities) {
+            loadEntities();
+            loadEntities= true;
+        }
+
+        this.semantic=isSemantic;
+        this.stemming=isStem;
         File path= new File(pathToQueries);
         String line;
         StringBuilder sb = new StringBuilder();
@@ -50,7 +95,7 @@ public class Searcher {
             {
                 if(line.equals("</top>")){
                     sb.append(line).append("\n");
-                    handleQueryFromData(sb,postingPath);
+                    handleQueryFromData(sb);
                     sb.setLength(0);
                 }
                 else
@@ -66,7 +111,7 @@ public class Searcher {
     private String[] parseQueryFromData(StringBuilder stringBuilder)
     {
         String text =stringBuilder.toString();
-        String [] tokens=text.split(" ");
+        String [] tokens=StringUtils.split(text," \n");
         String[] queryData= new String[2];
         String query ="";
         int index=0;
@@ -109,22 +154,40 @@ public class Searcher {
         return queryData;
     }
 
-    public void search(String postingPath, String query, boolean stemming, boolean semantic) {
+    public LinkedList<Pair<String,String>> search( String query, boolean stemming, boolean semantic) {
         this.stemming=stemming;
         this.semantic=semantic;
+        if(!loadEntities) {
+            loadEntities();
+            loadEntities= true;
+        }
         TreeMap<String, Integer> termsQuery = parser.parseQuery(query, stemming); //tremName, tf in query
-        if (semantic) {
+        if (semantic)
+        {
             TreeMap<String, Integer> semanticTerms = getWords(termsQuery);
             termsQuery.putAll(semanticTerms);
         }
-        infoFromPosting(postingPath, termsQuery);
+        infoFromPosting(termsQuery);
+        if(allRelevantDocsSize.isEmpty())
+        {
+            return null;
+        }
         LinkedList<String> rankedDocuments=ranker.rankDocuments();
-        System.out.println(rankedDocuments);
+        double doubleID=(Math.random()*((999-100)+1))+100;
+        int id=(int)doubleID;
+        writeQueryAnswerToFile(id,rankedDocuments);
+        LinkedList<Pair<String,String>> rankedDocumentsAndEntity= fillEntities(rankedDocuments);
+        termsQuery.clear();
+        return rankedDocumentsAndEntity;
     }
 
-
-    public String getEntities(String docName) {
-        return null;
+    private LinkedList<Pair<String,String>> fillEntities(LinkedList<String> rankedDocuments) {
+        LinkedList<Pair<String,String>> ans=new LinkedList<>();
+        for (int i=0; i<rankedDocuments.size();i++){
+            String entities= allRelevantDocsEntyies.get(rankedDocuments.get(i));
+            ans.add(i,new Pair<>(rankedDocuments.get(i),entities));
+        }
+        return ans;
     }
 
 
@@ -136,11 +199,29 @@ public class Searcher {
         return null;
     }
 
-    public void infoFromPosting(String postingPath, TreeMap<String, Integer> termsQuery) {
+
+    public void writeQueryAnswerToFile(int queryID, List<String> documents)
+    {
+        try {
+            for (String document :documents)
+            {
+                String ans =queryID+" 0 "+document+" 1  42.38 mt";
+                queriesWriter.append(ans);
+                queriesWriter.newLine();
+            }
+            queriesWriter.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    public void infoFromPosting( TreeMap<String, Integer> termsQuery) {
         try {
             tremsInDoc= new TreeMap<>();
             termsDf= new TreeMap<>();// Term, df-how manyDocs
-            allRelevantDocs = new TreeMap<>(); // docNam
+            allRelevantDocsSize = new TreeMap<>(); // docNam
+            allRelevantDocsEntyies = new HashMap<>(); // docNam
             totalCurposDoc=0;
             averageDocLength=0;
 
@@ -150,20 +231,20 @@ public class Searcher {
             else
                 s="No";
 
-            FileReader numberFile = new FileReader((postingPath) + "/finalPostingNumbers"+s+"Stemming.txt");
-            FileReader capitalFile = new FileReader((postingPath) + "/finalPostingCapital"+s+"Stemming.txt");
-            FileReader lowerFile1 = new FileReader((postingPath) + "/finalPostingLowert"+s+"StemmingD.txt");
-            FileReader lowerFile2 = new FileReader((postingPath) + "/finalPostingLowert"+s+"StemmingP.txt");
-            FileReader lowerFile3 = new FileReader((postingPath) + "/finalPostingLowert"+s+"StemmingZ.txt");
-
-            BufferedReader lowerReader1 = new BufferedReader(lowerFile1);
-            BufferedReader lowerReader2 = new BufferedReader(lowerFile2);
-            BufferedReader lowerReader3 = new BufferedReader(lowerFile3);
-            BufferedReader numberReader = new BufferedReader(numberFile);
-            BufferedReader capitalReader = new BufferedReader(capitalFile);
 
 
             for (String term : termsQuery.keySet()) {
+                FileReader numberFile = new FileReader((postingPath) + "/finalPostingNumbers"+s+"Stemming.txt");
+                FileReader capitalFile = new FileReader((postingPath) + "/finalPostingCapital"+s+"Stemming.txt");
+                FileReader lowerFile1 = new FileReader((postingPath) + "/finalPostingLowert"+s+"StemmingD.txt");
+                FileReader lowerFile2 = new FileReader((postingPath) + "/finalPostingLowert"+s+"StemmingP.txt");
+                FileReader lowerFile3 = new FileReader((postingPath) + "/finalPostingLowert"+s+"StemmingZ.txt");
+
+                BufferedReader lowerReader1 = new BufferedReader(lowerFile1);
+                BufferedReader lowerReader2 = new BufferedReader(lowerFile2);
+                BufferedReader lowerReader3 = new BufferedReader(lowerFile3);
+                BufferedReader numberReader = new BufferedReader(numberFile);
+                BufferedReader capitalReader = new BufferedReader(capitalFile);
                 if (term.toUpperCase().equals(term)){
                     String line= capitalReader.readLine();
                     while (line!=null){
@@ -226,10 +307,11 @@ public class Searcher {
                     }
                 }
             }
-
-            rePostingDocs(postingPath);
-            ranker.setData(tremsInDoc, termsDf, allRelevantDocs , termsQuery);
-
+            if(!allRelevantDocsSize.isEmpty())
+            {
+                rePostingDocs(postingPath);
+                ranker.setData(tremsInDoc, termsDf, allRelevantDocsSize, termsQuery);
+            }
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {
@@ -253,24 +335,23 @@ public class Searcher {
             BufferedReader bufferedDocs= new BufferedReader(Documents);
             String line= bufferedDocs.readLine();
             while (line!=null) {
-                Set set = allRelevantDocs.entrySet();
+                Set set = allRelevantDocsSize.entrySet();
                 Iterator iterator = set.iterator();
                 Map.Entry entry = (Map.Entry) iterator.next();
                 while (entry!=null)
                 {
                     String docInPosting= line.substring(0,line.indexOf("!"));
-                    String entryDoc=(String)entry.getKey();
                     if(docInPosting.charAt(0)==' ')
-                    {
-                        docInPosting=docInPosting.substring(1);
-                    }
+                        docInPosting= docInPosting.substring(1);
                     if(docInPosting.charAt(docInPosting.length()-1)==' ')
-                    {
-                        docInPosting=docInPosting.substring(0,docInPosting.length()-1);
-                    }
-                    if (entryDoc.equals(docInPosting)){
+                        docInPosting= docInPosting.substring(0, docInPosting.length()-1);
+
+                    if (entry.getKey().equals(docInPosting)){
                         String [] parseDoc=  StringUtils.split(line,"!");
-                        allRelevantDocs.put(docInPosting, Integer.valueOf(parseDoc[parseDoc.length-1]));
+                        allRelevantDocsSize.put(docInPosting, Integer.valueOf(parseDoc[3]));
+                        String realEntities= getRealEntities(parseDoc[parseDoc.length-1]);
+                        allRelevantDocsEntyies.put(docInPosting, realEntities);
+                        //allRelevantDocsEntyies.put(docInPosting, parseDoc[parseDoc.length-1]);
                         if(iterator.hasNext())
                             entry = (Map.Entry) iterator.next();
                         else
@@ -297,9 +378,18 @@ public class Searcher {
 
     }
 
-    
-    private void rePostingTerms(String term)
-    {
+    private String getRealEntities(String s) {
+        String[] entities= StringUtils.split(s, "|");
+        String ans="";
+        for (String suspect: entities){
+            if(legalEntities.contains(suspect.toUpperCase()))
+                ans= ans+"|"+ suspect;
+        }
+    return ans;
+    }
+
+    private void rePostingTerms(String term) {
+
         String[] miniParse= StringUtils.split(term,"!");
         String termName= miniParse[0];
 
@@ -315,7 +405,7 @@ public class Searcher {
             String tfInDoc=StringUtils.substring(splitDocs[i],splitDocs[i].indexOf(":")+1);
             if(tfInDoc.charAt(tfInDoc.length()-1)==']')
                 tfInDoc= StringUtils.substring(tfInDoc,0,tfInDoc.length()-1);
-            allRelevantDocs.put(docName, 0);
+            allRelevantDocsSize.put(docName, 0);
             if(tremsInDoc.containsKey(docName)){
                 TreeMap<String,Integer> temp= tremsInDoc.get(docName);
                 temp.put(termName, Integer.valueOf(tfInDoc));
