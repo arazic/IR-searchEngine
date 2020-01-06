@@ -53,7 +53,6 @@ public class Parse {
         if (term.isEmpty() || term.contains(">")||term.contains("<")) {
             return;
         }
-        totalTermsInDoc++;
         if (term.charAt(0) > 'Z' || term.charAt(0) < 'A') // is lowerCase
         {
             if (allDocTerms.containsKey(term)) {
@@ -288,6 +287,7 @@ public class Parse {
 
         if(tokens[currIndex].equals("Text"))
             currIndex++;
+        totalTermsInDoc=tokens.length-currIndex;
         while (currIndex < tokens.length)
         {
             boolean cunterFlag=false;

@@ -5,6 +5,7 @@ import org.apache.commons.lang3.StringUtils;
 import java.awt.*;
 import java.io.*;
 import java.util.*;
+import java.util.List;
 
 public class Searcher {
     Ranker ranker;
@@ -296,8 +297,9 @@ public class Searcher {
 
     }
 
-    private void rePostingTerms(String term) {
-
+    
+    private void rePostingTerms(String term)
+    {
         String[] miniParse= StringUtils.split(term,"!");
         String termName= miniParse[0];
 
