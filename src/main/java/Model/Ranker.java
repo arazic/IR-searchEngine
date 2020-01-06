@@ -17,7 +17,7 @@ public class Ranker {
 
     public Ranker ()
     {
-        k=45;
+        k=10;
         b=0.25;
     }
 

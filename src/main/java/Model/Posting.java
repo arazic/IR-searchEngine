@@ -99,7 +99,7 @@ public class Posting {
                         }
                         else
                         {
-                            mergeTerms.put(original, "!" + docs + "!" + df + "!" + freq + "^" + title);
+                            mergeTerms.put(newTerm, "!" + docs + "!" + df + "!" + freq + "^" + title);
                         }
                     }
                     else
@@ -110,7 +110,7 @@ public class Posting {
                         }
                         else
                         {
-                            mergeTerms.put(original, "![" + docName + ":" + newFreq + "]!" + 1 + "!" + newFreq + "^" + title);
+                            mergeTerms.put(newTerm, "![" + docName + ":" + newFreq + "]!" + 1 + "!" + newFreq + "^" + title);
                         }
                     }
                 }
@@ -144,11 +144,40 @@ public class Posting {
                     e.printStackTrace();
                 }
             }
-
         }
     }
 
     public void margeToMainPostingFile() {
+
+        if(!mergeTerms.isEmpty())
+        {
+            try {
+                int counterWriter=0;
+                if(isStemming)
+                    writerToPostingTerm = new BufferedWriter(new FileWriter(postingPath + "/postingTerm!S" + chunksCount + ".txt"));
+                else
+                    writerToPostingTerm = new BufferedWriter(new FileWriter(postingPath + "/postingTerm!R" + chunksCount + ".txt"));
+                TreeMap<String,String> sortedTerms= new TreeMap<>(mergeTerms);
+                for (Map.Entry entry : sortedTerms.entrySet()) {
+                    writerToPostingTerm.append(entry.getKey().toString()+ entry.getValue().toString());
+                    writerToPostingTerm.newLine();
+                    counterWriter++;
+                    if(counterWriter>= writeToBuff) {
+                        writerToPostingTerm.flush();
+                        counterWriter=0;
+                    }
+                }
+                if(counterWriter< writeToBuff) {
+                    writerToPostingTerm.flush();
+                }
+                docCounter = 0;
+                mergeTerms.clear();
+                chunksCount++;
+                writerToPostingTerm.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
         String m;
         String h;
         String k;
