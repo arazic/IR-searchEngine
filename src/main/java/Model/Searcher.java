@@ -4,7 +4,12 @@ import javafx.util.Pair;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.*;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.*;
+
+
 
 public class Searcher {
     Ranker ranker;
@@ -178,11 +183,57 @@ public class Searcher {
 
 
     private TreeMap<String, Integer> getWords(TreeMap<String, Integer> termsQuery) {
+        TreeMap<String, Integer> result= new TreeMap<> ();
+        TreeMap<String, Integer> ans= new TreeMap<> ();
 
-        for (String terms : termsQuery.keySet()) {
-
+        for (String term : termsQuery.keySet()) {
+            String curTerm= term.replace(" ","+");
+            String ansJ= StringUtils.substring(getFromJ(curTerm),1,getFromJ(curTerm).length()-1);
+            for(String jsomAns: ansJ.split("}")){
+                jsomAns=StringUtils.substring(jsomAns,1);
+                ans=cleanAns(jsomAns,curTerm);
+                result.putAll(ans);
+            }
+            System.out.println("************************");
         }
-        return null;
+        return result;
+    }
+
+    private TreeMap<String,Integer> cleanAns(String jsomAns,String curTerm) {
+        TreeMap<String,Integer> ans= new TreeMap<>();
+        jsomAns= StringUtils.substring(jsomAns,1,jsomAns.length()-1);
+        String []parseJson= StringUtils.split(jsomAns,',');
+        String []SynonymTerm= StringUtils.split(parseJson[0],":");
+        String []SynonymScore= StringUtils.split(parseJson[1],":");
+        if(Integer.parseInt(SynonymScore[1])>1500 && !(SynonymTerm[1].equals(curTerm))){
+            ans.put(SynonymTerm[1],Integer.parseInt(SynonymScore[1]));
+        }
+        return ans;
+    }
+
+
+    public String getFromJ(String term){
+        URL currentTermUrl;
+        HttpURLConnection connection;
+        BufferedReader bufferedReader;
+        StringBuilder fromJ = new StringBuilder();
+
+        try {
+            currentTermUrl = new URL("http://api.datamuse.com/words?ml=" + term);
+            connection  = (HttpURLConnection)  currentTermUrl.openConnection();
+            connection.setRequestMethod("GET");
+            bufferedReader = new BufferedReader(new InputStreamReader(connection.getInputStream(), "UTF-8"));
+            String line;
+
+            while ((line = bufferedReader.readLine()) != null)
+                fromJ.append(line);
+            bufferedReader.close();
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return fromJ != null ? fromJ.toString() : null;
     }
 
     public void infoFromPosting( TreeMap<String, Integer> termsQuery) {
@@ -200,20 +251,19 @@ public class Searcher {
             else
                 s="No";
 
-            FileReader numberFile = new FileReader((postingPath) + "/finalPostingNumbers"+s+"Stemming.txt");
-            FileReader capitalFile = new FileReader((postingPath) + "/finalPostingCapital"+s+"Stemming.txt");
-            FileReader lowerFile1 = new FileReader((postingPath) + "/finalPostingLowert"+s+"StemmingD.txt");
-            FileReader lowerFile2 = new FileReader((postingPath) + "/finalPostingLowert"+s+"StemmingP.txt");
-            FileReader lowerFile3 = new FileReader((postingPath) + "/finalPostingLowert"+s+"StemmingZ.txt");
-
-            BufferedReader lowerReader1 = new BufferedReader(lowerFile1);
-            BufferedReader lowerReader2 = new BufferedReader(lowerFile2);
-            BufferedReader lowerReader3 = new BufferedReader(lowerFile3);
-            BufferedReader numberReader = new BufferedReader(numberFile);
-            BufferedReader capitalReader = new BufferedReader(capitalFile);
-
-
             for (String term : termsQuery.keySet()) {
+                FileReader numberFile = new FileReader((postingPath) + "/finalPostingNumbers"+s+"Stemming.txt");
+                FileReader capitalFile = new FileReader((postingPath) + "/finalPostingCapital"+s+"Stemming.txt");
+                FileReader lowerFile1 = new FileReader((postingPath) + "/finalPostingLowert"+s+"StemmingD.txt");
+                FileReader lowerFile2 = new FileReader((postingPath) + "/finalPostingLowert"+s+"StemmingP.txt");
+                FileReader lowerFile3 = new FileReader((postingPath) + "/finalPostingLowert"+s+"StemmingZ.txt");
+
+                BufferedReader lowerReader1 = new BufferedReader(lowerFile1);
+                BufferedReader lowerReader2 = new BufferedReader(lowerFile2);
+                BufferedReader lowerReader3 = new BufferedReader(lowerFile3);
+                BufferedReader numberReader = new BufferedReader(numberFile);
+                BufferedReader capitalReader = new BufferedReader(capitalFile);
+
                 if (term.toUpperCase().equals(term)){
                     String line= capitalReader.readLine();
                     while (line!=null){
