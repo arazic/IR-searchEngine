@@ -25,9 +25,8 @@ public class Controller extends Observable implements Observer {
                     break;
                 case "loadDictionary":
                     TreeMap<String,String> tm=model.loadDictionary(view.loadDic,view.isStemming);
-                    if(tm!=null) {
+                    if(tm!=null)
                         view.SetLoadDictionarySuccessfully(tm);
-                    }
                     else
                         view.SetLoadDictionarySuccessfully(null);
                     break;

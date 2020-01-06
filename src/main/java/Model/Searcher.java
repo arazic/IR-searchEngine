@@ -19,6 +19,7 @@ public class Searcher {
     int totalCurposDoc ;
     double averageDocLength ;
     String postingPath;
+    boolean loadEntities;
 
     public Searcher(Parse parser, boolean isStemming,  String postingPath ) {
         ranker = new Ranker();
@@ -26,7 +27,7 @@ public class Searcher {
         this.stemming=isStemming;
         this.postingPath=postingPath;
         this.legalEntities= new HashSet<>();
-        loadEntities();
+        loadEntities= false;
     }
 
     private void loadEntities() {
@@ -71,6 +72,11 @@ public class Searcher {
 
     public void readQueriesFromData(String pathToQueries,boolean isStem, boolean isSemantic ,String postingPath)
     {
+        if(!loadEntities) {
+            loadEntities();
+            loadEntities= true;
+        }
+
         this.semantic=isSemantic;
         this.stemming=isStem;
         File path= new File(pathToQueries);
@@ -144,6 +150,11 @@ public class Searcher {
     public LinkedList<Pair<String,String>> search( String query, boolean stemming, boolean semantic) {
         this.stemming=stemming;
         this.semantic=semantic;
+        if(!loadEntities) {
+            loadEntities();
+            loadEntities= true;
+        }
+
         TreeMap<String, Integer> termsQuery = parser.parseQuery(query, stemming); //tremName, tf in query
         if (semantic) {
             TreeMap<String, Integer> semanticTerms = getWords(termsQuery);
@@ -339,7 +350,7 @@ public class Searcher {
         String[] entities= StringUtils.split(s, "|");
         String ans="";
         for (String suspect: entities){
-            if(legalEntities.contains(suspect))
+            if(legalEntities.contains(suspect.toUpperCase()))
                 ans= ans+"|"+ suspect;
         }
     return ans;

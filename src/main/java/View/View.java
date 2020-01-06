@@ -297,6 +297,8 @@ public class View extends Observable {
                         String entities= currTop50.get(Integer.parseInt(title[5])-1).getValue();
                         if(entities!=null) {
                             entities = StringUtils.replace(entities, "|", " ,");
+                            if(entities!="" && entities.charAt(0)==' '&& entities.charAt(1)==',')
+                                entities= StringUtils.substring(entities,2);
                             entities = StringUtils.substring(entities, 0, entities.length() - 1);
                             alert.setHeaderText("Top Entities in " + title[6] + " :" + entities);
                             alert.showAndWait();
