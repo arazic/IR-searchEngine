@@ -37,8 +37,10 @@ public class View extends Observable {
     public javafx.scene.control.Button search;
     public javafx.scene.control.Button browserQueries;
     public javafx.scene.control.Button runTxtQueries;
+    public javafx.scene.control.Button browserQueriesResult;
     public javafx.scene.control.TextField txtfld_query;
     public javafx.scene.control.TextField txtfld_txtQueries;
+    public javafx.scene.control.TextField txtfld_txtQueriesResult;
     public javafx.scene.control.ListView indexerDictionary;
 
     public Accordion docs_ans;
@@ -47,6 +49,7 @@ public class View extends Observable {
     public String loadDic;
     public String currentQuery;
     public String queriesPath;
+    public String queriesResultPath;
     public boolean loadDictionarySuccessfully;
     public TreeMap<String,String> termsDictionary;
 
@@ -223,46 +226,61 @@ public class View extends Observable {
         }
         else
         {
-            currentQuery= txtfld_query.getText();
-            if(c_steeming.isSelected())
-                isStemming=true;
-            else
-                isStemming=false;
+            if(txtfld_txtQueriesResult.getText().isEmpty()){
+                Alert alert = new Alert(Alert.AlertType.WARNING);
+                alert.setTitle("Be Attention");
+                alert.setHeaderText("Please enter a path to save the results!\n");
+                alert.showAndWait();
+            }
+            else {
+                queriesResultPath= txtfld_txtQueriesResult.getText();
+                currentQuery = txtfld_query.getText();
+                if (c_steeming.isSelected())
+                    isStemming = true;
+                else
+                    isStemming = false;
 
-            if(c_semantic.isSelected())
-                isSemantic =true;
-            else
-                isSemantic =false;
+                if (c_semantic.isSelected())
+                    isSemantic = true;
+                else
+                    isSemantic = false;
 
-            setChanged();
-            notifyObservers("runQuery");
+                setChanged();
+                notifyObservers("runQuery");
+            }
         }
     }
 
     public void run_txtQueries(ActionEvent actionEvent) {
-        if(txtfld_txtQueries.getText().isEmpty()){
+        if (txtfld_txtQueries.getText().isEmpty()) {
             Alert alert = new Alert(Alert.AlertType.WARNING);
             alert.setTitle("Be Attention");
             alert.setHeaderText("please insert query!\n");
             alert.showAndWait();
+        } else {
+            if (txtfld_txtQueriesResult.getText().isEmpty()) {
+                Alert alert = new Alert(Alert.AlertType.WARNING);
+                alert.setTitle("Be Attention");
+                alert.setHeaderText("Please enter a path to save the results!\n");
+                alert.showAndWait();
+            } else {
+                queriesResultPath = txtfld_txtQueriesResult.getText();
+                queriesPath = txtfld_txtQueries.getText();
+                if (c_steeming.isSelected())
+                    isStemming = true;
+                else
+                    isStemming = false;
+
+                if (c_semantic.isSelected())
+                    isSemantic = true;
+                else
+                    isSemantic = false;
+
+                setChanged();
+                notifyObservers("runQueries");
+            }
+
         }
-        else
-        {
-            queriesPath= txtfld_txtQueries.getText();
-            if(c_steeming.isSelected())
-                isStemming=true;
-            else
-                isStemming=false;
-
-            if(c_semantic.isSelected())
-                isSemantic =true;
-            else
-                isSemantic =false;
-
-            setChanged();
-            notifyObservers("runQueries");
-        }
-
     }
 
     public String getCurrentQuery() {
@@ -330,4 +348,16 @@ public class View extends Observable {
     }
 
 
+    public void browser_queriesResults(ActionEvent actionEvent) {
+        DirectoryChooser chooser = new DirectoryChooser();
+        chooser.setInitialDirectory(new File(System.getProperty("user.home")));
+        File selectedDirectory = chooser.showDialog(null);
+
+        if(selectedDirectory!=null){
+            txtfld_txtQueriesResult.clear();
+            File corpusFile=  selectedDirectory.getAbsoluteFile();
+            txtfld_txtQueriesResult.appendText(corpusFile.getAbsolutePath());
+        }
+
+    }
 }

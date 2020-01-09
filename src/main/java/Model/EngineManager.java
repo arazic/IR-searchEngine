@@ -2,10 +2,12 @@ package Model;
 
 
 import javafx.util.Pair;
-
 import java.util.LinkedList;
 import java.util.TreeMap;
 
+// TODO: the docs are sorted by importance?
+// TODO: to add just one sys term to semantic
+// TODO: use indexer to find posting files
 public class EngineManager {
 
     private String corpusPath;
@@ -71,7 +73,6 @@ public class EngineManager {
     }
 */
 
-
     public boolean existCorpusPath() {
         if(this.corpusPath==null)
             return false;
@@ -107,6 +108,10 @@ public class EngineManager {
     }
     public void searchQueriesFile(String path, boolean isStemming, boolean isSemantic) {
         searcher.readQueriesFromData(path,isStemming,isSemantic,postingPath);
+    }
+
+    public void setQueriesResultPath(String queriesResultPath) {
+        this.searcher.setQueriesResultPath(queriesResultPath);
     }
 }
 

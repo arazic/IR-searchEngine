@@ -87,24 +87,26 @@ public class Model extends Observable
 
     }
 
-    public void runQuery(String currentQuery, boolean isStemming, boolean isSemantic) {
+    public void runQuery(String currentQuery, boolean isStemming, boolean isSemantic, String queriesResultPath) {
         if(engineManager==null){
             setChanged();
             notifyObservers("notPreparedToSearch");
         }
         else{
+            engineManager.setQueriesResultPath(queriesResultPath);
             currTop50 = engineManager.search(currentQuery, isStemming, isSemantic);
             setChanged();
             notifyObservers("answerSearch");
         }
     }
 
-    public void runQueriesFile(String pathQuery, boolean isStemming, boolean isSemantic) {
+    public void runQueriesFile(String pathQuery, boolean isStemming, boolean isSemantic, String queriesResultPath) {
         if(engineManager==null){
             setChanged();
             notifyObservers("notPreparedToSearch");
         }
         else{
+            engineManager.setQueriesResultPath(queriesResultPath);
             engineManager.searchQueriesFile(pathQuery,isStemming,isSemantic);
         }
     }
