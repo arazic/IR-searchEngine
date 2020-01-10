@@ -21,7 +21,6 @@ public class Searcher {
     TreeMap<String, TreeMap<String, Integer>> tremsInDoc ; // docName, <Term-"tf">
     TreeMap<String, Integer> termsDf ; // Term, df-how manyDocs
     TreeMap<String, Integer> allRelevantDocsSize; // docName, size - |d|
-    TreeMap<String,Integer>  termsTotalFrequency; // term - total frequency
     HashMap<String, String> allRelevantDocsEntyies; // docName,Entities
     HashSet<String> legalEntities;
     int totalCurposDoc ;
@@ -303,7 +302,6 @@ public class Searcher {
         termsDf= new TreeMap<>();// Term, df-how manyDocs
         allRelevantDocsSize = new TreeMap<>(); // docNam
         allRelevantDocsEntyies = new HashMap<>(); // docNam
-        termsTotalFrequency = new TreeMap<>();
         totalCurposDoc=0;
         averageDocLength=0;
         TreeMap<String,String> allDictionatryTerms= new TreeMap<>();
@@ -335,15 +333,12 @@ public class Searcher {
             String data = allDictionatryTerms.get(term);
             String[] splitData =data.split("!");
             int pointer=-1;
-            int termFrequency=-1;
             int documentFrequency=-1;
             if(splitData.length>2)
             {
                 documentFrequency=Integer.parseInt(splitData[0]);
-                termFrequency=Integer.parseInt(splitData[1]);
                 pointer=Integer.parseInt(splitData[splitData.length-1]);
                 termsDf.put(term,documentFrequency);
-                termsTotalFrequency.put(term,termFrequency);
             }
             else
             {
@@ -394,7 +389,7 @@ public class Searcher {
             if(!allRelevantDocsSize.isEmpty())
             {
                 rePostingDocs(postingPath);
-                ranker.setData(tremsInDoc, termsDf, allRelevantDocsSize, termsQuery,termsTotalFrequency);
+                ranker.setData(tremsInDoc, termsDf, allRelevantDocsSize, termsQuery);
             }
         }
         catch (Exception e)

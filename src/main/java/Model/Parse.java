@@ -1193,7 +1193,7 @@ public class Parse {
         return terms;
     }
 
-    //TODO: not good!
+
     public TreeMap<String, Integer> parseSemantic(TreeMap<String, Integer> semanticTerms)
     {
         TreeMap<String,Integer> termAfterStem = new TreeMap<>();
