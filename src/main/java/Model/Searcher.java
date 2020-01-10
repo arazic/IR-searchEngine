@@ -83,6 +83,13 @@ public class Searcher {
         if (semantic) {
             TreeMap<String, Integer> semanticTerms = getWords(termsQuery);
             termsQuery.putAll(semanticTerms);
+            if(stemming) {
+                semanticTerms = parser.parseSemantic(semanticTerms);
+                termsQuery.putAll(semanticTerms);
+            }
+            else {
+                termsQuery.putAll(semanticTerms);
+            }
         }
         infoFromPosting(termsQuery);
         LinkedList<String> rankedDocuments=ranker.rankDocuments();
@@ -90,7 +97,7 @@ public class Searcher {
 
     }
 
-    public void readQueriesFromData(String pathToQueries,boolean isStem, boolean isSemantic ,String postingPath)
+    public boolean readQueriesFromData(String pathToQueries,boolean isStem, boolean isSemantic ,String postingPath)
     {
         if(!loadEntities) {
             loadEntities();
@@ -119,6 +126,7 @@ public class Searcher {
         {
             i.printStackTrace();
         }
+        return true;
     }
 
     private String[] parseQueryFromData(StringBuilder stringBuilder)
@@ -182,8 +190,15 @@ public class Searcher {
         TreeMap<String, Integer> termsQuery = parser.parseQuery(query, stemming); //tremName, tf in query
         if (semantic) {
             TreeMap<String, Integer> semanticTerms = getWords(termsQuery);
-            termsQuery.putAll(semanticTerms);
+            if(stemming) {
+                semanticTerms = parser.parseSemantic(semanticTerms);
+                termsQuery.putAll(semanticTerms);
+            }
+            else {
+                termsQuery.putAll(semanticTerms);
+            }
         }
+
         infoFromPosting(termsQuery);
         if(allRelevantDocsSize.isEmpty())
         {
@@ -216,11 +231,13 @@ public class Searcher {
             String curTerm= term.replace(" ","+");
             String ansJ= StringUtils.substring(getFromJ(curTerm),1,getFromJ(curTerm).length()-1);
             for(String jsomAns: ansJ.split("}")){
-                jsomAns=StringUtils.substring(jsomAns,1);
-                ans=cleanAns(jsomAns,curTerm);
-                result.putAll(ans);
+
+                    jsomAns=StringUtils.substring(jsomAns,1);
+                     ans=cleanAns(jsomAns,curTerm);
+
+                     result.putAll(ans);
+                    break;
             }
-            System.out.println("************************");
         }
         return result;
     }

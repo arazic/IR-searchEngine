@@ -14,7 +14,7 @@
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.RowConstraints?>
 
-<AnchorPane prefHeight="494.0" prefWidth="996.0" xmlns="http://javafx.com/javafx/10.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="View.View">
+<AnchorPane prefHeight="494.0" prefWidth="996.0" xmlns="http://javafx.com/javafx/8.0.172-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="View.View">
     <children>
         <TabPane layoutX="5.0" layoutY="6.0" prefHeight="487.0" prefWidth="988.0" tabClosingPolicy="UNAVAILABLE">
             <tabs>
@@ -121,8 +121,7 @@
                                                 <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                                             </rowConstraints>
                                             <children>
-                                                <CheckBox fx:id="c_steeming_q" mnemonicParsing="false" prefHeight="27.0" prefWidth="114.0" text="stemming" GridPane.halignment="LEFT" />
-                                                <CheckBox fx:id="c_semantic" mnemonicParsing="false" prefHeight="27.0" prefWidth="156.0" text="semantic" GridPane.columnIndex="1" GridPane.halignment="LEFT" />
+                                                <CheckBox fx:id="c_semantic" mnemonicParsing="false" prefHeight="27.0" prefWidth="156.0" text="semantic" GridPane.halignment="LEFT" />
                                             </children>
                                         </GridPane>
                                         <GridPane GridPane.columnIndex="4" GridPane.rowIndex="2">
