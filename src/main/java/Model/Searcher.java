@@ -34,8 +34,9 @@ public class Searcher {
         this.postingPath=postingPath;
         this.legalEntities= new HashSet<>();
         loadEntities= false;
-
     }
+
+
 
     private void loadEntities() {
         try {
