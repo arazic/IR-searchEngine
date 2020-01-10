@@ -14,7 +14,6 @@ public class Document {
     private int uniqeTermsNum;
     private int totalTerms;
 
-
     private String[] topEntities;
 
     public Document()

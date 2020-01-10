@@ -27,19 +27,16 @@ public class Searcher {
     boolean loadEntities;
     private BufferedWriter queriesWriter;
 
-    public Searcher(Parse parser, boolean isStemming,  String postingPath ) {
+    public Searcher(Parse parser, boolean isStemming,  String postingPath) {
         ranker = new Ranker();
         this.parser = parser;
         this.stemming=isStemming;
         this.postingPath=postingPath;
         this.legalEntities= new HashSet<>();
         loadEntities= false;
-        try {
-            queriesWriter=new  BufferedWriter(new FileWriter((postingPath+"/queriesAnswers.txt")));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
+
+
 
     private void loadEntities() {
         try {
@@ -297,8 +294,6 @@ public class Searcher {
             else
                 s="No";
 
-
-
             for (String term : termsQuery.keySet()) {
                 FileReader numberFile = new FileReader((postingPath) + "/finalPostingNumbers"+s+"Stemming.txt");
                 FileReader capitalFile = new FileReader((postingPath) + "/finalPostingCapital"+s+"Stemming.txt");
@@ -483,6 +478,14 @@ public class Searcher {
                 temp.put(termName, Integer.valueOf(tfInDoc));
                 tremsInDoc.put(docName,temp);
             }
+        }
+    }
+
+    public void setQueriesResultPath(String queriesResultPath) {
+        try {
+            queriesWriter=new  BufferedWriter(new FileWriter((queriesResultPath+"/queriesAnswers.txt")));
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 }

@@ -37,10 +37,10 @@ public class Controller extends Observable implements Observer {
                     model.reset();
                     break;
                 case "runQuery":
-                    model.runQuery(view.getCurrentQuery(), view.isStemming, view.isSemantic);
+                    model.runQuery(view.getCurrentQuery(), view.isStemming, view.isSemantic, view.queriesResultPath);
                     break;
                 case "runQueries":
-                    model.runQueriesFile(view.queriesPath, view.isStemming, view.isSemantic);
+                    model.runQueriesFile(view.queriesPath, view.isStemming, view.isSemantic, view.queriesResultPath);
                     break;
 
             }
