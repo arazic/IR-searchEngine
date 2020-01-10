@@ -1192,4 +1192,32 @@ public class Parse {
         cleanQuery();
         return terms;
     }
+
+    //TODO: not good!
+    public TreeMap<String, Integer> parseSemantic(TreeMap<String, Integer> semanticTerms)
+    {
+        TreeMap<String,Integer> termAfterStem = new TreeMap<>();
+        for (String term:semanticTerms.keySet())
+        {
+            int frequrncy=semanticTerms.get(term);
+            if(term.contains(" "))
+            {
+                String[] splitData=term.split(" ");
+                for(int i=0;i<splitData.length;i++)
+                {
+                    String stem=stemmer.stem(splitData[i]);
+                    if(!stem.isEmpty())
+                    {
+                        termAfterStem.put(stem,frequrncy);
+                    }
+                }
+                termAfterStem.put(term.toUpperCase(),frequrncy);
+            }
+            else
+            {
+                termAfterStem.put(term.toUpperCase(),frequrncy);
+            }
+        }
+        return  termAfterStem;
+    }
 }

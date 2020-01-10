@@ -157,6 +157,7 @@ public class View extends Observable {
             alert.setTitle("Be Attention");
             alert.setHeaderText("The dictionary was not loaded!\n\n");
             alert.showAndWait();
+            this.isStemming=c_steeming.isSelected();
         }
 
     }
@@ -321,10 +322,11 @@ public class View extends Observable {
                         String [] title= StringUtils.split(Bt.getText()," ");
                         String entities= currTop50.get(Integer.parseInt(title[5])-1).getValue();
                         if(entities!=null) {
-                            entities = StringUtils.replace(entities, "|", " ,");
+                       //     entities = StringUtils.replace(entities, "|", " ,");
+                            entities = StringUtils.substring(entities, 0, entities.length() - 1);
+                            entities=cutFive(entities);
                             if(entities!="" && entities.charAt(0)==' '&& entities.charAt(1)==',')
                                 entities= StringUtils.substring(entities,2);
-                            entities = StringUtils.substring(entities, 0, entities.length() - 1);
                             alert.setHeaderText("Top Entities in " + title[6] + " :" + entities);
                             alert.showAndWait();
                         }
@@ -347,6 +349,33 @@ public class View extends Observable {
         stage.show();
     }
 
+    private String cutFive(String entities) {
+        String []all= StringUtils.split(entities,"|");
+        String ans= "";
+        if(all.length>=5) {
+            for (int i = 0; i < 5; i++) {
+                if(i==4) {
+                    ans = ans + all[i] ;
+                }
+                else{
+                    ans = ans + all[i] + " ,";
+                }
+            }
+            return ans;
+        }
+        else{
+            for (int i = 0; i < all.length; i++) {
+                if(i==all.length-1) {
+                    ans = ans + all[i] ;
+                }
+                else{
+                    ans = ans + all[i] + " ,";
+                }
+            }
+            return ans;
+        }
+    }
+
 
     public void browser_queriesResults(ActionEvent actionEvent) {
         DirectoryChooser chooser = new DirectoryChooser();
@@ -359,5 +388,12 @@ public class View extends Observable {
             txtfld_txtQueriesResult.appendText(corpusFile.getAbsolutePath());
         }
 
+    }
+
+    public void alertFinishAndCreateAnswerDoc() {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Congratulation!");
+        alert.setHeaderText("Answer file was created!!\n\n\n");
+        alert.showAndWait();
     }
 }

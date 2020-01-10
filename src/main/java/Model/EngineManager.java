@@ -106,8 +106,8 @@ public class EngineManager {
     public LinkedList<Pair<String,String>> search(String currentQuery, boolean isStemming, boolean isSemantic) {
         return searcher.search(currentQuery,isStemming, isSemantic);
     }
-    public void searchQueriesFile(String path, boolean isStemming, boolean isSemantic) {
-        searcher.readQueriesFromData(path,isStemming,isSemantic,postingPath);
+    public boolean searchQueriesFile(String path, boolean isStemming, boolean isSemantic) {
+       return searcher.readQueriesFromData(path,isStemming,isSemantic,postingPath);
     }
 
     public void setQueriesResultPath(String queriesResultPath) {

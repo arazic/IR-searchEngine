@@ -107,7 +107,11 @@ public class Model extends Observable
         }
         else{
             engineManager.setQueriesResultPath(queriesResultPath);
-            engineManager.searchQueriesFile(pathQuery,isStemming,isSemantic);
+            if(engineManager.searchQueriesFile(pathQuery,isStemming,isSemantic)){
+                setChanged();
+                notifyObservers("finishAndCreateAnswerDoc");
+            }
+
         }
     }
 }

@@ -60,7 +60,8 @@ public class Controller extends Observable implements Observer {
                 case "answerSearch":
                     view.showEngineAnswers(model.currTop50);
                     break;
-
+                case "finishAndCreateAnswerDoc":
+                    view.alertFinishAndCreateAnswerDoc();
             }
 
         }
