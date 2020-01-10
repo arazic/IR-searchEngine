@@ -17,8 +17,8 @@ public class Ranker {
 
     public Ranker ()
     {
-        k=1.5;
-        b=0.75;
+        k=1.25;
+        b=0.55;
     }
 
     public void cleanRanker()
@@ -45,7 +45,7 @@ public class Ranker {
     public LinkedList<String> rankDocuments()
     {
         TreeMap<String,Double> rankDocuments = new TreeMap<>();
-        TreeMap<String,Double> documentsByRank= new TreeMap<>();
+        LinkedList<String> documentsByRank= new LinkedList<>();
         for (Map.Entry entry:documentsSize.entrySet())
         {
             String docName=(String)entry.getKey();
@@ -65,14 +65,13 @@ public class Ranker {
                     maxRank=(double) entry.getValue();
                 }
             }
-            documentsByRank.put(maxdoc,maxRank);
+            documentsByRank.addLast(maxdoc);
             rankDocuments.remove(maxdoc);
             maxdoc="";
             maxRank=0;
         }
-        LinkedList<String> ans = new LinkedList<>(documentsByRank.keySet());
         cleanRanker();
-        return ans;
+        return documentsByRank;
     }
 
 
@@ -95,7 +94,6 @@ public class Ranker {
     public void setAvergeDocSize(double avergeDocSize)
     {
         this.avergeDocSize=avergeDocSize;
-
     }
 
 }

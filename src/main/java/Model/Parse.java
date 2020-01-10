@@ -1162,7 +1162,7 @@ public class Parse {
     public TreeMap<String,Integer> parseQuery(String query, boolean isStemming) {
 
         currIndex=0;
-        tokens= query.split(" ");
+        tokens= StringUtils.split(query," ():?[]!;*#+| ");
         parseText();
         if(isStemming)
         {

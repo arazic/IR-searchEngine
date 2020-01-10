@@ -72,6 +72,17 @@ public class Searcher {
         String[] queryData =parseQueryFromData(query);
         int queryID=Integer.parseInt(queryData[0]);
         TreeMap<String,Integer> termsQuery = parser.parseQuery(queryData[1],stemming);
+        TreeMap<String,Integer> titleQuery = parser.parseQuery(queryData[2],stemming);
+        for (String  title:titleQuery.keySet())
+        {
+            if(termsQuery.containsKey(title))
+            {
+                double wight=termsQuery.get(title)*titleQuery.get(title)*1.3;
+                int intWight=(int)wight;
+                termsQuery.replace(title,intWight);
+            }
+
+        }
         if (semantic) {
             TreeMap<String, Integer> semanticTerms = getWords(termsQuery);
             termsQuery.putAll(semanticTerms);
@@ -117,8 +128,9 @@ public class Searcher {
     {
         String text =stringBuilder.toString();
         String [] tokens=StringUtils.split(text," \n");
-        String[] queryData= new String[2];
-        String query ="";
+        String[] queryData= new String[3];
+        String title="";
+        String description ="";
         int index=0;
         while(index<tokens.length)
         {
@@ -127,35 +139,38 @@ public class Searcher {
                 if(index+2<tokens.length)
                 {
                     queryData[0]=tokens[index+2];
-                    index=index+3;
+                    index=index+4;
                     break;
                 }
             }
             index++;
         }
+        //get title
         while(index<tokens.length)
         {
-            if(tokens[index].equals("<title>"))
+            if(tokens[index].equals("<desc>"))
             {
-                index++;
-                while(index<tokens.length)
-                {
-                    if(tokens[index].equals("<desc>"))
-                    {
-                        index++;
-                        queryData[1]=query;
-                        break;
-                    }
-                    else
-                    {
-                        query=query+tokens[index]+" ";
-                    }
-                    index++;
-                }
+                index=index+2;
                 break;
             }
+            description=description+tokens[index]+" ";
+            title=title+tokens[index]+" ";
             index++;
         }
+        //get description
+        while (index<tokens.length)
+        {
+            if(tokens[index].equals("<narr>"))
+            {
+                index=index+2;
+                break;
+            }
+            description=description+tokens[index]+" ";
+            index++;
+        }
+        queryData[1]=description;
+        queryData[2]=title;
+        System.out.println(description);
         return queryData;
     }
 
