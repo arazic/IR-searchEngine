@@ -11,6 +11,8 @@ import java.util.*;
 
 
 
+
+
 public class Searcher {
     Ranker ranker;
     Parse parser;
@@ -19,6 +21,7 @@ public class Searcher {
     TreeMap<String, TreeMap<String, Integer>> tremsInDoc ; // docName, <Term-"tf">
     TreeMap<String, Integer> termsDf ; // Term, df-how manyDocs
     TreeMap<String, Integer> allRelevantDocsSize; // docName, size - |d|
+    TreeMap<String,Integer>  termsTotalFrequency; // term - total frequency
     HashMap<String, String> allRelevantDocsEntyies; // docName,Entities
     HashSet<String> legalEntities;
     int totalCurposDoc ;
@@ -167,7 +170,6 @@ public class Searcher {
         }
         queryData[1]=description;
         queryData[2]=title;
-        System.out.println(description);
         return queryData;
     }
 
@@ -278,8 +280,148 @@ public class Searcher {
         }
     }
 
+    public void infoFromPosting(TreeMap<String,Integer> termsQuery)
+    {
+        tremsInDoc= new TreeMap<>();
+        termsDf= new TreeMap<>();// Term, df-how manyDocs
+        allRelevantDocsSize = new TreeMap<>(); // docNam
+        allRelevantDocsEntyies = new HashMap<>(); // docNam
+        termsTotalFrequency = new TreeMap<>();
+        totalCurposDoc=0;
+        averageDocLength=0;
+        TreeMap<String,String> allDictionatryTerms= new TreeMap<>();
+        for (String term:termsQuery.keySet())
+        {
+            if(Indexer.checkTerm(term))
+            {
+                allDictionatryTerms.put(term,Indexer.getTermPosition(term));
+            }
+            else
+            {
+                String lowerCase=term.toLowerCase();
+                if(term.equals(lowerCase))
+                {
+                    if(Indexer.checkTerm(lowerCase))
+                    {
+                        allDictionatryTerms.put(lowerCase,Indexer.getTermPosition(lowerCase));
+                    }
+                }
+            }
+        }
+        TreeMap<String,Integer> capitalTerms = new TreeMap<>();
+        TreeMap<String,Integer> numberTerms = new TreeMap<>();
+        TreeMap<String,Integer> dLowerTerms = new TreeMap<>();
+        TreeMap<String,Integer> pLowerTerms = new TreeMap<>();
+        TreeMap<String,Integer>  zLowerTerms = new TreeMap<>();
+        for (String term:allDictionatryTerms.keySet())
+        {
+            String data = allDictionatryTerms.get(term);
+            String[] splitData =data.split("!");
+            int pointer=-1;
+            int termFrequency=-1;
+            int documentFrequency=-1;
+            if(splitData.length>2)
+            {
+                documentFrequency=Integer.parseInt(splitData[0]);
+                termFrequency=Integer.parseInt(splitData[1]);
+                pointer=Integer.parseInt(splitData[splitData.length-1]);
+                termsDf.put(term,documentFrequency);
+                termsTotalFrequency.put(term,termFrequency);
+            }
+            else
+            {
+                continue;
+            }
+            if(term.charAt(0)<='9' && term.charAt(0)>='0')
+            {
+                numberTerms.put(term,pointer);
+            }
+            else if(term.charAt(0)<='Z' && term.charAt(0)>='A')
+            {
+                capitalTerms.put(term,pointer);
+            }
+            else if(term.charAt(0)<='d')
+            {
+                dLowerTerms.put(term,pointer);
+            }
+            else if(term.charAt(0)<='p')
+            {
+                pLowerTerms.put(term,pointer);
+            }
+            else
+            {
+                zLowerTerms.put(term,pointer);
+            }
+        }
+        String  s="";
+        if(stemming)
+            s="With";
+        else
+            s="No";
+        try {
+            FileReader numberFile = new FileReader((postingPath) + "/finalPostingNumbers"+s+"Stemming.txt");
+            FileReader capitalFile = new FileReader((postingPath) + "/finalPostingCapital"+s+"Stemming.txt");
+            FileReader lowerFile1 = new FileReader((postingPath) + "/finalPostingLower"+s+"StemmingD.txt");
+            FileReader lowerFile2 = new FileReader((postingPath) + "/finalPostingLower"+s+"StemmingP.txt");
+            FileReader lowerFile3 = new FileReader((postingPath) + "/finalPostingLower"+s+"StemmingZ.txt");
+            BufferedReader lowerReader1 = new BufferedReader(lowerFile1);
+            BufferedReader lowerReader2 = new BufferedReader(lowerFile2);
+            BufferedReader lowerReader3 = new BufferedReader(lowerFile3);
+            BufferedReader numberReader = new BufferedReader(numberFile);
+            BufferedReader capitalReader = new BufferedReader(capitalFile);
+            getPostingData(numberTerms,numberReader);
+            getPostingData(capitalTerms,capitalReader);
+            getPostingData(dLowerTerms,lowerReader1);
+            getPostingData(pLowerTerms,lowerReader2);
+            getPostingData(zLowerTerms,lowerReader3);
+            if(!allRelevantDocsSize.isEmpty())
+            {
+                rePostingDocs(postingPath);
+                ranker.setData(tremsInDoc, termsDf, allRelevantDocsSize, termsQuery,termsTotalFrequency);
+            }
+        }
+        catch (Exception e)
+        {
 
-    public void infoFromPosting( TreeMap<String, Integer> termsQuery) {
+        }
+
+    }
+
+    private void getPostingData(TreeMap<String,Integer> termsPointer,BufferedReader postingReader)
+    {
+        if(termsPointer.isEmpty())
+        {
+            return;
+        }
+        try {
+            int counter = 0;
+            for (Map.Entry entry : termsPointer.entrySet()) {
+                String term = (String) entry.getKey();
+                int pointer = (int) entry.getValue();
+                String line = null;
+                line = postingReader.readLine();
+                while (line != null) {
+                    if (counter == pointer-1) {
+                        rePostingTerms(line);
+                        String termName = line.substring(0, line.indexOf("!"));
+                        counter++;
+                        System.out.println(termName +" == "+ term);
+                        break;
+                    }
+                    counter++;
+                    line = postingReader.readLine();
+                }
+            }
+        }
+        catch (Exception e)
+        {
+
+        }
+    }
+
+
+
+    /*public void infoFromPosting( TreeMap<String, Integer> termsQuery) {
         try {
             tremsInDoc= new TreeMap<>();
             termsDf= new TreeMap<>();// Term, df-how manyDocs
@@ -297,9 +439,9 @@ public class Searcher {
             for (String term : termsQuery.keySet()) {
                 FileReader numberFile = new FileReader((postingPath) + "/finalPostingNumbers"+s+"Stemming.txt");
                 FileReader capitalFile = new FileReader((postingPath) + "/finalPostingCapital"+s+"Stemming.txt");
-                FileReader lowerFile1 = new FileReader((postingPath) + "/finalPostingLowert"+s+"StemmingD.txt");
-                FileReader lowerFile2 = new FileReader((postingPath) + "/finalPostingLowert"+s+"StemmingP.txt");
-                FileReader lowerFile3 = new FileReader((postingPath) + "/finalPostingLowert"+s+"StemmingZ.txt");
+                FileReader lowerFile1 = new FileReader((postingPath) + "/finalPostingLower"+s+"StemmingD.txt");
+                FileReader lowerFile2 = new FileReader((postingPath) + "/finalPostingLower"+s+"StemmingP.txt");
+                FileReader lowerFile3 = new FileReader((postingPath) + "/finalPostingLower"+s+"StemmingZ.txt");
 
                 BufferedReader lowerReader1 = new BufferedReader(lowerFile1);
                 BufferedReader lowerReader2 = new BufferedReader(lowerFile2);
@@ -379,11 +521,10 @@ public class Searcher {
             e.printStackTrace();
         }
 
-    }
+    }*/
 
     private void rePostingDocs(String postingPath) {
         try {
-
             String  s="";
             if(stemming) {
                 s="With";
@@ -391,7 +532,6 @@ public class Searcher {
             else {
                 s="No";
             }
-
             FileReader Documents = new FileReader((postingPath) + "/postingDocuments"+s+"Stemming.txt");
             BufferedReader bufferedDocs= new BufferedReader(Documents);
             String line= bufferedDocs.readLine();
@@ -449,13 +589,39 @@ public class Searcher {
     return ans;
     }
 
-    private void rePostingTerms(String term) {
+    private void rePostingTerms(String term)
+    {
+        String[] miniParse= StringUtils.split(term,"!");
+        String termName= miniParse[0];
+        String[] splitDocs= StringUtils.split(miniParse[1].substring(1,miniParse[1].length()),",");
+        for (int i=0; i<splitDocs.length; i++){
+            String docName= StringUtils.substring(splitDocs[i],0,splitDocs[i].indexOf(":"));
+            if(docName.charAt(0)==' ')
+                docName= StringUtils.substring(docName,1);
+            if(docName.charAt(docName.length()-1)==' ')
+                docName= StringUtils.substring(docName,0,docName.length()-1);
+            String tfInDoc=StringUtils.substring(splitDocs[i],splitDocs[i].indexOf(":")+1);
+            if(tfInDoc.charAt(tfInDoc.length()-1)==']')
+                tfInDoc= StringUtils.substring(tfInDoc,0,tfInDoc.length()-1);
+            allRelevantDocsSize.put(docName, 0);
+            if(tremsInDoc.containsKey(docName)){
+                TreeMap<String,Integer> temp= tremsInDoc.get(docName);
+                temp.put(termName, Integer.valueOf(tfInDoc));
+                tremsInDoc.put(docName,temp);
+            }
+            else{
+                TreeMap<String,Integer> temp= new TreeMap<>();
+                temp.put(termName, Integer.valueOf(tfInDoc));
+                tremsInDoc.put(docName,temp);
+            }
+        }
+    }
+
+    /*private void rePostingTerms(String term) {
 
         String[] miniParse= StringUtils.split(term,"!");
         String termName= miniParse[0];
-
         termsDf.put(termName, Integer.valueOf(miniParse[2])); //insert df of term
-
         String[] splitDocs= StringUtils.split(miniParse[1].substring(1,miniParse[1].length()),",");
         for (int i=0; i<splitDocs.length; i++){
             String docName= StringUtils.substring(splitDocs[i],0,splitDocs[i].indexOf(":"));
@@ -479,7 +645,7 @@ public class Searcher {
                 tremsInDoc.put(docName,temp);
             }
         }
-    }
+    }*/
 
     public void setQueriesResultPath(String queriesResultPath) {
         try {

@@ -19,7 +19,26 @@ public class Indexer
             isStemming=isStemm;
         }
 
+        public static boolean checkTerm(String term)
+        {
+            if(termsDic!=null)
+            {
+                if(termsDic.containsKey(term))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
 
+        public static String getTermPosition(String term)
+        {
+            if(checkTerm(term))
+            {
+                return termsDic.get(term);
+            }
+            return "";
+        }
     /**
      * add term to the final dictionary
      */
@@ -48,7 +67,7 @@ public class Indexer
             while(it.hasNext())
             {
                 Map.Entry cur = (Map.Entry)it.next();
-                index.append(cur.getKey()+","+ cur.getValue());
+                index.append(cur.getKey()+"!"+ cur.getValue());
                 index.newLine();
             }
             index.flush();
@@ -88,8 +107,8 @@ public class Indexer
 
             while (line != null) {
 
-                String term= line.substring(0,line.indexOf(","));
-                String info= line.substring(line.indexOf(",")+1);
+                String term= line.substring(0,line.indexOf("!"));
+                String info= line.substring(line.indexOf("!")+1);
                 Indexer.addTerm(term,info);
                 line= readerIndex.readLine();
             }

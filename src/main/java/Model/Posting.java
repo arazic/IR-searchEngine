@@ -13,7 +13,7 @@ public class Posting {
     private boolean finishDoc;
     private boolean isStemming;
 
-    private int chunkPostingSIZE =300; // how many doc in a temporary postingTerm file
+    private int chunkPostingSIZE =300; // how many doc in a temporary postingTerm fileINDEXER
     private int writeToBuff=400;// how many tersms to writw each write to disk
     private int chunksCount; // how many docs beeen posting
     private int docCounter; // how many docs are merging in the memory;
@@ -389,9 +389,9 @@ public class Posting {
                     if (k == "!R") {
                         numberFile = new FileWriter((postingPath) + "/finalPostingNumbersNoStemming" + ".txt");
                         capitalFile = new FileWriter((postingPath) + "/finalPostingCapitalNoStemming" + ".txt");
-                        lowerFile1 = new FileWriter((postingPath) + "/finalPostingLowertNoStemmingD" + ".txt");
-                        lowerFile2 = new FileWriter((postingPath) + "/finalPostingLowertNoStemmingP" + ".txt");
-                        lowerFile3 = new FileWriter((postingPath) + "/finalPostingLowertNoStemmingZ" + ".txt");
+                        lowerFile1 = new FileWriter((postingPath) + "/finalPostingLowerNoStemmingD" + ".txt");
+                        lowerFile2 = new FileWriter((postingPath) + "/finalPostingLowerNoStemmingP" + ".txt");
+                        lowerFile3 = new FileWriter((postingPath) + "/finalPostingLowerNoStemmingZ" + ".txt");
                         lowerWriter1 = new BufferedWriter(lowerFile1);
                         lowerWriter2 = new BufferedWriter(lowerFile2);
                         lowerWriter3 = new BufferedWriter(lowerFile3);
@@ -981,16 +981,16 @@ public class Posting {
             if(f.exists())
                 f.delete();
 
-            path = Paths.get((postingPath + "/finalPostingLowertNoStemmingD.txt"));
+            path = Paths.get((postingPath + "/finalPostingLowerNoStemmingD.txt"));
             f = path.toFile();
             if(f.exists())
                 f.delete();
 
-           path = Paths.get((postingPath + "/finalPostingLowertNoStemmingP.txt"));
+           path = Paths.get((postingPath + "/finalPostingLowerNoStemmingP.txt"));
             f = path.toFile();
             if(f.exists())
                 f.delete();
-            path = Paths.get((postingPath + "/finalPostingLowertNoStemmingZ.txt"));
+            path = Paths.get((postingPath + "/finalPostingLowerNoStemmingZ.txt"));
             f = path.toFile();
             if(f.exists())
                 f.delete();

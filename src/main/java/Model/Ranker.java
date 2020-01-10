@@ -11,6 +11,7 @@ public class Ranker {
     private TreeMap<String,Integer> termsDocumentFrequency;
     private TreeMap<String,Integer> termsQueryFrequency;
     private TreeMap<String,TreeMap<String,Integer>> documentTermsFrequency;
+    private TreeMap<String,Integer> termsTotalFrequency;
     private TreeMap<String,Integer> documentsSize;
     private double k;
     private double b;
@@ -27,6 +28,7 @@ public class Ranker {
         termsQueryFrequency.clear();
         documentTermsFrequency.clear();
         documentsSize.clear();
+        termsTotalFrequency.clear();
     }
 
     private double rank(int docLength,TreeMap<String,Integer> termsTF)
@@ -38,6 +40,7 @@ public class Ranker {
             int termInDocFreq=(int)entry.getValue();
             int termDocumentsFreq=termsDocumentFrequency.get(entry.getKey());
             rank+=termInQueryfreq*((k+1)*termInDocFreq)/(termInDocFreq+k*(1-b+b*(docLength/avergeDocSize)))*Math.log10((corpusSize+1)/termDocumentsFreq);
+            rank+=1/(Math.log10(termsTotalFrequency.get(entry.getKey()))+1);
         }
         return rank;
     }
@@ -78,12 +81,13 @@ public class Ranker {
 
     public void setData(TreeMap<String, TreeMap<String,Integer>> tremsInDoc, // docName, <Term-"tf">
             TreeMap<String, Integer> termsDf, // Term, df-how manyDocs
-            TreeMap<String, Integer> allRelevantDocs , TreeMap<String,Integer> termsQueryFrequency) // docName, size - |d|
+            TreeMap<String, Integer> allRelevantDocs , TreeMap<String,Integer> termsQueryFrequency , TreeMap<String,Integer> termsTotalFrequency) // docName, size - |d|
     {
         documentTermsFrequency=tremsInDoc;
         termsDocumentFrequency=termsDf;
         documentsSize=allRelevantDocs;
         this.termsQueryFrequency=termsQueryFrequency;
+        this.termsTotalFrequency=termsTotalFrequency;
     }
 
     public void setCorpusSize(int size)
