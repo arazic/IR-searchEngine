@@ -4,6 +4,7 @@ import javafx.util.Pair;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Observable;
 import java.util.TreeMap;
@@ -19,6 +20,7 @@ public class Model extends Observable
     public int totalDocNum;
     public String totalTime;
     public LinkedList<Pair<String,String>> currTop50;
+    public HashMap<Integer, LinkedList<Pair<String,String>>>allQueriesTop50;
 
     public void startEngine(String corpusPath,String postingPath,boolean isStemming){
         long millis=System.currentTimeMillis();
@@ -107,7 +109,8 @@ public class Model extends Observable
         }
         else{
             engineManager.setQueriesResultPath(queriesResultPath);
-            if(engineManager.searchQueriesFile(pathQuery,isStemming,isSemantic)){
+            allQueriesTop50= engineManager.searchQueriesFile(pathQuery,isStemming,isSemantic);
+            if(allQueriesTop50!=null){
                 setChanged();
                 notifyObservers("finishAndCreateAnswerDoc");
             }

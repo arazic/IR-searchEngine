@@ -2,6 +2,8 @@ package Model;
 
 
 import javafx.util.Pair;
+
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.TreeMap;
 
@@ -106,7 +108,7 @@ public class EngineManager {
     public LinkedList<Pair<String,String>> search(String currentQuery, boolean isStemming, boolean isSemantic) {
         return searcher.search(currentQuery,isStemming, isSemantic);
     }
-    public boolean searchQueriesFile(String path, boolean isStemming, boolean isSemantic) {
+    public HashMap<Integer, LinkedList<Pair<String,String>>> searchQueriesFile(String path, boolean isStemming, boolean isSemantic) {
        return searcher.readQueriesFromData(path,isStemming,isSemantic,postingPath);
     }
 

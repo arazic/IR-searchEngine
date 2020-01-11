@@ -66,7 +66,7 @@ public class Searcher {
         }
     }
 
-    private void handleQueryFromData(StringBuilder query)
+    private void handleQueryFromData(StringBuilder query, HashMap<Integer, LinkedList<Pair<String, String>>> queryDocsEntity)
     {
         String[] queryData =parseQueryFromData(query);
         int queryID=Integer.parseInt(queryData[0]);
@@ -96,10 +96,12 @@ public class Searcher {
         infoFromPosting(termsQuery);
         LinkedList<String> rankedDocuments=ranker.rankDocuments();
         writeQueryAnswerToFile(queryID,rankedDocuments);
-
+        LinkedList<Pair<String,String>> rankedDocumentsAndEntity= fillEntities(rankedDocuments);
+        termsQuery.clear();
+        queryDocsEntity.put(queryID,rankedDocumentsAndEntity);
     }
 
-    public boolean readQueriesFromData(String pathToQueries,boolean isStem, boolean isSemantic ,String postingPath)
+    public HashMap<Integer, LinkedList<Pair<String,String>>> readQueriesFromData(String pathToQueries,boolean isStem, boolean isSemantic ,String postingPath)
     {
         if(!loadEntities) {
             loadEntities();
@@ -111,13 +113,14 @@ public class Searcher {
         File path= new File(pathToQueries);
         String line;
         StringBuilder sb = new StringBuilder();
+        HashMap<Integer, LinkedList<Pair<String,String>>> queryDocsEntity= new HashMap<>();
         try(BufferedReader br = new BufferedReader(new FileReader(path)))
         {
             while ((line = br.readLine()) != null)
             {
                 if(line.equals("</top>")){
                     sb.append(line).append("\n");
-                    handleQueryFromData(sb);
+                    handleQueryFromData(sb, queryDocsEntity);
                     sb.setLength(0);
                 }
                 else
@@ -128,7 +131,7 @@ public class Searcher {
         {
             i.printStackTrace();
         }
-        return true;
+        return queryDocsEntity;
     }
 
     private String[] parseQueryFromData(StringBuilder stringBuilder)
@@ -430,7 +433,7 @@ public class Searcher {
                         rePostingTerms(line);
                         String termName = line.substring(0, line.indexOf("!"));
                         counter++;
-                        System.out.println(termName +" == "+ term);
+                      //  System.out.println(termName +" == "+ term);
                         break;
                     }
                     counter++;
