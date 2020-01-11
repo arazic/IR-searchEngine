@@ -42,7 +42,6 @@ public class Controller extends Observable implements Observer {
                 case "runQueries":
                     model.runQueriesFile(view.queriesPath, view.isStemming, view.isSemantic, view.queriesResultPath);
                     break;
-
             }
         }
         else if( o == model){
@@ -61,7 +60,7 @@ public class Controller extends Observable implements Observer {
                     view.showEngineAnswers(model.currTop50);
                     break;
                 case "finishAndCreateAnswerDoc":
-                    view.alertFinishAndCreateAnswerDoc();
+                    view.alertFinishAndCreateAnswerDoc(model.allQueriesTop50);
             }
 
         }

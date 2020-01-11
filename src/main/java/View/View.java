@@ -5,9 +5,7 @@ import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
-import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
@@ -19,7 +17,6 @@ import javafx.util.Pair;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.*;
 
 /**
@@ -37,10 +34,13 @@ public class View extends Observable {
     public javafx.scene.control.Button search;
     public javafx.scene.control.Button browserQueries;
     public javafx.scene.control.Button runTxtQueries;
+    public javafx.scene.control.Button showAllEntities;
     public javafx.scene.control.Button browserQueriesResult;
     public javafx.scene.control.TextField txtfld_query;
     public javafx.scene.control.TextField txtfld_txtQueries;
     public javafx.scene.control.TextField txtfld_txtQueriesResult;
+    public javafx.scene.control.ChoiceBox cb_queryNum;
+    public javafx.scene.control.Label queryNumLabel;
     public javafx.scene.control.ListView indexerDictionary;
 
     public Accordion docs_ans;
@@ -52,6 +52,7 @@ public class View extends Observable {
     public String queriesResultPath;
     public boolean loadDictionarySuccessfully;
     public TreeMap<String,String> termsDictionary;
+    public HashMap<Integer, LinkedList<Pair<String, String>>> dataQueriesTop50;
 
 
     public void browser_corsus(){
@@ -277,6 +278,11 @@ public class View extends Observable {
                 else
                     isSemantic = false;
 
+                Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+                alert.setTitle("Congratulation!");
+                alert.setHeaderText("The engine started working on your request ...\n\n\n");
+                alert.showAndWait();
+
                 setChanged();
                 notifyObservers("runQueries");
             }
@@ -310,6 +316,10 @@ public class View extends Observable {
             alert.showAndWait();
             return;
         }
+        ChoiceBox CB= (ChoiceBox) scene.lookup("#cb_queryNum");
+        CB.setItems(FXCollections.observableArrayList(
+                "query number 1")
+        );
         tps = new TitledPane[currTop50.size()];
         for (int i = 0; i < currTop50.size(); i++) {
             docs_ans = (Accordion) scene.lookup("#docAns");
@@ -390,10 +400,88 @@ public class View extends Observable {
 
     }
 
-    public void alertFinishAndCreateAnswerDoc() {
+    public void alertFinishAndCreateAnswerDoc(HashMap<Integer, LinkedList<Pair<String, String>>> allQueriesTop50) {
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
         alert.setTitle("Congratulation!");
         alert.setHeaderText("Answer file was created!!\n\n\n");
         alert.showAndWait();
+
+        if(allQueriesTop50==null){
+            return;
+        }
+        dataQueriesTop50 = allQueriesTop50;
+        docs_ans=null;
+        TitledPane[] tps;
+        Scene scene = search.getScene();
+        Stage stage = (Stage) search.getScene().getWindow();
+        ChoiceBox CB= (ChoiceBox) scene.lookup("#cb_queryNum");
+
+        CB.setItems(FXCollections.observableArrayList(
+                allQueriesTop50.keySet())
+        );
+        showAllEntities.setVisible(true);
+        queryNumLabel.setVisible(true);
+        cb_queryNum.setVisible(true);
+        stage.setScene(scene);
+        stage.show();
+
+
+    }
+
+    public void showEntities(ActionEvent actionEvent) {
+
+        if(cb_queryNum.getValue().equals(""))
+        {
+            Alert alert = new Alert(Alert.AlertType.WARNING);
+            alert.setTitle("Be Attention");
+            alert.setHeaderText("Choose a query you want to see its results\n!\n\n\n");
+            alert.showAndWait();
+            return;
+        }
+
+        int query= Integer.parseInt(cb_queryNum.getValue().toString());
+        docs_ans=null;
+        TitledPane[] tps;
+        Scene scene = search.getScene();
+        Stage stage = (Stage) search.getScene().getWindow();
+
+
+        tps = new TitledPane[dataQueriesTop50.get(query).size()];
+        for (int i = 0; i < dataQueriesTop50.get(query).size(); i++) {
+            docs_ans = (Accordion) scene.lookup("#docAns");
+            Button Bt = new Button("show entities from doc num "+(i+1)+" " + dataQueriesTop50.get(query).get(i).getKey());
+            Bt.setOnAction(new EventHandler<ActionEvent>() {
+                @Override
+                public void handle(ActionEvent e) {
+                    Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                    alert.setTitle("Top Entities");
+                    String [] title= StringUtils.split(Bt.getText()," ");
+                    String entities= dataQueriesTop50.get(query).get(Integer.parseInt(title[5])-1).getValue();
+                    if(entities!=null) {
+                        //     entities = StringUtils.replace(entities, "|", " ,");
+                        entities = StringUtils.substring(entities, 0, entities.length() - 1);
+                        entities=cutFive(entities);
+                        if(entities!="" && entities.charAt(0)==' '&& entities.charAt(1)==',')
+                            entities= StringUtils.substring(entities,2);
+                        alert.setHeaderText("Top Entities in " + title[6] + " :" + entities);
+                        alert.showAndWait();
+                    }
+                }
+            });
+
+            GridPane GP = new GridPane();
+            GP.add(Bt, 1, 0);
+            tps[i] = new TitledPane(dataQueriesTop50.get(query).get(i).getKey(), GP);
+        }
+        if (tps.length > 0) {
+            for (int i=0; i<50;i++){
+                if(docs_ans.getPanes().size()!=0)
+                    docs_ans.getPanes().remove(49-i);
+            }
+            docs_ans.getPanes().addAll(tps);
+            docs_ans.setExpandedPane(tps[0]);
+        }
+        stage.setScene(scene);
+        stage.show();
     }
 }
