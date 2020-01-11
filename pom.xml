@@ -62,6 +62,11 @@
             <artifactId>commons-lang3</artifactId>
             <version>3.9</version>
         </dependency>
+        <dependency>
+            <groupId>com.medallia.word4vec</groupId>
+            <artifactId>Word2VecJava</artifactId>
+            <version>0.10.2</version>
+        </dependency>
 
 
     </dependencies>

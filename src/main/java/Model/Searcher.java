@@ -1,5 +1,8 @@
 package Model;
 
+import com.medallia.word2vec.Searcher.Match;
+import com.medallia.word2vec.Searcher.UnknownWordException;
+import com.medallia.word2vec.Word2VecModel;
 import javafx.util.Pair;
 import org.apache.commons.lang3.StringUtils;
 
@@ -28,6 +31,7 @@ public class Searcher {
     String postingPath;
     boolean loadEntities;
     private BufferedWriter queriesWriter;
+    private com.medallia.word2vec.Searcher searcher;
 
     public Searcher(Parse parser, boolean isStemming,  String postingPath) {
         ranker = new Ranker();
@@ -36,13 +40,48 @@ public class Searcher {
         this.postingPath=postingPath;
         this.legalEntities= new HashSet<>();
         loadEntities= false;
+        loadSementicsModel();
+    }
+
+    public void loadSementicsModel()
+    {
+        try {
+
+            File file = new File(this.getClass().getClassLoader().getResource("word2vec.c.output.model.txt").getFile());
+            Word2VecModel model =Word2VecModel.fromTextFile(file);
+            com.medallia.word2vec.Searcher searcher =model.forSearch();
+            this.searcher=searcher;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private TreeMap<String,Integer> getSemanticsWord(TreeMap<String,Integer> queryTerms)
+    {
+        TreeMap<String,Integer> semanticsTerms=new TreeMap<>();
+        for (String term:queryTerms.keySet())
+        {
+            try {
+                if(searcher.contains(term))
+                {
+                    List<Match> maches =searcher.getMatches(term,2);
+                    for ( com.medallia.word2vec.Searcher.Match match:maches)
+                    {
+                        String semanticTerm=match.match();
+                        semanticsTerms.put(semanticTerm,queryTerms.get(term));
+                    }
+                }
+            } catch (UnknownWordException e) {
+                e.printStackTrace();
+            }
+        }
+        return semanticsTerms;
     }
 
 
 
     private void loadEntities() {
         try {
-
         String  s="";
         if(stemming)
             s="With";
@@ -83,14 +122,16 @@ public class Searcher {
 
         }
         if (semantic) {
-            TreeMap<String, Integer> semanticTerms = getWords(termsQuery);
-            termsQuery.putAll(semanticTerms);
+            TreeMap<String, Integer> semanticTerms = getSemanticsWord(termsQuery);
             if(stemming) {
                 semanticTerms = parser.parseSemantic(semanticTerms);
-                termsQuery.putAll(semanticTerms);
             }
-            else {
-                termsQuery.putAll(semanticTerms);
+            for (String semantic:semanticTerms.keySet())
+            {
+                if(termsQuery.containsKey(semantic)==false)
+                {
+                    termsQuery.put(semantic,semanticTerms.get(semantic));
+                }
             }
         }
         infoFromPosting(termsQuery);
@@ -189,14 +230,18 @@ public class Searcher {
         }
 
         TreeMap<String, Integer> termsQuery = parser.parseQuery(query, stemming); //tremName, tf in query
-        if (semantic) {
-            TreeMap<String, Integer> semanticTerms = getWords(termsQuery);
+        if (semantic)
+        {
+            TreeMap<String, Integer> semanticTerms = getSemanticsWord(termsQuery);
             if(stemming) {
                 semanticTerms = parser.parseSemantic(semanticTerms);
-                termsQuery.putAll(semanticTerms);
             }
-            else {
-                termsQuery.putAll(semanticTerms);
+            for (String semanticTerm:semanticTerms.keySet())
+            {
+                if(termsQuery.containsKey(semanticTerm)==false)
+                {
+                    termsQuery.put(semanticTerm,semanticTerms.get(semanticTerm));
+                }
             }
         }
 
@@ -430,7 +475,6 @@ public class Searcher {
                         rePostingTerms(line);
                         String termName = line.substring(0, line.indexOf("!"));
                         counter++;
-                        System.out.println(termName +" == "+ term);
                         break;
                     }
                     counter++;
