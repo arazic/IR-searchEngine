@@ -305,6 +305,7 @@ public class Searcher {
         totalCurposDoc=0;
         averageDocLength=0;
         TreeMap<String,String> allDictionatryTerms= new TreeMap<>();
+        TreeMap<String,Integer> tempTermsQuery = new TreeMap<>();
         for (String term:termsQuery.keySet())
         {
             if(Indexer.checkTerm(term))
@@ -314,13 +315,25 @@ public class Searcher {
             else
             {
                 String lowerCase=term.toLowerCase();
-                if(term.equals(lowerCase))
+                if(!term.equals(lowerCase))
                 {
                     if(Indexer.checkTerm(lowerCase))
                     {
                         allDictionatryTerms.put(lowerCase,Indexer.getTermPosition(lowerCase));
+                        tempTermsQuery.put(lowerCase,termsQuery.get(term));
                     }
                 }
+            }
+        }
+        if(tempTermsQuery.isEmpty()==false)
+        {
+            for (String term:tempTermsQuery.keySet())
+            {
+                if(termsQuery.containsKey(term.toUpperCase()))
+                {
+                    termsQuery.remove(term.toUpperCase());
+                }
+                termsQuery.put(term,tempTermsQuery.get(term));
             }
         }
         TreeMap<String,Integer> capitalTerms = new TreeMap<>();
