@@ -41,12 +41,15 @@ public class Ranker {
     private double rank(int docLength,TreeMap<String,Integer> termsTF)
     {
         double rank=0;
-        for (Map.Entry entry:termsTF.entrySet())
-        {
-            int termInQueryfreq= termsQueryFrequency.get(entry.getKey());
-            int termInDocFreq=(int)entry.getValue();
-            int termDocumentsFreq=termsDocumentFrequency.get(entry.getKey());
-            rank+=termInQueryfreq*((k+1)*termInDocFreq)/(termInDocFreq+k*(1-b+b*(docLength/ averageDocSize)))*Math.log10((corpusSize+1)/termDocumentsFreq);
+        for (Map.Entry entry:termsTF.entrySet()) {
+            if (termsQueryFrequency.containsKey(entry.getKey())) {
+                int termInQueryfreq = termsQueryFrequency.get(entry.getKey());
+                int termInDocFreq = (int) entry.getValue();
+                int termDocumentsFreq = termsDocumentFrequency.get(entry.getKey());
+                rank += termInQueryfreq * ((k + 1) * termInDocFreq) / (termInDocFreq + k * (1 - b + b * (docLength / averageDocSize))) * Math.log10((corpusSize + 1) / termDocumentsFreq);
+            }
+            else
+                System.out.println(entry.getKey());
         }
         return rank;
     }

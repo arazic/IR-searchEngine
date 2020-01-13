@@ -46,7 +46,8 @@ public class View extends Observable {
     public Accordion docs_ans;
     public boolean isStemming;
     public boolean isSemantic;
-    public String loadDic;
+    public String loadDicPosting;
+    public String loadDicCorpus;
     public String currentQuery;
     public String queriesPath;
     public String queriesResultPath;
@@ -87,9 +88,16 @@ public class View extends Observable {
             alert.setHeaderText("the posting path is empty!\n");
             alert.showAndWait();
         }
+        if(txtfld_corpusPath.getText().isEmpty()) {
+            Alert alert = new Alert(Alert.AlertType.WARNING);
+            alert.setTitle("Be Attention");
+            alert.setHeaderText("the corpus path is empty!\n");
+            alert.showAndWait();
+        }
         else{
-            loadDic = txtfld_postingPath.getText();
-            System.out.println(loadDic);
+            loadDicPosting = txtfld_postingPath.getText();
+            loadDicCorpus= txtfld_corpusPath.getText();
+            //System.out.println(loadDicPosting);
             if(c_steeming.isSelected()){
                 isStemming=true;}
             else{
@@ -333,7 +341,7 @@ public class View extends Observable {
                         String entities= currTop50.get(Integer.parseInt(title[5])-1).getValue();
                         if(entities!=null) {
                        //     entities = StringUtils.replace(entities, "|", " ,");
-                            entities = StringUtils.substring(entities, 0, entities.length() - 1);
+                            entities = StringUtils.substring(entities, 0, entities.length() );
                             entities=cutFive(entities);
                             if(entities!="" && entities.charAt(0)==' '&& entities.charAt(1)==',')
                                 entities= StringUtils.substring(entities,2);
@@ -438,6 +446,9 @@ public class View extends Observable {
             alert.showAndWait();
             return;
         }
+
+        if(cb_queryNum.getValue().toString().equals("query number 1"))
+            return;
 
         int query= Integer.parseInt(cb_queryNum.getValue().toString());
         docs_ans=null;

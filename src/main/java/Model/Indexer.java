@@ -96,6 +96,11 @@ public class Indexer
      * @return
      */
     public static TreeMap<String, String> loadData() {
+
+        if(termsDic!=null && !termsDic.isEmpty()){
+            termsDic.clear();
+        }
+
         try {
             FileReader fr;
             if(isStemming)

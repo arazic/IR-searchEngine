@@ -56,7 +56,9 @@ public class Searcher {
     public void loadSemanticsModel()
     {
         try {
-            File file = new File(this.getClass().getClassLoader().getResource("word2vec.c.output.model.txt").getFile());
+//            System.out.println(Paths.get(".").toAbsolutePath());
+           File file = new File("./word2vec.c.output.model.txt");// for Jar
+//            File file = new File(this.getClass().getClassLoader().getResource("/word2vec.c.output.model.txt").getFile()); //for intellij
             Word2VecModel model =Word2VecModel.fromTextFile(file);
             com.medallia.word2vec.Searcher searcher =model.forSearch();
             this.searcher=searcher;
@@ -170,34 +172,31 @@ public class Searcher {
      * @param query the current query
      * @param queryDocsEntity data structure
      */
-    private void handleQueryFromData(StringBuilder query, HashMap<Integer, LinkedList<Pair<String, String>>> queryDocsEntity)
-    {
-        String[] queryData =parseQueryFromData(query);
-        int queryID=Integer.parseInt(queryData[0]);
-        TreeMap<String,Integer> termsQuery = parser.parseQuery(queryData[1],stemming);
-        TreeMap<String,Integer> titleQuery = parser.parseQuery(queryData[2],stemming);
-        for (String  title:titleQuery.keySet())
-        {
-            if(termsQuery.containsKey(title))
-            {
-                double wight=termsQuery.get(title)*titleQuery.get(title)*1.3;
-                int intWight=(int)wight;
-                termsQuery.replace(title,intWight);
+    private void handleQueryFromData(StringBuilder query, HashMap<Integer, LinkedList<Pair<String, String>>> queryDocsEntity) {
+        String[] queryData = parseQueryFromData(query);
+        int queryID = Integer.parseInt(queryData[0]);
+        TreeMap<String, Integer> termsQuery = parser.parseQuery(queryData[1], stemming);
+        TreeMap<String, Integer> titleQuery = parser.parseQuery(queryData[2], stemming);
+        for (String title : titleQuery.keySet()) {
+            if (termsQuery.containsKey(title)) {
+                double wight = termsQuery.get(title) * titleQuery.get(title) * 1.3;
+                int intWight = (int) wight;
+                termsQuery.replace(title, intWight);
             }
-
         }
         if (semantic) {
             TreeMap<String, Integer> semanticTerms = getSemanticsWord(termsQuery);
-            if(stemming) {
-                semanticTerms = parser.parseSemantic(semanticTerms);
+            if (stemming) {
+                semanticTerms = parser.parseStemming(semanticTerms);
             }
-            for (String semantic:semanticTerms.keySet())
-            {
-                if(termsQuery.containsKey(semantic)==false)
-                {
-                    termsQuery.put(semantic,semanticTerms.get(semantic));
+            for (String semantic : semanticTerms.keySet()) {
+                if (termsQuery.containsKey(semantic) == false) {
+                    termsQuery.put(semantic, semanticTerms.get(semantic));
                 }
             }
+        }
+        else if(!semantic && stemming){
+            termsQuery = parser.parseStemming(termsQuery);
         }
         infoFromPosting(termsQuery);
         LinkedList<String> rankedDocuments=ranker.rankDocuments();
@@ -205,6 +204,7 @@ public class Searcher {
         LinkedList<Pair<String,String>> rankedDocumentsAndEntity= fillEntities(rankedDocuments);
         termsQuery.clear();
         queryDocsEntity.put(queryID,rankedDocumentsAndEntity);
+
     }
 
 
@@ -284,7 +284,7 @@ public class Searcher {
         {
             TreeMap<String, Integer> semanticTerms = getSemanticsWord(termsQuery);
             if(stemming) {
-                semanticTerms = parser.parseSemantic(semanticTerms);
+                semanticTerms = parser.parseStemming(semanticTerms);
             }
             for (String semanticTerm:semanticTerms.keySet())
             {
@@ -293,6 +293,9 @@ public class Searcher {
                     termsQuery.put(semanticTerm,semanticTerms.get(semanticTerm));
                 }
             }
+        }
+        else if(!semantic && stemming){
+                termsQuery = parser.parseStemming(termsQuery);
         }
 
         infoFromPosting(termsQuery);
@@ -363,11 +366,14 @@ public class Searcher {
         averageDocLength=0;
         TreeMap<String,String> allDictionatryTerms= new TreeMap<>();
         TreeMap<String,Integer> tempTermsQuery = new TreeMap<>();
+        TreeSet<String> termsToRemove=new TreeSet<>();
         for (String term:termsQuery.keySet())
         {
+            boolean flag=false;
             if(Indexer.checkTerm(term))
             {
                 allDictionatryTerms.put(term,Indexer.getTermPosition(term));
+                flag=true;
             }
             else
             {
@@ -378,8 +384,21 @@ public class Searcher {
                     {
                         allDictionatryTerms.put(lowerCase,Indexer.getTermPosition(lowerCase));
                         tempTermsQuery.put(lowerCase,termsQuery.get(term));
+                        flag=true;
                     }
                 }
+            }
+            if(!flag)
+            {
+                termsToRemove.add(term);
+            }
+        }
+        if(termsToRemove.isEmpty()==false)
+        {
+            for (String term:termsToRemove)
+            {
+                termsQuery.remove(term);
+      //          System.out.println(term+ " deleted");
             }
         }
         if(tempTermsQuery.isEmpty()==false)
@@ -490,7 +509,7 @@ public class Searcher {
                     if (counter == pointer-1) {
                         rePostingTerms(line);
                         counter++;
-                      //  System.out.println(termName +" == "+ term);
+                  //      System.out.println(entry.getKey() +" == "+ line);
                         break;
                     }
                     counter++;

@@ -55,10 +55,11 @@ public class Model extends Observable
 
     }
 
-    public TreeMap<String,String> loadDictionary(String postingPath, boolean isStemming) {
+    public TreeMap<String,String> loadDictionary(String postingPath,String corpusPath, boolean isStemming) {
 
         if(engineManager==null){
-            this.engineManager= new EngineManager(postingPath,isStemming);
+            this.engineManager= new EngineManager( corpusPath, postingPath,isStemming);
+            engineManager.setIsStemming(isStemming);
             return engineManager.getIndexer();
         }
         else {

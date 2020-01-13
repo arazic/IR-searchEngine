@@ -34,8 +34,11 @@ public class ReadFile {
 
     private void readStopWords()
     {
-        String sPath = this.corpusPath+"/stop_words.txt";
+       // File path = new File("./stop_words.txt");// for Jar
+       String sPath = this.corpusPath+"/stop_words.txt";
         File path= new File(sPath);
+        //String sPath ="src/main/resources/stop_words.txt";
+       // File path= new File(sPath);
         String line;
         HashSet<String> sWords = new HashSet<>();
         try(BufferedReader br = new BufferedReader(new FileReader(path)))
@@ -54,7 +57,7 @@ public class ReadFile {
 
     public void readStopWordsNoRunning()
     {
-        String sPath = "src/main/resources/stop_words.txt";
+        String sPath = this.corpusPath+"/stop_words.txt";
         File path= new File(sPath);
         String line;
         HashSet<String> sWords = new HashSet<>();

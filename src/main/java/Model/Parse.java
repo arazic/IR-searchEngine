@@ -1198,7 +1198,7 @@ public class Parse {
     }
 
 
-    public TreeMap<String, Integer> parseSemantic(TreeMap<String, Integer> semanticTerms)
+    public TreeMap<String, Integer> parseStemming(TreeMap<String, Integer> semanticTerms)
     {
         TreeMap<String,Integer> termAfterStem = new TreeMap<>();
         for (String term:semanticTerms.keySet())

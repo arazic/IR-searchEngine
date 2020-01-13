@@ -29,10 +29,11 @@ public class EngineManager {
         this.readFile= new ReadFile(corpusPath, parse);
         this.searcher= new Searcher(parse,isStemming,postingPath);
         Indexer.initIndexer(postingPath,isStemming);
+        readFile.readStopWordsNoRunning();
 
     }
 
-    public EngineManager(String postingPath, boolean isStemming){
+/*    public EngineManager(String postingPath, boolean isStemming){
         this.corpusPath=null;
         this.postingPath=postingPath;
         this.stemming=isStemming;
@@ -43,7 +44,7 @@ public class EngineManager {
         Indexer.initIndexer(postingPath,isStemming);
         readFile.readStopWordsNoRunning();
 
-    }
+    }*/
 
     public void startEngine() {
         readFile.createDocuments();  //create also tmpPosting files

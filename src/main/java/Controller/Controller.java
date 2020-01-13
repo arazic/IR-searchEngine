@@ -24,7 +24,7 @@ public class Controller extends Observable implements Observer {
                     model.startEngine(view.txtfld_corpusPath.getText(),view.txtfld_postingPath.getText(),view.isStemming);
                     break;
                 case "loadDictionary":
-                    TreeMap<String,String> tm=model.loadDictionary(view.loadDic,view.isStemming);
+                    TreeMap<String,String> tm=model.loadDictionary(view.loadDicPosting,view.loadDicCorpus, view.isStemming);
                     if(tm!=null)
                         view.SetLoadDictionarySuccessfully(tm);
                     else
