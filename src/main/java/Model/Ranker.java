@@ -7,7 +7,7 @@ import java.util.TreeMap;
 public class Ranker {
 
     private int corpusSize;
-    private double avergeDocSize;
+    private double averageDocSize;
     private TreeMap<String,Integer> termsDocumentFrequency;
     private TreeMap<String,Integer> termsQueryFrequency;
     private TreeMap<String,TreeMap<String,Integer>> documentTermsFrequency;
@@ -21,6 +21,9 @@ public class Ranker {
         b=0.55;
     }
 
+    /**
+     *
+     */
     public void cleanRanker()
     {
         termsDocumentFrequency.clear();
@@ -29,6 +32,12 @@ public class Ranker {
         documentsSize.clear();
     }
 
+    /**
+     *  run the BM25 algorithm to find the rank of one doc
+     * @param docLength
+     * @param termsTF
+     * @return
+     */
     private double rank(int docLength,TreeMap<String,Integer> termsTF)
     {
         double rank=0;
@@ -37,11 +46,15 @@ public class Ranker {
             int termInQueryfreq= termsQueryFrequency.get(entry.getKey());
             int termInDocFreq=(int)entry.getValue();
             int termDocumentsFreq=termsDocumentFrequency.get(entry.getKey());
-            rank+=termInQueryfreq*((k+1)*termInDocFreq)/(termInDocFreq+k*(1-b+b*(docLength/avergeDocSize)))*Math.log10((corpusSize+1)/termDocumentsFreq);
+            rank+=termInQueryfreq*((k+1)*termInDocFreq)/(termInDocFreq+k*(1-b+b*(docLength/ averageDocSize)))*Math.log10((corpusSize+1)/termDocumentsFreq);
         }
         return rank;
     }
 
+    /**
+     * rank all the documents and returns the top 50
+     * @return
+     */
     public LinkedList<String> rankDocuments()
     {
         TreeMap<String,Double> rankDocuments = new TreeMap<>();
@@ -74,11 +87,17 @@ public class Ranker {
         return documentsByRank;
     }
 
-
-
+    /**
+     * set all the needed info to do the rank action
+     * @param tremsInDoc
+     * @param termsDf
+     * @param allRelevantDocs
+     * @param termsQueryFrequency
+     */
     public void setData(TreeMap<String, TreeMap<String,Integer>> tremsInDoc, // docName, <Term-"tf">
             TreeMap<String, Integer> termsDf, // Term, df-how manyDocs
-            TreeMap<String, Integer> allRelevantDocs , TreeMap<String,Integer> termsQueryFrequency ) // docName, size - |d|
+            TreeMap<String, Integer> allRelevantDocs ,  // docName, size - |d|
+                        TreeMap<String,Integer> termsQueryFrequency ) // freq of term in the query
     {
         documentTermsFrequency=tremsInDoc;
         termsDocumentFrequency=termsDf;
@@ -92,9 +111,9 @@ public class Ranker {
         corpusSize=size;
     }
 
-    public void setAvergeDocSize(double avergeDocSize)
+    public void setAverageDocSize(double averageDocSize)
     {
-        this.avergeDocSize=avergeDocSize;
+        this.averageDocSize = averageDocSize;
     }
 
 }

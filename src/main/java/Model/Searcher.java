@@ -7,14 +7,19 @@ import javafx.util.Pair;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.*;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.*;
 
+/*import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;*/
 
-
-
+/**
+ * It is her job to perform the queries.
+ * The class will receive a query or queries
+ * , the class will analyze the input according to the text analysis
+ * done on the documents and return the the documents most relevant
+ * to the query are graded (using the detailed Ranker class)
+ */
 
 public class Searcher {
     Ranker ranker;
@@ -22,9 +27,9 @@ public class Searcher {
     boolean stemming;
     boolean semantic;
     TreeMap<String, TreeMap<String, Integer>> tremsInDoc ; // docName, <Term-"tf">
-    TreeMap<String, Integer> termsDf ; // Term, df-how manyDocs
     TreeMap<String, Integer> allRelevantDocsSize; // docName, size - |d|
-    HashMap<String, String> allRelevantDocsEntyies; // docName,Entities
+    HashMap<String, String> allRelevantDocsEntities; // docName,Entities
+    TreeMap<String, Integer> termsDf ; // Term, df-how manyDocs
     HashSet<String> legalEntities;
     int totalCurposDoc ;
     double averageDocLength ;
@@ -40,13 +45,17 @@ public class Searcher {
         this.postingPath=postingPath;
         this.legalEntities= new HashSet<>();
         loadEntities= false;
-        loadSementicsModel();
+        loadSemanticsModel();
     }
 
-    public void loadSementicsModel()
+    /**
+     * This function loads a model that helps us extract
+     *  the synonyms into the words of the question.
+     *  This is to better retrieve!
+     */
+    public void loadSemanticsModel()
     {
         try {
-
             File file = new File(this.getClass().getClassLoader().getResource("word2vec.c.output.model.txt").getFile());
             Word2VecModel model =Word2VecModel.fromTextFile(file);
             com.medallia.word2vec.Searcher searcher =model.forSearch();
@@ -56,6 +65,13 @@ public class Searcher {
         }
     }
 
+    /**
+     *The function uses the word2vec model to find
+     * words related to the original words of the query
+     * @param queryTerms
+     * @return Other words that have a connection to the terms in the query
+     * TreeMap<String,Integer> - <term, freq in the query>
+     */
     private TreeMap<String,Integer> getSemanticsWord(TreeMap<String,Integer> queryTerms)
     {
         TreeMap<String,Integer> semanticsTerms=new TreeMap<>();
@@ -79,7 +95,9 @@ public class Searcher {
     }
 
 
-
+    /**
+     * The function loads from the posting file the found entities
+     */
     private void loadEntities() {
         try {
         String  s="";
@@ -105,6 +123,53 @@ public class Searcher {
         }
     }
 
+    /**
+     * The function creates a data structure that contains the query number and list of its answers.
+     * The list of answers is built from a couple which is a document and entities.
+     * @param pathToQueries - The path in which the query or queries are saved
+     * @param isStem - if the user ask for Stemming
+     * @param isSemantic -- if the user ask for Semantic
+     * @return Data structure described above
+     */
+    public HashMap<Integer, LinkedList<Pair<String,String>>> readQueriesFromData(String pathToQueries,boolean isStem, boolean isSemantic)
+    {
+        if(!loadEntities) {
+            loadEntities();
+            loadEntities= true;
+        }
+
+        this.semantic=isSemantic;
+        this.stemming=isStem;
+        File path= new File(pathToQueries);
+        String line;
+        StringBuilder sb = new StringBuilder();
+        HashMap<Integer, LinkedList<Pair<String,String>>> queryDocsEntity= new HashMap<>();
+        try(BufferedReader br = new BufferedReader(new FileReader(path)))
+        {
+            while ((line = br.readLine()) != null)
+            {
+                if(line.equals("</top>")){
+                    sb.append(line).append("\n");
+                    handleQueryFromData(sb, queryDocsEntity);
+                    sb.setLength(0);
+                }
+                else
+                    sb.append(line).append("\n");
+            }
+        }
+        catch (IOException i)
+        {
+            i.printStackTrace();
+        }
+        return queryDocsEntity;
+    }
+
+    /**
+     * The function gets a data structure that contains the query number and list of its answers.
+     * The list of answers is built from a couple which is a document and entities.
+     * @param query the current query
+     * @param queryDocsEntity data structure
+     */
     private void handleQueryFromData(StringBuilder query, HashMap<Integer, LinkedList<Pair<String, String>>> queryDocsEntity)
     {
         String[] queryData =parseQueryFromData(query);
@@ -142,42 +207,17 @@ public class Searcher {
         queryDocsEntity.put(queryID,rankedDocumentsAndEntity);
     }
 
-    public HashMap<Integer, LinkedList<Pair<String,String>>> readQueriesFromData(String pathToQueries,boolean isStem, boolean isSemantic ,String postingPath)
-    {
-        if(!loadEntities) {
-            loadEntities();
-            loadEntities= true;
-        }
 
-        this.semantic=isSemantic;
-        this.stemming=isStem;
-        File path= new File(pathToQueries);
-        String line;
-        StringBuilder sb = new StringBuilder();
-        HashMap<Integer, LinkedList<Pair<String,String>>> queryDocsEntity= new HashMap<>();
-        try(BufferedReader br = new BufferedReader(new FileReader(path)))
-        {
-            while ((line = br.readLine()) != null)
-            {
-                if(line.equals("</top>")){
-                    sb.append(line).append("\n");
-                    handleQueryFromData(sb, queryDocsEntity);
-                    sb.setLength(0);
-                }
-                else
-                    sb.append(line).append("\n");
-            }
-        }
-        catch (IOException i)
-        {
-            i.printStackTrace();
-        }
-        return queryDocsEntity;
-    }
-
-    private String[] parseQueryFromData(StringBuilder stringBuilder)
+    /**
+     * the method parse the query to title and description
+     * @param query
+     * @return array:
+     *         queryData[1]=description;
+     *         queryData[2]=title;
+     */
+    private String[] parseQueryFromData(StringBuilder query)
     {
-        String text =stringBuilder.toString();
+        String text =query.toString();
         String [] tokens=StringUtils.split(text," \n");
         String[] queryData= new String[3];
         String title="";
@@ -224,6 +264,13 @@ public class Searcher {
         return queryData;
     }
 
+    /**
+     * The main method of this class, gets query,
+     * @param query
+     * @param stemming- A variable that says whether it asks for stemming
+     * @param semantic- A variable that says whether it asks for semantic
+     * @return list of answers is built from a couple which is a document and entities.
+     */
     public LinkedList<Pair<String,String>> search( String query, boolean stemming, boolean semantic) {
         this.stemming=stemming;
         this.semantic=semantic;
@@ -262,73 +309,26 @@ public class Searcher {
         return rankedDocumentsAndEntity;
     }
 
+    /**
+     * fill the entities of the doc from the posting file
+     * @param rankedDocuments
+     * @return
+     */
     private LinkedList<Pair<String,String>> fillEntities(LinkedList<String> rankedDocuments) {
         LinkedList<Pair<String,String>> ans=new LinkedList<>();
         for (int i=0; i<rankedDocuments.size();i++){
-            String entities= allRelevantDocsEntyies.get(rankedDocuments.get(i));
+            String entities= allRelevantDocsEntities.get(rankedDocuments.get(i));
             ans.add(i,new Pair<>(rankedDocuments.get(i),entities));
         }
         return ans;
     }
 
 
-    private TreeMap<String, Integer> getWords(TreeMap<String, Integer> termsQuery) {
-        TreeMap<String, Integer> result= new TreeMap<> ();
-        TreeMap<String, Integer> ans= new TreeMap<> ();
-
-        for (String term : termsQuery.keySet()) {
-            String curTerm= term.replace(" ","+");
-            String ansJ= StringUtils.substring(getFromJ(curTerm),1,getFromJ(curTerm).length()-1);
-            for(String jsomAns: ansJ.split("}")){
-
-                    jsomAns=StringUtils.substring(jsomAns,1);
-                     ans=cleanAns(jsomAns,curTerm);
-
-                     result.putAll(ans);
-                    break;
-            }
-        }
-        return result;
-    }
-
-    private TreeMap<String,Integer> cleanAns(String jsomAns,String curTerm) {
-        TreeMap<String,Integer> ans= new TreeMap<>();
-        jsomAns= StringUtils.substring(jsomAns,1,jsomAns.length()-1);
-        String []parseJson= StringUtils.split(jsomAns,',');
-        String []SynonymTerm= StringUtils.split(parseJson[0],":");
-        String []SynonymScore= StringUtils.split(parseJson[1],":");
-        if(Integer.parseInt(SynonymScore[1])>1500 && !(SynonymTerm[1].equals(curTerm))){
-            ans.put(SynonymTerm[1],Integer.parseInt(SynonymScore[1]));
-        }
-        return ans;
-    }
-
-
-    public String getFromJ(String term){
-        URL currentTermUrl;
-        HttpURLConnection connection;
-        BufferedReader bufferedReader;
-        StringBuilder fromJ = new StringBuilder();
-
-        try {
-            currentTermUrl = new URL("http://api.datamuse.com/words?ml=" + term);
-            connection  = (HttpURLConnection)  currentTermUrl.openConnection();
-            connection.setRequestMethod("GET");
-            bufferedReader = new BufferedReader(new InputStreamReader(connection.getInputStream(), "UTF-8"));
-            String line;
-
-            while ((line = bufferedReader.readLine()) != null)
-                fromJ.append(line);
-            bufferedReader.close();
-        } catch (MalformedURLException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return fromJ != null ? fromJ.toString() : null;
-    }
-
-
+    /**
+     * create file that save all the engine result
+     * @param queryID
+     * @param documents
+     */
     public void writeQueryAnswerToFile(int queryID, List<String> documents)
     {
         try {
@@ -344,12 +344,21 @@ public class Searcher {
         }
     }
 
+    /**
+     * Read from all the posting files the relevant information,
+     * fill the data structure:
+     *     1. tremsInDoc
+     *     2. termsDf
+     *     3. allRelevantDocsSize
+     *     4. allRelevantDocsEntities
+     * @param termsQuery - accept all the queries term
+     */
     public void infoFromPosting(TreeMap<String,Integer> termsQuery)
     {
         tremsInDoc= new TreeMap<>();
         termsDf= new TreeMap<>();// Term, df-how manyDocs
-        allRelevantDocsSize = new TreeMap<>(); // docNam
-        allRelevantDocsEntyies = new HashMap<>(); // docNam
+        allRelevantDocsSize = new TreeMap<>(); // docNam - size
+        allRelevantDocsEntities = new HashMap<>(); // docNam - entities
         totalCurposDoc=0;
         averageDocLength=0;
         TreeMap<String,String> allDictionatryTerms= new TreeMap<>();
@@ -460,6 +469,11 @@ public class Searcher {
 
     }
 
+    /**
+     *  read till the wanted pointer
+     * @param termsPointer
+     * @param postingReader
+     */
     private void getPostingData(TreeMap<String,Integer> termsPointer,BufferedReader postingReader)
     {
         if(termsPointer.isEmpty())
@@ -469,14 +483,12 @@ public class Searcher {
         try {
             int counter = 0;
             for (Map.Entry entry : termsPointer.entrySet()) {
-                String term = (String) entry.getKey();
                 int pointer = (int) entry.getValue();
                 String line = null;
                 line = postingReader.readLine();
                 while (line != null) {
                     if (counter == pointer-1) {
                         rePostingTerms(line);
-                        String termName = line.substring(0, line.indexOf("!"));
                         counter++;
                       //  System.out.println(termName +" == "+ term);
                         break;
@@ -492,110 +504,10 @@ public class Searcher {
         }
     }
 
-
-
-    /*public void infoFromPosting( TreeMap<String, Integer> termsQuery) {
-        try {
-            tremsInDoc= new TreeMap<>();
-            termsDf= new TreeMap<>();// Term, df-how manyDocs
-            allRelevantDocsSize = new TreeMap<>(); // docNam
-            allRelevantDocsEntyies = new HashMap<>(); // docNam
-            totalCurposDoc=0;
-            averageDocLength=0;
-
-            String  s="";
-            if(stemming)
-                s="With";
-            else
-                s="No";
-
-            for (String term : termsQuery.keySet()) {
-                FileReader numberFile = new FileReader((postingPath) + "/finalPostingNumbers"+s+"Stemming.txt");
-                FileReader capitalFile = new FileReader((postingPath) + "/finalPostingCapital"+s+"Stemming.txt");
-                FileReader lowerFile1 = new FileReader((postingPath) + "/finalPostingLower"+s+"StemmingD.txt");
-                FileReader lowerFile2 = new FileReader((postingPath) + "/finalPostingLower"+s+"StemmingP.txt");
-                FileReader lowerFile3 = new FileReader((postingPath) + "/finalPostingLower"+s+"StemmingZ.txt");
-
-                BufferedReader lowerReader1 = new BufferedReader(lowerFile1);
-                BufferedReader lowerReader2 = new BufferedReader(lowerFile2);
-                BufferedReader lowerReader3 = new BufferedReader(lowerFile3);
-                BufferedReader numberReader = new BufferedReader(numberFile);
-                BufferedReader capitalReader = new BufferedReader(capitalFile);
-                if (term.toUpperCase().equals(term)){
-                    String line= capitalReader.readLine();
-                    while (line!=null){
-                        String termName= line.substring(0,line.indexOf("!"));
-                        if(termName.equals(term)){
-                            rePostingTerms(line);
-                            System.out.println(term);
-                            break;
-                        }
-                        line=capitalReader.readLine();
-                    }
-                }
-                else if (term.charAt(0) > '9' || term.charAt(0) < '0') {
-                    if (term.charAt(0) <= 'd') {
-                        String line= lowerReader1.readLine();
-                        while (line!=null){
-                            String termName= line.substring(0,line.indexOf("!"));
-                            if(termName.equals(term)){
-                                rePostingTerms(line);
-                                System.out.println(term);
-                                break;
-                            }
-                            line=lowerReader1.readLine();
-                        }
-                    } else if (term.charAt(0) <= 'p') {
-                        String line= lowerReader2.readLine();
-                        while (line!=null){
-                            String termName= line.substring(0,line.indexOf("!"));
-                            if(termName.equals(term)){
-                                rePostingTerms(line);
-                                System.out.println(term);
-                                break;
-                            }
-                            line=lowerReader2.readLine();
-                        }
-                    }
-                    else {
-                        String line= lowerReader3.readLine();
-                        while (line!=null){
-                            String termName= line.substring(0,line.indexOf("!"));
-                            if(termName.equals(term)){
-                                rePostingTerms(line);
-                                System.out.println(term);
-                                break;
-                            }
-                            line=lowerReader3.readLine();
-                        }
-                    }
-                } else {
-
-                    String line= numberReader.readLine();
-                    while (line!=null){
-                        String termName= line.substring(0,line.indexOf("!"));
-                        if(termName.equals(term)){
-                            rePostingTerms(line);
-                            System.out.println(term);
-                            break;
-                        }
-                        line=numberReader.readLine();
-                    }
-                }
-            }
-            if(!allRelevantDocsSize.isEmpty())
-            {
-                rePostingDocs(postingPath);
-                ranker.setData(tremsInDoc, termsDf, allRelevantDocsSize, termsQuery);
-            }
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-    }*/
-
+    /**
+     * Read the doc details from the posting file
+     * @param postingPath
+     */
     private void rePostingDocs(String postingPath) {
         try {
             String  s="";
@@ -624,8 +536,7 @@ public class Searcher {
                         String [] parseDoc=  StringUtils.split(line,"!");
                         allRelevantDocsSize.put(docInPosting, Integer.valueOf(parseDoc[3]));
                         String realEntities= getRealEntities(parseDoc[parseDoc.length-1]);
-                        allRelevantDocsEntyies.put(docInPosting, realEntities);
-                        //allRelevantDocsEntyies.put(docInPosting, parseDoc[parseDoc.length-1]);
+                        allRelevantDocsEntities.put(docInPosting, realEntities);
                         if(iterator.hasNext())
                             entry = (Map.Entry) iterator.next();
                         else
@@ -638,7 +549,7 @@ public class Searcher {
                         averageDocLength= Integer.parseInt(line.substring(1));
                         line=bufferedDocs.readLine();
                         ranker.setCorpusSize(totalCurposDoc);
-                        ranker.setAvergeDocSize(averageDocLength);
+                        ranker.setAverageDocSize(averageDocLength);
                         break;
                     }
                 }
@@ -662,6 +573,10 @@ public class Searcher {
     return ans;
     }
 
+    /**
+     * parse the term info from the posting doc
+     * @param term
+     */
     private void rePostingTerms(String term)
     {
         String[] miniParse= StringUtils.split(term,"!");
@@ -690,36 +605,11 @@ public class Searcher {
         }
     }
 
-    /*private void rePostingTerms(String term) {
 
-        String[] miniParse= StringUtils.split(term,"!");
-        String termName= miniParse[0];
-        termsDf.put(termName, Integer.valueOf(miniParse[2])); //insert df of term
-        String[] splitDocs= StringUtils.split(miniParse[1].substring(1,miniParse[1].length()),",");
-        for (int i=0; i<splitDocs.length; i++){
-            String docName= StringUtils.substring(splitDocs[i],0,splitDocs[i].indexOf(":"));
-            if(docName.charAt(0)==' ')
-                docName= StringUtils.substring(docName,1);
-            if(docName.charAt(docName.length()-1)==' ')
-                docName= StringUtils.substring(docName,0,docName.length()-1);
-            String tfInDoc=StringUtils.substring(splitDocs[i],splitDocs[i].indexOf(":")+1);
-            if(tfInDoc.charAt(tfInDoc.length()-1)==']')
-                tfInDoc= StringUtils.substring(tfInDoc,0,tfInDoc.length()-1);
-            allRelevantDocsSize.put(docName, 0);
-            if(tremsInDoc.containsKey(docName)){
-                TreeMap<String,Integer> temp= tremsInDoc.get(docName);
-                temp.put(termName, Integer.valueOf(tfInDoc));
-                tremsInDoc.put(docName,temp);
-            }
-            else{
-                TreeMap<String,Integer> temp= new TreeMap<>();
-                //System.out.println(docName);
-                temp.put(termName, Integer.valueOf(tfInDoc));
-                tremsInDoc.put(docName,temp);
-            }
-        }
-    }*/
-
+    /**
+     * write the result to path
+     * @param queriesResultPath
+     */
     public void setQueriesResultPath(String queriesResultPath) {
         try {
             queriesWriter=new  BufferedWriter(new FileWriter((queriesResultPath+"/queriesAnswers.txt")));
@@ -727,4 +617,63 @@ public class Searcher {
             e.printStackTrace();
         }
     }
+
+//Brings synonyms on the web API
+    /*private TreeMap<String, Integer> getWords(TreeMap<String, Integer> termsQuery) {
+        TreeMap<String, Integer> result= new TreeMap<> ();
+        TreeMap<String, Integer> ans= new TreeMap<> ();
+
+        for (String term : termsQuery.keySet()) {
+            String curTerm= term.replace(" ","+");
+           String ansJ= StringUtils.substring(getFromJ(curTerm),1,getFromJ(curTerm).length()-1);
+          for(String jsomAns: ansJ.split("}")){
+
+               jsomAns=StringUtils.substring(jsomAns,1);
+              ans=cleanAns(jsomAns,curTerm);
+
+              result.putAll(ans);
+               break;
+         }
+     }
+     return result;
+    }*/
+
+   /* public String getFromJ(String term){
+        URL currentTermUrl;
+        HttpURLConnection connection;
+        BufferedReader bufferedReader;
+        StringBuilder fromJ = new StringBuilder();
+
+        try {
+            currentTermUrl = new URL("http://api.datamuse.com/words?ml=" + term);
+            connection  = (HttpURLConnection)  currentTermUrl.openConnection();
+            connection.setRequestMethod("GET");
+            bufferedReader = new BufferedReader(new InputStreamReader(connection.getInputStream(), "UTF-8"));
+            String line;
+
+            while ((line = bufferedReader.readLine()) != null)
+                fromJ.append(line);
+            bufferedReader.close();
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return fromJ != null ? fromJ.toString() : null;
+    }
+*/
+/*
+   private TreeMap<String,Integer> cleanAns(String jsomAns,String curTerm) {
+       TreeMap<String,Integer> ans= new TreeMap<>();
+       jsomAns= StringUtils.substring(jsomAns,1,jsomAns.length()-1);
+       String []parseJson= StringUtils.split(jsomAns,',');
+       String []SynonymTerm= StringUtils.split(parseJson[0],":");
+       String []SynonymScore= StringUtils.split(parseJson[1],":");
+       if(Integer.parseInt(SynonymScore[1])>1500 && !(SynonymTerm[1].equals(curTerm))){
+           ans.put(SynonymTerm[1],Integer.parseInt(SynonymScore[1]));
+       }
+       return ans;
+   }
+*/
+
 }

@@ -99,6 +99,7 @@ public class EngineManager {
     public static TreeMap<String, String> getTermsDic(){
         return Indexer.getTermsDic();
     }
+
     public void reset() {
         posting.reset();
     }
@@ -109,7 +110,7 @@ public class EngineManager {
         return searcher.search(currentQuery,isStemming, isSemantic);
     }
     public HashMap<Integer, LinkedList<Pair<String,String>>> searchQueriesFile(String path, boolean isStemming, boolean isSemantic) {
-       return searcher.readQueriesFromData(path,isStemming,isSemantic,postingPath);
+       return searcher.readQueriesFromData(path,isStemming,isSemantic);
     }
 
     public void setQueriesResultPath(String queriesResultPath) {

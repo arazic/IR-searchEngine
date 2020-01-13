@@ -48,6 +48,7 @@ public class Parse {
         totalTermsInDoc=0;
     }
 
+
     private void insertToAllDocTerms(String term)
     {
         if (term.isEmpty() || term.contains(">")||term.contains("<") || stopWords.contains(term)) {
@@ -234,6 +235,9 @@ public class Parse {
         updateDoc();
     }
 
+    /**
+     * after parse update doc
+     */
     private void updateDoc() {
         currDoc.setTotalTerms(totalTermsInDoc);
         currDoc.setMaxTerm(maxFreqTermInDoc);
